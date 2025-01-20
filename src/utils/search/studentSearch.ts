@@ -19,8 +19,13 @@ export const studentSearchableFields: (keyof IStudent | string)[] = [
 ];
 
 // Helper function to get nested object values
-export const getNestedValue = (obj: any, path: string) => {
-  return path.split(".").reduce((acc, part) => acc?.[part], obj);
+export const getNestedValue = <T extends object>(
+  obj: T,
+  path: string
+): unknown => {
+  return path.split(".").reduce<unknown>((acc, part) => {
+    return (acc as Record<string, unknown>)?.[part];
+  }, obj);
 };
 
 // Search function that checks all specified fields

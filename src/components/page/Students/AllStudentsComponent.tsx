@@ -22,11 +22,24 @@ import DeletePopup from "@/components/UI/DeletePopup";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import { FiEdit } from "react-icons/fi";
 import { MdDelete } from "react-icons/md";
-import { FaFilter } from "react-icons/fa";
 import { Menu } from "@headlessui/react";
 import { IoCloseCircle } from "react-icons/io5";
+import { MdViewColumn } from "react-icons/md";
+import { IoMdOptions } from "react-icons/io";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
+
+const DEFAULT_VISIBLE_COLUMNS = {
+  firstName: true,
+  class: true,
+  fatherName: true,
+  motherName: true,
+  admissionDate: false,
+  referredBy: true,
+  sex: false,
+  institute: false,
+  studentId: true,
+};
 
 const AllStudentsComponent = () => {
   const router = useRouter();
@@ -42,10 +55,9 @@ const AllStudentsComponent = () => {
     message: string;
   }>({ isOpen: false, message: "" });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    sex: false,
-    institute: false,
-  });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    DEFAULT_VISIBLE_COLUMNS
+  );
 
   const columnHelper = createColumnHelper<IStudent>();
 
@@ -308,101 +320,136 @@ const AllStudentsComponent = () => {
           </div>
         </div>
 
-        <Menu as="div" className="relative">
-          <Menu.Item>
-            {({ active }) => (
-              <button
-                className={`text-xl ${
-                  active ? "text-white" : "text-gray-400"
-                } hover:text-white`}
-              >
-                <FaFilter />
-              </button>
-            )}
-          </Menu.Item>
+        <div className="flex items-center gap-x-4">
+          <Menu as="div" className="relative">
+            <Menu.Button className="text-3xl text-gray-400 hover:text-white">
+              <MdViewColumn />
+            </Menu.Button>
 
-          <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-10">
-            <div className="space-y-4">
-              {/* Class Filter */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Class</label>
-                <select
-                  className="w-full bg-gray-700 rounded p-1 text-sm"
-                  value={
-                    (table.getColumn("class")?.getFilterValue() as string) ?? ""
-                  }
-                  onChange={(e) =>
-                    table.getColumn("class")?.setFilterValue(e.target.value)
-                  }
-                >
-                  <option value="">All</option>
-                  {uniqueValues.class.map((value) => (
-                    <option key={value} value={value}>
-                      {(() => {
-                        switch (value) {
-                          case "arabic":
-                            return "Arabic";
-                          case "spoken_english":
-                            return "Spoken English";
-                          case "drawing":
-                            return "Drawing";
-                          default:
-                            return `Class ${value}`;
-                        }
-                      })()}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-10">
+              <div className="space-y-2">
+                {table.getAllLeafColumns().map((column) => {
+                  // Skip the actions column from toggle
+                  if (column.id === "studentId") return null;
 
-              {/* Sex Filter */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Gender</label>
-                <select
-                  className="w-full bg-gray-700 rounded p-1 text-sm"
-                  value={
-                    (table.getColumn("sex")?.getFilterValue() as string) ?? ""
-                  }
-                  onChange={(e) =>
-                    table.getColumn("sex")?.setFilterValue(e.target.value)
-                  }
-                >
-                  <option value="">All</option>
-                  {uniqueValues.sex.map((value) => (
-                    <option key={value} value={value}>
-                      {value === "male" ? "Male" : "Female"}
-                    </option>
-                  ))}
-                </select>
+                  return (
+                    <div key={column.id} className="flex items-center gap-x-2">
+                      <input
+                        type="checkbox"
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                        className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+                      />
+                      <label className="text-sm">
+                        {column.id === "firstName"
+                          ? "Name"
+                          : column.id === "sex"
+                          ? "Gender"
+                          : column.id.charAt(0).toUpperCase() +
+                            column.id.slice(1)}
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
+            </Menu.Items>
+          </Menu>
 
-              {/* Institute Filter */}
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Institute
-                </label>
-                <select
-                  className="w-full bg-gray-700 rounded p-1 text-sm"
-                  value={
-                    (table
-                      .getColumn("institute")
-                      ?.getFilterValue() as string) ?? ""
-                  }
-                  onChange={(e) =>
-                    table.getColumn("institute")?.setFilterValue(e.target.value)
-                  }
-                >
-                  <option value="">All</option>
-                  {uniqueValues.institute.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
+          <Menu as="div" className="relative">
+            <Menu.Button className="text-2xl text-gray-400 hover:text-white">
+              <IoMdOptions />
+            </Menu.Button>
+
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-10">
+              <div className="space-y-4">
+                {/* Class Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Class
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table.getColumn("class")?.getFilterValue() as string) ??
+                      ""
+                    }
+                    onChange={(e) =>
+                      table.getColumn("class")?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    {uniqueValues.class.map((value) => (
+                      <option key={value} value={value}>
+                        {(() => {
+                          switch (value) {
+                            case "arabic":
+                              return "Arabic";
+                            case "spoken_english":
+                              return "Spoken English";
+                            case "drawing":
+                              return "Drawing";
+                            default:
+                              return `Class ${value}`;
+                          }
+                        })()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sex Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Gender
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table.getColumn("sex")?.getFilterValue() as string) ?? ""
+                    }
+                    onChange={(e) =>
+                      table.getColumn("sex")?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    {uniqueValues.sex.map((value) => (
+                      <option key={value} value={value}>
+                        {value === "male" ? "Male" : "Female"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Institute Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Institute
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table
+                        .getColumn("institute")
+                        ?.getFilterValue() as string) ?? ""
+                    }
+                    onChange={(e) =>
+                      table
+                        .getColumn("institute")
+                        ?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    {uniqueValues.institute.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
-          </Menu.Items>
-        </Menu>
+            </Menu.Items>
+          </Menu>
+        </div>
       </div>
       {filteredStudents.length === 0 ? (
         <div className="text-center py-4">No students found</div>
