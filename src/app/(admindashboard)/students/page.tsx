@@ -1,3 +1,5 @@
+"use client";
+
 import AllStudentsComponent from "@/components/page/Students/AllStudentsComponent";
 import { NextPage } from "next";
 

@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["via.placeholder.com", "i1.rgstatic.net"],
+    remotePatterns: [
+      {
+        hostname: "via.placeholder.com",
+      },
+      {
+        hostname: "i1.rgstatic.net",
+      },
+    ],
   },
 };
 

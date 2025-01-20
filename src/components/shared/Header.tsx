@@ -2,17 +2,30 @@
 
 import UserAvatar from "./UserAvatar";
 import { loggedInUserData } from "../../../public/data/data";
-import { IoNotifications } from "react-icons/io5";
+import { IoNotifications, IoCloseCircle } from "react-icons/io5";
+import { useSearch } from "@/context/SearchContext";
 
 export default function Header() {
+  const { searchQuery, setSearchQuery } = useSearch();
+
   return (
     <header className="h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible relative z-50">
-      <div className="text-gray-500 w-11/12">
+      <div className="text-gray-500 w-11/12 relative">
         <input
           type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
-          className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2"
+          className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-primary"
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-600"
+          >
+            <IoCloseCircle size={20} />
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-x-4 relative w-1/12">
