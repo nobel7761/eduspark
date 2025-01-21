@@ -26,6 +26,7 @@ import { Menu } from "@headlessui/react";
 import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
+import Link from "next/link";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -49,7 +50,8 @@ const AllStudentsComponent = () => {
   const [deletePopup, setDeletePopup] = useState<{
     isOpen: boolean;
     student: IStudent | null;
-  }>({ isOpen: false, student: null });
+    multipleStudents: IStudent[] | null;
+  }>({ isOpen: false, student: null, multipleStudents: null });
   const [successPopup, setSuccessPopup] = useState<{
     isOpen: boolean;
     message: string;
@@ -57,6 +59,9 @@ const AllStudentsComponent = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     DEFAULT_VISIBLE_COLUMNS
+  );
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
+    new Set()
   );
 
   const columnHelper = createColumnHelper<IStudent>();
@@ -101,27 +106,103 @@ const AllStudentsComponent = () => {
 
   const handleEdit = useCallback(
     (studentId: string) => {
-      router.push(`/students/${studentId}`);
+      router.push(`/students/edit/${studentId}`);
     },
     [router]
   );
 
-  const handleDelete = (student: IStudent) => {
-    setDeletePopup({ isOpen: true, student });
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = table
+        .getRowModel()
+        .rows.map((row) => row.original.studentId);
+      setSelectedStudents(new Set(allIds));
+    } else {
+      setSelectedStudents(new Set());
+    }
+  };
+
+  const handleSelectStudent = (studentId: string, checked: boolean) => {
+    const newSelected = new Set(selectedStudents);
+    if (checked) {
+      newSelected.add(studentId);
+    } else {
+      newSelected.delete(studentId);
+    }
+    setSelectedStudents(newSelected);
+  };
+
+  const handleDelete = (students: IStudent | IStudent[]) => {
+    if (Array.isArray(students)) {
+      setDeletePopup({
+        isOpen: true,
+        student: null,
+        multipleStudents: students,
+      });
+    } else {
+      setDeletePopup({
+        isOpen: true,
+        student: students,
+        multipleStudents: null,
+      });
+    }
   };
 
   const confirmDelete = () => {
     // Implement delete logic here
-    console.log("Deleting student:", deletePopup.student?.studentId);
-    setDeletePopup({ isOpen: false, student: null });
+    if (deletePopup.multipleStudents) {
+      console.log(
+        "Deleting multiple students:",
+        deletePopup.multipleStudents.map((s) => s.studentId)
+      );
+      setSelectedStudents(new Set());
+    } else if (deletePopup.student) {
+      console.log("Deleting student:", deletePopup.student.studentId);
+    }
+
+    setDeletePopup({ isOpen: false, student: null, multipleStudents: null });
     setSuccessPopup({
       isOpen: true,
-      message: "Student deleted successfully",
+      message: deletePopup.multipleStudents
+        ? "Selected students deleted successfully"
+        : "Student deleted successfully",
     });
   };
 
   const columns = React.useMemo(
     () => [
+      columnHelper.display({
+        id: "select",
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            checked={
+              table.getRowModel().rows.length > 0 &&
+              table
+                .getRowModel()
+                .rows.every((row) =>
+                  selectedStudents.has(row.original.studentId)
+                )
+            }
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+          />
+        ),
+        cell: ({ row }) => (
+          <div onClick={(e) => e.stopPropagation()} className="relative z-20">
+            <input
+              type="checkbox"
+              checked={selectedStudents.has(row.original.studentId)}
+              onChange={(e) =>
+                handleSelectStudent(row.original.studentId, e.target.checked)
+              }
+              className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      }),
       columnHelper.accessor("firstName", {
         header: "Name",
         cell: (info) => (
@@ -249,7 +330,7 @@ const AllStudentsComponent = () => {
         ),
       }),
     ],
-    [columnHelper, handleEdit]
+    [columnHelper, selectedStudents]
   );
 
   const table = useReactTable({
@@ -275,10 +356,33 @@ const AllStudentsComponent = () => {
     <div className="p-4 rounded-md bg-gray-900 text-white">
       <div className="flex justify-between items-center mb-4">
         <div className="space-y-2">
-          <h1 className="text-lg font-semibold">All Students</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold">All Students</h1>
+            {selectedStudents.size > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const studentsToDelete = filteredStudents.filter(
+                      (student) => selectedStudents.has(student.studentId)
+                    );
+                    handleDelete(studentsToDelete);
+                  }}
+                  className="px-3 py-1 text-sm text-red-400 hover:text-red-300 border border-red-400 hover:border-red-300 rounded-full"
+                >
+                  Delete Selected ({selectedStudents.size})
+                </button>
+                <button
+                  onClick={() => setSelectedStudents(new Set())}
+                  className="px-3 py-1 text-sm text-gray-400 hover:text-gray-300 border border-gray-400 hover:border-gray-300 rounded-full"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Active Filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {table.getState().columnFilters.map((filter) => {
               // Format the display value based on filter type and value
               let displayValue = String(filter.value);
@@ -317,6 +421,16 @@ const AllStudentsComponent = () => {
                 </div>
               );
             })}
+            {table.getState().columnFilters.length > 0 && (
+              <button
+                onClick={() => {
+                  table.resetColumnFilters();
+                }}
+                className="px-2 py-1 text-sm text-red-400 hover:text-red-300 border border-red-400 hover:border-red-300 rounded-full"
+              >
+                Reset All
+              </button>
+            )}
           </div>
         </div>
 
@@ -326,7 +440,7 @@ const AllStudentsComponent = () => {
               <MdViewColumn />
             </Menu.Button>
 
-            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-10">
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-2">
                 {table.getAllLeafColumns().map((column) => {
                   // Skip the actions column from toggle
@@ -360,7 +474,7 @@ const AllStudentsComponent = () => {
               <IoMdOptions />
             </Menu.Button>
 
-            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-10">
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-4">
                 {/* Class Filter */}
                 <div>
@@ -495,11 +609,30 @@ const AllStudentsComponent = () => {
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-t border-gray-700 hover:bg-gray-800"
+                className="border-t border-gray-700 hover:bg-gray-800 relative group"
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="py-2 px-4">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  <td key={cell.id} className="py-2 px-4 relative">
+                    {cell.column.id === "studentId" ? (
+                      <div className="relative z-10">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <Link
+                          href={`/students/${row.original.studentId}`}
+                          className="absolute inset-0 z-0"
+                          aria-label={`View details for ${row.original.firstName} ${row.original.lastName}`}
+                        />
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </div>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -566,16 +699,25 @@ const AllStudentsComponent = () => {
 
       <DeletePopup
         isOpen={deletePopup.isOpen}
-        onClose={() => setDeletePopup({ isOpen: false, student: null })}
+        onClose={() =>
+          setDeletePopup({
+            isOpen: false,
+            student: null,
+            multipleStudents: null,
+          })
+        }
         onDelete={confirmDelete}
-        itemName={`${deletePopup.student?.firstName} ${deletePopup.student?.lastName}`}
+        itemName={
+          deletePopup.multipleStudents
+            ? `Selected students`
+            : `${deletePopup.student?.firstName} ${deletePopup.student?.lastName}`
+        }
       />
 
       <SuccessPopup
         isOpen={successPopup.isOpen}
-        message={successPopup.message}
         onClose={() => setSuccessPopup({ isOpen: false, message: "" })}
-        autoCloseDelay={3000}
+        message={successPopup.message}
       />
     </div>
   );

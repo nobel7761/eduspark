@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "i1.rgstatic.net",
       },
+      {
+        hostname: "img.freepik.com",
+      },
     ],
   },
 };
