@@ -11,7 +11,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-primary flex flex-col">
+    <aside className="w-64 bg-primary flex flex-col fixed h-screen">
       <div className="h-[10vh] bg-white p-4 flex items-center justify-start gap-x-2 overflow-hidden">
         <Image
           src={logo}

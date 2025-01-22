@@ -9,9 +9,11 @@ const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
     <SearchProvider>
       <div className="flex min-h-screen">
         <Sidebar />
-        <div className="flex-1">
+        <div className="flex-1 ml-64">
           <Header />
-          <main className="p-4 bg-gray-100 min-h-[90vh]">{children}</main>
+          <main className="p-4 bg-gray-100 min-h-[90vh] mt-[10vh]">
+            {children}
+          </main>
         </div>
       </div>
     </SearchProvider>

@@ -27,6 +27,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
+import Image from "next/image";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -203,19 +204,44 @@ const AllStudentsComponent = () => {
         enableSorting: false,
         enableHiding: false,
       }),
+      // columnHelper.accessor("photo", {
+      //   header: "Photo",
+      //   cell: (info) => (
+      //     <div>
+      //       <Image
+      //         src={info.row.original.photo}
+      //         alt="Student Photo"
+      //         width={50}
+      //         height={50}
+      //         className="w-12 h-12 rounded-full object-cover object-center"
+      //       />
+      //     </div>
+      //   ),
+      // }),
       columnHelper.accessor("firstName", {
         header: "Name",
         cell: (info) => (
-          <div>
+          <div className="flex items-center gap-x-2">
             <div>
-              {info.row.original.firstName} {info.row.original.lastName} (
-              {info.row.original.studentId})
+              <Image
+                src={info.row.original.photo}
+                alt="Student Photo"
+                width={50}
+                height={50}
+                className="w-12 h-12 rounded-full object-cover object-center"
+              />
             </div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.primaryPhone}
-            </div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.institute}
+            <div>
+              <div>
+                {info.row.original.firstName} {info.row.original.lastName} (
+                {info.row.original.studentId})
+              </div>
+              <div className="text-sm text-gray-400">
+                {info.row.original.primaryPhone}
+              </div>
+              <div className="text-sm text-gray-400">
+                {info.row.original.institute}
+              </div>
             </div>
           </div>
         ),

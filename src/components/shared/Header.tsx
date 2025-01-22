@@ -9,7 +9,7 @@ export default function Header() {
   const { searchQuery, setSearchQuery } = useSearch();
 
   return (
-    <header className="h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible relative z-50">
+    <header className="h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible fixed top-0 right-0 left-64 z-50">
       <div className="text-gray-500 w-11/12 relative">
         <input
           type="text"
