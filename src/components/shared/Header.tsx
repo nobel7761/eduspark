@@ -5,11 +5,19 @@ import { loggedInUserData } from "../../../public/data/data";
 import { IoNotifications, IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
 
-export default function Header() {
+interface HeaderProps {
+  isCollapsed: boolean;
+}
+
+export default function Header({ isCollapsed }: HeaderProps) {
   const { searchQuery, setSearchQuery } = useSearch();
 
   return (
-    <header className="h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible fixed top-0 right-0 left-64 z-50">
+    <header
+      className={`h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible fixed top-0 right-0 ${
+        isCollapsed ? "left-16" : "left-64"
+      } transition-all duration-300 z-50`}
+    >
       <div className="text-gray-500 w-11/12 relative">
         <input
           type="text"

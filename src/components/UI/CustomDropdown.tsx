@@ -20,9 +20,14 @@ interface NavigationItem {
 interface CustomDropdownProps {
   items: NavigationItem;
   pathname: string;
+  isCollapsed?: boolean;
 }
 
-const CustomDropdown: React.FC<CustomDropdownProps> = ({ items, pathname }) => {
+const CustomDropdown: React.FC<CustomDropdownProps> = ({
+  items,
+  pathname,
+  isCollapsed,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -44,19 +49,28 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ items, pathname }) => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-3 hover:bg-gray-500/10 cursor-pointer flex items-center justify-between"
+        className={`w-full p-3 hover:bg-gray-500/10 cursor-pointer flex items-center ${
+          isCollapsed ? "justify-center" : "justify-between"
+        }`}
         type="button"
+        {...(isCollapsed ? { title: items.name } : {})}
       >
-        <div className="flex items-center">
-          <span className="mr-3">{items.icon}</span>
-          {items.name}
-        </div>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+        <div
+          className={`flex items-center ${isCollapsed ? "justify-center" : ""}`}
         >
-          <MdKeyboardArrowDown />
-        </motion.div>
+          <span className={`${isCollapsed ? "text-2xl" : "mr-3"}`}>
+            {items.icon}
+          </span>
+          {!isCollapsed && items.name}
+        </div>
+        {!isCollapsed && (
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <MdKeyboardArrowDown />
+          </motion.div>
+        )}
       </button>
 
       <AnimatePresence>
@@ -66,14 +80,18 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ items, pathname }) => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="w-full overflow-hidden"
+            className={`${
+              isCollapsed ? "absolute left-full top-0 ml-1 w-48" : "w-full"
+            } overflow-hidden`}
           >
             <ul className="bg-primary">
               {items.children?.map((child) => (
                 <li key={child.name}>
                   <Link
                     href={child.href}
-                    className={`block p-3 pl-12 hover:bg-gray-500/10 ${
+                    className={`block p-3 ${
+                      isCollapsed ? "" : "pl-12"
+                    } hover:bg-gray-500/10 ${
                       pathname === child.href ? "bg-gray-500/80" : ""
                     }`}
                   >
