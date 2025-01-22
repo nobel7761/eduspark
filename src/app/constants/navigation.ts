@@ -39,6 +39,22 @@ export const adminNavigation = [
     href: "/calendar",
   },
   {
+    name: "Accounts",
+    icon: "💰",
+    children: [
+      { name: "Earnings", href: "/accounts/earnings" },
+      { name: "Expenses", href: "/accounts/expenses" },
+    ],
+  },
+  {
+    name: "Management Hours",
+    icon: "⏰",
+    children: [
+      { name: "Submit Timing", href: "/management-hours/submit-timing" },
+      { name: "Reports", href: "/management-hours/reports" },
+    ],
+  },
+  {
     name: "Settings",
     icon: "⚙️",
     href: "/settings",
