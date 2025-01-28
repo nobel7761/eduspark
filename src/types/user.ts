@@ -1,13 +1,12 @@
+import { Status } from "@/enums/status-type.enum";
+import { UserType } from "@/enums/user-type.enum";
+
 export interface IUser {
   firstName: string;
   lastName: string;
-  primaryPhone: string;
-  secondaryPhone?: string;
-  fatherName: string;
-  fatherPhone: string;
-  motherName: string;
-  motherPhone: string;
-  presentAddress: string;
-  permanentAddress?: string;
-  profilePhoto?: string;
+  email: string;
+  primaryPhoneNumber: string;
+  status: Status;
+  userType: UserType;
+  accessToken: string;
 }

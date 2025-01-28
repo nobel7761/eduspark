@@ -11,6 +11,7 @@ import PageLoader from "@/components/shared/PageLoader";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { UserType } from "@/enums/user-type.enum";
 
 export interface LoginFormValues {
   email: string;
@@ -19,11 +20,7 @@ export interface LoginFormValues {
 
 export interface LoginResponse {
   access_token?: string;
-  // phone?: string;
-  // email?: string;
-  // name?: string;
-  // userId?: string;
-  // tfaId?: string;
+  user_type?: UserType;
 }
 
 const schema = yup.object({
@@ -33,6 +30,7 @@ const schema = yup.object({
 
 const LoginComponent = () => {
   const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -53,22 +51,21 @@ const LoginComponent = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
+    setIsLoading(true);
     const { email, ...rest } = values;
-    console.log(email, rest);
     await callApi({ email: email.trim(), ...rest });
   };
 
   console.log(data, error);
 
   useEffect(() => {
-    if (data?.access_token) {
-      // setLoading(true);
-      login(data.access_token);
+    if (data?.access_token && data?.user_type) {
+      login(data.access_token, data.user_type);
     }
   }, [data]);
 
   return (
-    <PageLoader loading={isSubmitting}>
+    <PageLoader loading={isLoading || isSubmitting}>
       <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex flex-col md:flex-row">
           {/* Left Side - Login Form */}

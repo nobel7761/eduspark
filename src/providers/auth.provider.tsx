@@ -14,12 +14,30 @@ const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   // load already stored auth token on first load
   useEffect(() => {
-    const token = readAuthToken();
+    const localToken = readAuthToken();
+    const cookieToken =
+      document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("auth_token="))
+        ?.split("=")[1] || "";
 
-    dispatch({
-      action: SET_TOKEN_LOADED,
-      payload: { token, loaded: true },
-    });
+    // If there's a mismatch between localStorage and cookies, clear both
+    if ((!localToken && cookieToken) || (localToken && !cookieToken)) {
+      localStorage.removeItem(LocalStorageAccessTokenKey);
+      document.cookie =
+        "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie =
+        "user_type=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      dispatch({
+        action: SET_TOKEN_LOADED,
+        payload: { token: "", loaded: true },
+      });
+    } else {
+      dispatch({
+        action: SET_TOKEN_LOADED,
+        payload: { token: localToken, loaded: true },
+      });
+    }
   }, []);
 
   // subscribe to auth token change in local storage
