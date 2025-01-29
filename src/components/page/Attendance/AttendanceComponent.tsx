@@ -11,7 +11,7 @@ import {
   flexRender,
   SortingState,
   ColumnFiltersState,
-  ColumnVisibilityState,
+  VisibilityState,
 } from "@tanstack/react-table";
 import { Menu } from "@headlessui/react";
 import { IoMdOptions } from "react-icons/io";
@@ -82,11 +82,10 @@ const AttendanceComponent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] =
-    useState<ColumnVisibilityState>({
-      year: false,
-      month: false,
-    });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    year: false,
+    month: false,
+  });
 
   const { searchQuery } = useSearch();
 
@@ -121,6 +120,9 @@ const AttendanceComponent = () => {
     designations: Array.from(
       new Set(mockAttendanceData.map((record) => record.designation))
     ),
+    names: Array.from(
+      new Set(mockAttendanceData.map((record) => record.name))
+    ).sort(),
   };
 
   const columnHelper = createColumnHelper<AttendanceRecord>();
@@ -131,7 +133,10 @@ const AttendanceComponent = () => {
       cell: (info) => info.getValue(),
       enableSorting: true,
       enableColumnFilter: true,
-      //   filterFn: "includesString",
+      filterFn: (row, columnId, filterValue) => {
+        if (!filterValue) return true;
+        return row.getValue(columnId) === filterValue;
+      },
     }),
     columnHelper.accessor("designation", {
       header: "Designation",
@@ -148,7 +153,7 @@ const AttendanceComponent = () => {
       cell: (info) => {
         const date = new Date(info.getValue());
         const day = date.getDate();
-        const suffix = (day) => {
+        const suffix = (day: number) => {
           if (day > 3 && day < 21) return "th";
           switch (day % 10) {
             case 1:
@@ -287,6 +292,28 @@ const AttendanceComponent = () => {
 
             <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-4">
+                {/* Name Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table.getColumn("name")?.getFilterValue() as string) ??
+                      ""
+                    }
+                    onChange={(e) =>
+                      table.getColumn("name")?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    {uniqueValues.names.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Designation Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
