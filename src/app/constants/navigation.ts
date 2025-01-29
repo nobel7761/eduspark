@@ -57,10 +57,7 @@ export const adminNavigation = [
   {
     name: "Attendance",
     icon: "📝",
-    children: [
-      { name: "Give Attendance", href: "/attendance/give-attendance" },
-      { name: "Attendance Reports", href: "/attendance/reports" },
-    ],
+    href: "/attendance",
   },
   {
     name: "Settings",
