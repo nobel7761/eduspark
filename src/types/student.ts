@@ -2,8 +2,6 @@ export enum StudentClass {
   DRAWING = "drawing",
   ARABIC = "arabic",
   SPOKEN_ENGLISH = "spoken_english",
-  CLASS_1 = 1,
-  CLASS_2 = 2,
   CLASS_3 = 3,
   CLASS_4 = 4,
   CLASS_5 = 5,
@@ -12,6 +10,8 @@ export enum StudentClass {
   CLASS_8 = 8,
   CLASS_9 = 9,
   CLASS_10 = 10,
+  CLASS_11 = 11,
+  CLASS_12 = 12,
 }
 
 export enum Sex {
