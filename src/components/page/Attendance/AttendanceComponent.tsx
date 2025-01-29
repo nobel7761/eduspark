@@ -17,6 +17,10 @@ import { Menu } from "@headlessui/react";
 import { IoMdOptions } from "react-icons/io";
 import { IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
+import { useForm } from "react-hook-form";
+import SuccessPopup from "@/components/UI/SuccessPopup";
+import FailedPopup from "@/components/UI/FailedPopup";
+import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -77,6 +81,14 @@ const mockAttendanceData: AttendanceRecord[] = [
     comments: "Personal emergency",
   },
 ];
+
+type AttendanceFormData = {
+  staffId: string;
+  date: string;
+  inTime: string;
+  outTime: string;
+  comments?: string;
+};
 
 const AttendanceComponent = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -233,12 +245,57 @@ const AttendanceComponent = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [popup, setPopup] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({ isOpen: false, message: "", type: "success" });
+
+  const { reset } = useForm<AttendanceFormData>();
+
+  const onSubmit = async (data: AttendanceFormData) => {
+    try {
+      // TODO: Implement your API call here
+      console.log("Form data:", data);
+
+      setIsAddModalOpen(false);
+      reset();
+      setPopup({
+        isOpen: true,
+        message: "Attendance added successfully!",
+        type: "success",
+      });
+
+      setTimeout(() => {
+        setPopup((prev) => ({ ...prev, isOpen: false }));
+      }, 3000);
+    } catch (error) {
+      console.log(error);
+      setPopup({
+        isOpen: true,
+        message: "Failed to add attendance. Please try again.",
+        type: "error",
+      });
+
+      setTimeout(() => {
+        setPopup((prev) => ({ ...prev, isOpen: false }));
+      }, 3000);
+    }
+  };
+
   return (
     <div className="p-4 rounded-md bg-gray-900 text-white">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Staff Attendance Report</h2>
+        <h2 className="text-lg font-semibold">Attendance Report</h2>
 
         <div className="flex items-center gap-x-4">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <span>Add Attendance</span>
+          </button>
           {/* Active Filters Display */}
           <div className="flex flex-wrap items-center gap-2">
             {table.getState().columnFilters.map((filter) => {
@@ -539,6 +596,28 @@ const AttendanceComponent = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Attendance Modal */}
+      <AddAttendanceDialog
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={onSubmit}
+        uniqueNames={uniqueValues.names}
+      />
+
+      {/* Success/Error Popup */}
+      <SuccessPopup
+        isOpen={popup.isOpen && popup.type === "success"}
+        onClose={() =>
+          setPopup({ isOpen: false, message: "", type: "success" })
+        }
+        message={popup.message}
+      />
+      <FailedPopup
+        isOpen={popup.isOpen && popup.type === "error"}
+        onClose={() => setPopup({ isOpen: false, message: "", type: "error" })}
+        message={popup.message}
+      />
     </div>
   );
 };

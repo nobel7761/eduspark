@@ -11,6 +11,10 @@ export default {
       colors: {
         primary: "#111827",
         logoColor: "#1A4958",
+        secondPrimary: "#967AA1",
+        thirdPrimary: "#AAA1CB",
+        fourthPrimary: "#D5C6E0",
+        fifthPrimary: "#F5E6E8",
       },
       keyframes: {
         "circle-draw": {
