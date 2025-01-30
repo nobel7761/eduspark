@@ -60,6 +60,11 @@ export const adminNavigation = [
     href: "/attendance",
   },
   {
+    name: "Upcoming Students",
+    icon: "👶",
+    href: "/upcoming-students",
+  },
+  {
     name: "Settings",
     icon: "⚙️",
     href: "/settings",

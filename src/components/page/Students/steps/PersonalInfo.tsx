@@ -2,7 +2,10 @@ import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
 
 const PersonalInfoStep = () => {
-  const { register } = useFormContext();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
 
   return (
     <motion.div
@@ -21,9 +24,16 @@ const PersonalInfoStep = () => {
           <label className="block text-sm font-medium mb-1">First Name</label>
           <input
             type="text"
-            {...register("firstName", { required: true })}
+            {...register("firstName", {
+              required: "First name is required",
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
+          {errors.firstName && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.firstName.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -34,9 +44,16 @@ const PersonalInfoStep = () => {
           <label className="block text-sm font-medium mb-1">Last Name</label>
           <input
             type="text"
-            {...register("lastName", { required: true })}
+            {...register("lastName", {
+              required: "Last name is required",
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
+          {errors.lastName && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.lastName.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -49,9 +66,16 @@ const PersonalInfoStep = () => {
           </label>
           <input
             type="date"
-            {...register("dateOfBirth", { required: true })}
+            {...register("dateOfBirth", {
+              required: "Date of birth is required",
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
+          {errors.dateOfBirth && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.dateOfBirth.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -61,13 +85,20 @@ const PersonalInfoStep = () => {
         >
           <label className="block text-sm font-medium mb-1">Gender</label>
           <select
-            {...register("gender", { required: true })}
+            {...register("gender", {
+              required: "Gender is required",
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           >
             <option value="">Select Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
+          {errors.gender && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.gender.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -77,7 +108,9 @@ const PersonalInfoStep = () => {
         >
           <label className="block text-sm font-medium mb-1">Religion</label>
           <select
-            {...register("religion", { required: true })}
+            {...register("religion", {
+              required: "Religion is required",
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           >
             <option value="">Select Religion</option>
@@ -86,6 +119,11 @@ const PersonalInfoStep = () => {
             <option value="Christianity">Christianity</option>
             <option value="Buddhism">Buddhism</option>
           </select>
+          {errors.religion && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.religion.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div
@@ -98,9 +136,20 @@ const PersonalInfoStep = () => {
           </label>
           <input
             type="tel"
-            {...register("primaryPhone", { required: true })}
+            {...register("primaryPhone", {
+              required: "Primary phone is required",
+              pattern: {
+                value: /^[0-9+\-\s()]*$/,
+                message: "Please enter a valid phone number",
+              },
+            })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
+          {errors.primaryPhone && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.primaryPhone.message as string}
+            </p>
+          )}
         </motion.div>
 
         <motion.div

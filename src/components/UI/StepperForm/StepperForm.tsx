@@ -14,6 +14,30 @@ interface StepperFormProps {
 const StepperForm: React.FC<StepperFormProps> = ({ steps, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const methods = useForm();
+  const { trigger } = methods;
+
+  const handleNext = async () => {
+    // Get the fields to validate based on current step
+    let fieldsToValidate: string[] = [];
+
+    if (currentStep === 1) {
+      fieldsToValidate = [
+        "firstName",
+        "lastName",
+        "dateOfBirth",
+        "gender",
+        "religion",
+        "primaryPhone",
+      ];
+    }
+
+    // Trigger validation for the current step's fields
+    const isStepValid = await trigger(fieldsToValidate);
+
+    if (isStepValid) {
+      setCurrentStep((prev) => Math.min(steps.length, prev + 1));
+    }
+  };
 
   const handleSubmit = (data: any) => {
     onSubmit(data);
@@ -107,7 +131,7 @@ const StepperForm: React.FC<StepperFormProps> = ({ steps, onSubmit }) => {
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 if (currentStep < steps.length) {
-                  setCurrentStep((prev) => prev + 1);
+                  handleNext();
                 }
               }}
             >
