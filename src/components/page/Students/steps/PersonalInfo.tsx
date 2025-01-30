@@ -21,37 +21,17 @@ const PersonalInfoStep = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <label className="block text-sm font-medium mb-1">First Name</label>
+          <label className="block text-sm font-medium mb-1">Name</label>
           <input
             type="text"
-            {...register("firstName", {
-              required: "First name is required",
+            {...register("name", {
+              required: "Name is required",
             })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
-          {errors.firstName && (
+          {errors.name && (
             <p className="text-red-500 text-sm mt-1">
-              {errors.firstName.message as string}
-            </p>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <label className="block text-sm font-medium mb-1">Last Name</label>
-          <input
-            type="text"
-            {...register("lastName", {
-              required: "Last name is required",
-            })}
-            className="w-full p-2 rounded bg-gray-800 focus:outline-none"
-          />
-          {errors.lastName && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.lastName.message as string}
+              {errors.name.message as string}
             </p>
           )}
         </motion.div>
@@ -68,6 +48,15 @@ const PersonalInfoStep = () => {
             type="date"
             {...register("dateOfBirth", {
               required: "Date of birth is required",
+              validate: (value) => {
+                const date = new Date(value);
+                return !isNaN(date.getTime()) || "Invalid date format";
+              },
+              setValueAs: (value) => {
+                if (!value) return undefined;
+                const date = new Date(value);
+                return isNaN(date.getTime()) ? undefined : date;
+              },
             })}
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />

@@ -48,7 +48,7 @@ const CreateStudentComponent = () => {
   const steps = [
     {
       id: 1,
-      title: "Personal Information",
+      title: "Personal",
       component: <PersonalInfoStep />,
     },
     {
@@ -58,12 +58,12 @@ const CreateStudentComponent = () => {
     },
     {
       id: 3,
-      title: "Parents Information",
+      title: "Parents",
       component: <ParentsInfoStep />,
     },
     {
       id: 4,
-      title: "Referral Information",
+      title: "Referral & Payments",
       component: <ReferralInfoStep />,
     },
   ];

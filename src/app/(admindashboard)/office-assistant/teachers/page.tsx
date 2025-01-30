@@ -1,8 +1,8 @@
 import AllTeachersComponent from "@/components/page/Teachers/AllTeachersComponent";
 import { NextPage } from "next";
 
-const TeachersPage: NextPage = () => {
+const AllTeachersPage: NextPage = () => {
   return <AllTeachersComponent />;
 };
 
-export default TeachersPage;
+export default AllTeachersPage;

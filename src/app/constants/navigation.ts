@@ -13,11 +13,11 @@ export const adminNavigation = [
     ],
   },
   {
-    name: "Teachers",
+    name: "Office Assistant",
     icon: "👨‍🏫",
     children: [
-      { name: "All Teachers", href: "/teachers" },
-      { name: "Add Teacher", href: "/teachers/create" },
+      { name: "Teachers", href: "office-assistant/teachers" },
+      { name: "Bua", href: "office-assistant/bua" },
     ],
   },
   {

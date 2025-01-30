@@ -1,9 +1,11 @@
 import { Dialog } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 import { useForm } from "react-hook-form";
+import useApi from "@/hooks/use-api.hook";
 
 type AttendanceFormData = {
   staffId: string;
+  staffName: string;
   date: string;
   inTime: string;
   outTime: string;
@@ -30,9 +32,29 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     formState: { errors },
   } = useForm<AttendanceFormData>();
 
+  const { callApi, loading, error } = useApi<
+    { success: boolean },
+    AttendanceFormData
+  >({
+    url: "/attendance",
+    method: "POST",
+    lazy: true,
+  });
+
   const handleFormSubmit = async (data: AttendanceFormData) => {
-    await onSubmit(data);
-    reset();
+    try {
+      const formattedData = {
+        ...data,
+        staffName: data.staffId, // Using the selected name as both staffId and staffName
+      };
+      console.log(formattedData);
+      await callApi(formattedData);
+      await onSubmit(formattedData);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Error adding attendance:", error);
+    }
   };
 
   return (
