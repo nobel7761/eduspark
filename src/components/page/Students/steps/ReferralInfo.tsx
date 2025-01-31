@@ -1,11 +1,26 @@
 import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
 
+interface ReferralFormData {
+  referredBy: {
+    name: string;
+    phone: string;
+  };
+  payment: {
+    admissionFee: number;
+    formFee: number;
+    monthlyFee: number;
+    packageFee: number;
+    referrerFee: number;
+    comments?: string;
+  };
+}
+
 const ReferralInfoStep = () => {
   const {
     register,
     formState: { errors },
-  } = useFormContext();
+  } = useFormContext<ReferralFormData>();
 
   return (
     <div className="space-y-6">
@@ -133,7 +148,7 @@ const ReferralInfoStep = () => {
             transition={{ duration: 0.3, delay: 0.7 }}
           >
             <label className="block text-sm font-medium mb-1">
-              Monthly Package Fee
+              Our Monthly Package Fee
             </label>
             <input
               type="number"

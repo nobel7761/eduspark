@@ -7,42 +7,7 @@ import PersonalInfoStep from "./steps/PersonalInfo";
 import EducationStep from "./steps/EducationInfo";
 import ParentsInfoStep from "./steps/ParentsInfo";
 import ReferralInfoStep from "./steps/ReferralInfo";
-
-interface FormData {
-  // Personal Info
-  firstName: string;
-  lastName: string;
-  photo: FileList;
-  dateOfBirth: Date;
-  gender: "Male" | "Female";
-  religion: "Islam" | "Hinduism" | "Christianity" | "Buddhism";
-  primaryPhone: string;
-  secondaryPhone: string;
-
-  // Education Info
-  instituteName: string;
-  class: string;
-  presentAddress: string;
-  permanentAddress: string;
-
-  // Parents Info
-  father: {
-    name: string;
-    occupation: string;
-    phone: string;
-  };
-  mother: {
-    name: string;
-    occupation: string;
-    phone: string;
-  };
-
-  // Referral Info
-  referredBy: {
-    name: string;
-    phone: string;
-  };
-}
+import { FormData } from "@/types/stepperForm";
 
 const CreateStudentComponent = () => {
   const steps = [
@@ -68,7 +33,7 @@ const CreateStudentComponent = () => {
     },
   ];
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: FormData) => {
     console.log(data);
     // Handle form submission
   };

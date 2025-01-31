@@ -30,7 +30,7 @@ const PersonalInfoStep = () => {
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
           {errors.name && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.name.message as string}
             </p>
           )}
@@ -61,7 +61,7 @@ const PersonalInfoStep = () => {
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
           {errors.dateOfBirth && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.dateOfBirth.message as string}
             </p>
           )}
@@ -84,7 +84,7 @@ const PersonalInfoStep = () => {
             <option value="Female">Female</option>
           </select>
           {errors.gender && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.gender.message as string}
             </p>
           )}
@@ -109,7 +109,7 @@ const PersonalInfoStep = () => {
             <option value="Buddhism">Buddhism</option>
           </select>
           {errors.religion && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.religion.message as string}
             </p>
           )}
@@ -135,7 +135,7 @@ const PersonalInfoStep = () => {
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
           {errors.primaryPhone && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.primaryPhone.message as string}
             </p>
           )}

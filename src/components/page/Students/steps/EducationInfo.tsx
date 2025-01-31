@@ -1,6 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
 import Select from "react-select";
+import { MultiValue } from "react-select";
 
 // Add these subject options
 const subjectOptions = [
@@ -19,13 +20,17 @@ const subjectOptions = [
   { value: "geography", label: "Geography" },
 ];
 
+interface SubjectOption {
+  value: string;
+  label: string;
+}
+
 const EducationStep = () => {
   const {
     register,
     formState: { errors },
     watch,
     setValue,
-    trigger,
   } = useFormContext();
 
   const selectedClass = watch("class");
@@ -33,7 +38,7 @@ const EducationStep = () => {
   const showSubjects = ["11", "12"].includes(selectedClass);
 
   // Handle subject selection
-  const handleSubjectChange = (selectedOptions: any) => {
+  const handleSubjectChange = (selectedOptions: MultiValue<SubjectOption>) => {
     setValue("subjects", selectedOptions, {
       shouldValidate: true,
       shouldDirty: true,
@@ -68,7 +73,7 @@ const EducationStep = () => {
             className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           />
           {errors.instituteName && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.instituteName.message as string}
             </p>
           )}
@@ -97,7 +102,7 @@ const EducationStep = () => {
             <option value="spoken_english">Spoken English</option>
           </select>
           {errors.class && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.class.message as string}
             </p>
           )}
@@ -124,7 +129,7 @@ const EducationStep = () => {
               <option value="humanities">Humanities</option>
             </select>
             {errors.group && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 {errors.group.message as string}
               </p>
             )}
@@ -151,7 +156,7 @@ const EducationStep = () => {
               value={watch("subjects")}
             />
             {errors.subjects && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 {errors.subjects.message as string}
               </p>
             )}
@@ -178,7 +183,7 @@ const EducationStep = () => {
             rows={3}
           />
           {errors.presentAddress && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.presentAddress.message as string}
             </p>
           )}
@@ -202,7 +207,7 @@ const EducationStep = () => {
             rows={3}
           />
           {errors.permanentAddress && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1">
               {errors.permanentAddress.message as string}
             </p>
           )}

@@ -1,202 +1,53 @@
+"use client";
+
 import { motion } from "framer-motion";
-import { useForm, FormProvider } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useForm, FormProvider, Resolver } from "react-hook-form";
+import { useEffect, useState } from "react";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-
-interface StepperFormProps {
-  steps: {
-    id: number;
-    title: string;
-    component: React.ReactNode;
-  }[];
-  onSubmit: (data: any) => void;
-}
-
-const personalInfoSchema = yup.object({
-  name: yup
-    .string()
-    .required("Name is required")
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name must not exceed 50 characters"),
-
-  dateOfBirth: yup
-    .date()
-    .required("Date of birth is required")
-    .max(new Date(), "Date of birth cannot be in the future"),
-
-  gender: yup
-    .string()
-    .required("Gender is required")
-    .oneOf(["Male", "Female"], "Please select a valid gender"),
-
-  religion: yup
-    .string()
-    .required("Religion is required")
-    .oneOf(
-      ["Islam", "Hinduism", "Christianity", "Buddhism"],
-      "Please select a valid religion"
-    ),
-
-  primaryPhone: yup
-    .string()
-    .required("Primary phone is required")
-    .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number must not exceed 15 digits"),
-});
-
-const educationAndAddressInfoSchema = yup.object({
-  instituteName: yup
-    .string()
-    .required("Institute name is required")
-    .min(3, "Institute name must be at least 3 characters")
-    .max(100, "Institute name must not exceed 100 characters"),
-
-  class: yup
-    .mixed()
-    .required("Class is required")
-    .oneOf(
-      [
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-        "11",
-        "12",
-        "arabic",
-        "drawing",
-        "spoken_english",
-      ],
-      "Please select a valid class"
-    ),
-
-  group: yup.string().when("class", {
-    is: (val: string) => ["9", "10", "11", "12"].includes(val),
-    then: (schema) =>
-      schema
-        .required("Group is required")
-        .oneOf(
-          ["science", "business", "humanities"],
-          "Please select a valid group"
-        ),
-    otherwise: (schema) => schema.nullable(),
-  }),
-
-  subjects: yup.array().when("class", {
-    is: (classValue: string) => ["11", "12"].includes(classValue),
-    then: (schema) =>
-      schema
-        .required("Subjects are required")
-        .min(1, "At least one subject must be selected")
-        .max(6, "Maximum 6 subjects can be selected")
-        .test("is-valid-subjects", "Invalid subjects selection", (value) => {
-          if (!value) return false;
-          return Array.isArray(value) && value.length > 0;
-        }),
-    otherwise: (schema) => schema.nullable(),
-  }),
-
-  presentAddress: yup
-    .string()
-    .required("Present address is required")
-    .min(3, "Present address must be at least 3 characters")
-    .max(200, "Present address must not exceed 200 characters"),
-});
-
-const parentsInfoSchema = yup.object({
-  father: yup.object({
-    name: yup
-      .string()
-      .required("Father's name is required")
-      .min(2, "Father's name must be at least 2 characters")
-      .max(50, "Father's name must not exceed 50 characters"),
-    phone: yup
-      .string()
-      .required("Father's phone is required")
-      .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
-      .min(10, "Phone number must be at least 10 digits")
-      .max(15, "Phone number must not exceed 15 digits"),
-  }),
-
-  mother: yup.object({
-    name: yup
-      .string()
-      .required("Mother's name is required")
-      .min(2, "Mother's name must be at least 2 characters")
-      .max(50, "Mother's name must not exceed 50 characters"),
-    phone: yup
-      .string()
-      .required("Mother's phone is required")
-      .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
-      .min(10, "Phone number must be at least 10 digits")
-      .max(15, "Phone number must not exceed 15 digits"),
-  }),
-});
-
-const referralAndPaymentInfoSchema = yup.object({
-  payment: yup.object({
-    admissionFee: yup
-      .number()
-      .required("Admission fee is required")
-      .min(0, "Admission fee cannot be negative")
-      .typeError("Admission fee must be a number"),
-
-    formFee: yup
-      .number()
-      .required("Form fee is required")
-      .min(0, "Form fee cannot be negative")
-      .typeError("Form fee must be a number"),
-
-    monthlyFee: yup
-      .number()
-      .required("Monthly fee is required")
-      .min(0, "Monthly fee cannot be negative")
-      .typeError("Monthly fee must be a number"),
-
-    packageFee: yup
-      .number()
-      .required("Package fee is required")
-      .min(0, "Package fee cannot be negative")
-      .typeError("Package fee must be a number"),
-  }),
-});
+import {
+  educationAndAddressInfoSchema,
+  parentsInfoSchema,
+  personalInfoSchema,
+  referralAndPaymentInfoSchema,
+} from "./Form Schemas/CreateStudentFormSchema";
+import { FormData, FormFields, StepperFormProps } from "@/types/stepperForm";
 
 const StepperForm: React.FC<StepperFormProps> = ({ steps, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Get validation schema based on current step
-  const getValidationSchema = (step: number) => {
+  const getValidationSchema = (
+    step: number
+  ): yup.ObjectSchema<Partial<FormData>> => {
     switch (step) {
       case 1:
-        return personalInfoSchema;
+        return personalInfoSchema as yup.ObjectSchema<Partial<FormData>>;
       case 2:
-        return educationAndAddressInfoSchema;
+        return educationAndAddressInfoSchema as yup.ObjectSchema<
+          Partial<FormData>
+        >;
       case 3:
-        return parentsInfoSchema;
+        return parentsInfoSchema as yup.ObjectSchema<Partial<FormData>>;
       case 4:
-        return referralAndPaymentInfoSchema;
+        return referralAndPaymentInfoSchema as yup.ObjectSchema<
+          Partial<FormData>
+        >;
       default:
-        return yup.object().shape({});
+        return yup.object().shape({}) as yup.ObjectSchema<Partial<FormData>>;
     }
   };
-
-  const methods = useForm({
-    resolver: yupResolver(getValidationSchema(currentStep)),
+  const methods = useForm<FormData>({
+    resolver: yupResolver(
+      getValidationSchema(currentStep)
+    ) as Resolver<FormData>,
     mode: "onChange",
   });
 
-  const {
-    trigger,
-    formState: { errors },
-  } = methods;
+  const { trigger } = methods;
 
   const handleNext = async () => {
-    let fieldsToValidate: string[] = [];
+    let fieldsToValidate: FormFields[] = [];
 
     if (currentStep === 1) {
       fieldsToValidate = [
@@ -258,11 +109,11 @@ const StepperForm: React.FC<StepperFormProps> = ({ steps, onSubmit }) => {
   useEffect(() => {
     methods.clearErrors();
     methods.reset(methods.getValues(), {
-      resolver: yupResolver(getValidationSchema(currentStep)),
+      keepValues: true,
     });
   }, [currentStep, methods]);
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: FormData) => {
     onSubmit(data);
   };
 
