@@ -1,7 +1,7 @@
 import { Dialog } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 import { useForm } from "react-hook-form";
-import useApi from "@/hooks/use-api.hook";
+import { useState } from "react";
 
 type AttendanceFormData = {
   staffId: string;
@@ -32,14 +32,36 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     formState: { errors },
   } = useForm<AttendanceFormData>();
 
-  const { callApi, loading, error } = useApi<
-    { success: boolean },
-    AttendanceFormData
-  >({
-    url: "/attendance",
-    method: "POST",
-    lazy: true,
-  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const callApi = async (data: AttendanceFormData) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/attendance`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add attendance");
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFormSubmit = async (data: AttendanceFormData) => {
     try {
@@ -80,6 +102,9 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
               onSubmit={handleSubmit(handleFormSubmit)}
               className="space-y-6"
             >
+              {error && (
+                <div className="text-red-500 text-sm">{error.message}</div>
+              )}
               {/* Staff Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -173,12 +198,22 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white rounded-lg px-4 py-2.5 hover:bg-blue-700 transition-colors"
-              >
-                Submit Attendance
-              </button>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-4 py-2 text-sm bg-primary hover:bg-primary/80 text-white rounded-md disabled:opacity-50"
+                >
+                  {loading ? "Adding..." : "Add Attendance"}
+                </button>
+              </div>
             </form>
           </div>
         </Dialog.Panel>

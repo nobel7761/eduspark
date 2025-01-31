@@ -1,6 +1,5 @@
 "use client";
 
-import { adminNavigation } from "@/app/constants/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CustomDropdown from "../UI/CustomDropdown";
@@ -8,6 +7,7 @@ import Image from "next/image";
 import logo from "/public/images/eduspark-logo-nobg.png";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
+import { adminNavigation } from "@/constants/navigation";
 
 interface SidebarProps {
   isCollapsed: boolean;

@@ -2,11 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
 import logo from "/public/images/eduspark-logo-nobg.png";
-import useApi from "@/hooks/use-api.hook";
-import useAuth from "@/hooks/use-auth.hook";
 import PageLoader from "@/components/shared/PageLoader";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -29,7 +27,6 @@ const schema = yup.object({
 });
 
 const LoginComponent = () => {
-  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const {
     register,
@@ -45,24 +42,10 @@ const LoginComponent = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data, error, callApi } = useApi<LoginResponse, LoginFormValues>({
-    url: "/auth/login",
-    method: "POST",
-  });
-
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
-    const { email, ...rest } = values;
-    await callApi({ email: email.trim(), ...rest });
+    console.log("values", values);
   };
-
-  console.log(data, error);
-
-  useEffect(() => {
-    if (data?.access_token && data?.user_type) {
-      login(data.access_token, data.user_type);
-    }
-  }, [data]);
 
   return (
     <PageLoader loading={isLoading || isSubmitting}>
@@ -141,12 +124,6 @@ const LoginComponent = () => {
                     </p>
                   )}
                 </div>
-
-                {error && (
-                  <p className="text-red-500 text-sm text-center">
-                    {error.message || "An error occurred during login"}
-                  </p>
-                )}
 
                 <button
                   type="submit"

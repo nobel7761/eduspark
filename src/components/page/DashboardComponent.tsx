@@ -1,11 +1,8 @@
 "use client";
 
-import { allStudentsList } from "../../../public/data/students";
-import { allTeachersList } from "../../../public/data/teachers";
-
 const DashboardComponent: React.FC = () => {
-  const totalStudents = allStudentsList.length;
-  const totalTeachers = allTeachersList.length;
+  const totalStudents = 23;
+  const totalTeachers = 2;
   return (
     <div>
       <div className="flex justify-around bg-gray-900 p-6 rounded-md">

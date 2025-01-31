@@ -2,13 +2,50 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import React from "react";
-import { allStudentsList } from "../../../../public/data/students";
-import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import { IStudent } from "@/types/student";
 
 const StudentDetailsComponent = () => {
   const params = useParams();
-  const student = allStudentsList.find((s) => s.studentId === params.studentId);
+  const [student, setStudent] = useState<IStudent | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchStudent = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/students/${params.studentId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch student");
+      }
+      const data = await response.json();
+      setStudent(data.data);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (params.studentId) {
+      fetchStudent();
+    }
+  }, [params.studentId]);
+
+  if (loading) {
+    return <div className="text-center py-4">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-4 text-red-500">
+        Error: {error.message}
+      </div>
+    );
+  }
 
   if (!student) {
     return <div>Student not found</div>;
@@ -37,8 +74,7 @@ const StudentDetailsComponent = () => {
           </h2>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Name:</span> {student.firstName}{" "}
-              {student.lastName}
+              <span className="font-medium">Name:</span> {student.name}
             </p>
             <p>
               <span className="font-medium">Student ID:</span>{" "}
@@ -48,15 +84,15 @@ const StudentDetailsComponent = () => {
               <span className="font-medium">Class:</span> {student.class}
             </p>
             <p>
-              <span className="font-medium">Gender:</span> {student.sex}
+              <span className="font-medium">Gender:</span> {student.gender}
             </p>
             <p>
               <span className="font-medium">Institute:</span>{" "}
-              {student.institute}
+              {student.instituteName}
             </p>
             <p>
               <span className="font-medium">Admission Date:</span>{" "}
-              {student.admissionDate}
+              {student.createdAt}
             </p>
           </div>
         </div>
@@ -91,14 +127,14 @@ const StudentDetailsComponent = () => {
           </h2>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Name:</span> {student.fatherName}
+              <span className="font-medium">Name:</span> {student.father.name}
             </p>
             <p>
               <span className="font-medium">Occupation:</span>{" "}
-              {student.fatherOccupation}
+              {student.father.occupation}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {student.fatherPhone}
+              <span className="font-medium">Phone:</span> {student.father.phone}
             </p>
           </div>
         </div>
@@ -109,14 +145,14 @@ const StudentDetailsComponent = () => {
           </h2>
           <div className="space-y-2">
             <p>
-              <span className="font-medium">Name:</span> {student.motherName}
+              <span className="font-medium">Name:</span> {student.mother.name}
             </p>
             <p>
               <span className="font-medium">Occupation:</span>{" "}
-              {student.motherOccupation}
+              {student.mother.occupation}
             </p>
             <p>
-              <span className="font-medium">Phone:</span> {student.motherPhone}
+              <span className="font-medium">Phone:</span> {student.mother.phone}
             </p>
           </div>
         </div>
@@ -128,16 +164,16 @@ const StudentDetailsComponent = () => {
           <div className="space-y-2">
             <p>
               <span className="font-medium">Referred By:</span>{" "}
-              {student.referredBy.name}
+              {student.referredBy?.name}
             </p>
             <p>
               <span className="font-medium">Referrer&apos;s Phone:</span>{" "}
-              {student.referredBy.phone}
+              {student.referredBy?.phone}
             </p>
           </div>
         </div>
 
-        {student.photo && (
+        {/* {student.photo && (
           <div className="border border-primary p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-3 text-primary">
               Student Photo
@@ -150,7 +186,7 @@ const StudentDetailsComponent = () => {
               className="object-cover rounded-lg"
             />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

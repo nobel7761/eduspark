@@ -1,6 +1,6 @@
+import { userDropdownItems } from "@/constants/navigation";
 import { IUser } from "@/types/user";
 import Image from "next/image";
-import { userDropdownItems } from "@/app/constants/navigation";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 

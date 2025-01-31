@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import LoaderComponent from "@/components/UI/LoaderComponent";
-import GlobalProviders from "@/providers/global-providers.component";
 
 export const metadata: Metadata = {
   title: "EduSpark",
@@ -17,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <LoaderComponent />
-        <GlobalProviders>{children}</GlobalProviders>
+        {children}
       </body>
     </html>
   );

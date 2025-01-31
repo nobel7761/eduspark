@@ -14,32 +14,53 @@ export enum StudentClass {
   CLASS_12 = 12,
 }
 
-export enum Sex {
+export enum Gender {
   MALE = "male",
   FEMALE = "female",
 }
 
+export enum Religion {
+  ISLAM = "islam",
+  CHRISTIANITY = "christianity",
+  HINDUISM = "hinduism",
+  BUDDHISM = "buddhism",
+}
+
 export interface IStudent {
-  firstName: string;
-  lastName: string;
-  class: number | string;
-  sex: Sex;
-  presentAddress: string;
-  permanentAddress: string;
-  institute: string;
+  name: string;
+  dateOfBirth: string;
+  gender: Gender;
+  religion: Religion;
   primaryPhone: string;
-  secondaryPhone: string;
-  fatherName: string;
-  fatherOccupation: string;
-  fatherPhone: string;
-  motherName: string;
-  motherOccupation: string;
-  motherPhone: string;
-  studentId: string;
-  photo: string;
-  referredBy: {
+  secondaryPhone?: string;
+  instituteName: string;
+  class: string;
+  group?: string;
+  subjects?: Array<{ value: string; label: string }>;
+  presentAddress: string;
+  permanentAddress?: string;
+  father: {
+    name: string;
+    phone: string;
+    occupation?: string;
+  };
+  mother: {
+    name: string;
+    phone: string;
+    occupation?: string;
+  };
+  referredBy?: {
     name: string;
     phone: string;
   };
-  admissionDate: string;
+  payment: {
+    admissionFee: number;
+    formFee: number;
+    monthlyFee: number;
+    packageFee: number;
+    referrerFee?: number;
+    comments?: string;
+  };
+  createdAt?: string;
+  studentId: string;
 }

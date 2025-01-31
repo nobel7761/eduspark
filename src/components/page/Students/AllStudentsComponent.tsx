@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,7 +13,6 @@ import {
   ColumnFiltersState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { allStudentsList } from "../../../../public/data/students";
 import { IStudent } from "@/types/student";
 import { useSearch } from "@/context/SearchContext";
 import { searchStudent } from "@/utils/search/studentSearch";
@@ -27,18 +26,17 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
-import Image from "next/image";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
 const DEFAULT_VISIBLE_COLUMNS = {
-  firstName: true,
+  name: true,
   class: true,
-  fatherName: true,
-  motherName: true,
+  father: true,
+  mother: true,
   admissionDate: false,
-  referredBy: true,
-  sex: false,
+  referrer: true,
+  gender: false,
   institute: false,
   studentId: true,
 };
@@ -65,21 +63,53 @@ const AllStudentsComponent = () => {
     new Set()
   );
 
+  const [allStudentsList, setAllStudentsList] = useState<IStudent[] | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/students`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch students");
+        }
+        const data = await response.json();
+        setAllStudentsList(data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  console.log("allStudentsList", allStudentsList);
+
   const columnHelper = createColumnHelper<IStudent>();
 
   // Filter students based on search query
   const filteredStudents = React.useMemo(() => {
-    return allStudentsList.filter((student) => {
+    if (!allStudentsList) return [];
+    return allStudentsList.filter((student: IStudent) => {
       if (!searchQuery?.trim()) return true;
       return searchStudent(student, searchQuery);
     });
-  }, [searchQuery]);
+  }, [searchQuery, allStudentsList]);
 
   // Get unique values for filters
   const uniqueValues = React.useMemo(() => {
+    if (!allStudentsList) return { class: [], gender: [], instituteName: [] };
     return {
       class: Array.from(
-        new Set(allStudentsList.map((student) => student.class))
+        new Set(allStudentsList.map((student: IStudent) => student.class))
       ).sort((b, a) => {
         // Handle special classes
         const specialClasses = ["arabic", "spoken_english", "drawing"];
@@ -94,16 +124,20 @@ const AllStudentsComponent = () => {
         // Sort numbers in descending order
         return Number(b) - Number(a);
       }),
-      sex: Array.from(new Set(allStudentsList.map((student) => student.sex)))
+      gender: Array.from(
+        new Set(allStudentsList.map((student: IStudent) => student.gender))
+      )
         .sort()
         .reverse(),
-      institute: Array.from(
-        new Set(allStudentsList.map((student) => student.institute))
+      instituteName: Array.from(
+        new Set(
+          allStudentsList.map((student: IStudent) => student.instituteName)
+        )
       )
         .sort()
         .reverse(),
     };
-  }, []);
+  }, [allStudentsList]);
 
   const handleEdit = useCallback(
     (studentId: string) => {
@@ -204,25 +238,12 @@ const AllStudentsComponent = () => {
         enableSorting: false,
         enableHiding: false,
       }),
-      // columnHelper.accessor("photo", {
-      //   header: "Photo",
-      //   cell: (info) => (
-      //     <div>
-      //       <Image
-      //         src={info.row.original.photo}
-      //         alt="Student Photo"
-      //         width={50}
-      //         height={50}
-      //         className="w-12 h-12 rounded-full object-cover object-center"
-      //       />
-      //     </div>
-      //   ),
-      // }),
-      columnHelper.accessor("firstName", {
+
+      columnHelper.accessor("name", {
         header: "Name",
         cell: (info) => (
           <div className="flex items-center gap-x-2">
-            <div>
+            {/* <div>
               <Image
                 src={info.row.original.photo}
                 alt="Student Photo"
@@ -230,17 +251,16 @@ const AllStudentsComponent = () => {
                 height={50}
                 className="w-12 h-12 rounded-full object-cover object-center"
               />
-            </div>
+            </div> */}
             <div>
               <div>
-                {info.row.original.firstName} {info.row.original.lastName} (
-                {info.row.original.studentId})
+                {info.row.original.name} ({info.row.original.studentId})
               </div>
               <div className="text-sm text-gray-400">
                 {info.row.original.primaryPhone}
               </div>
               <div className="text-sm text-gray-400">
-                {info.row.original.institute}
+                {info.row.original.instituteName}
               </div>
             </div>
           </div>
@@ -267,7 +287,7 @@ const AllStudentsComponent = () => {
           }
         },
       }),
-      columnHelper.accessor("sex", {
+      columnHelper.accessor("gender", {
         header: "Gender",
         enableColumnFilter: true,
         filterFn: (row, columnId, filterValue) => {
@@ -275,7 +295,7 @@ const AllStudentsComponent = () => {
           return String(row.getValue(columnId)) === filterValue;
         },
         cell: (info) => {
-          const genderValue = info.row.original.sex;
+          const genderValue = info.row.original.gender;
           switch (genderValue) {
             case "male":
               return "Male";
@@ -287,50 +307,50 @@ const AllStudentsComponent = () => {
         },
         enableHiding: true,
       }),
-      columnHelper.accessor("fatherName", {
+      columnHelper.accessor("father", {
         header: "Father Name",
         cell: (info) => (
           <div>
-            <div>{info.row.original.fatherName}</div>
+            <div>{info.row.original.father.name}</div>
             <div className="text-sm text-gray-400">
-              {info.row.original.fatherPhone}
+              {info.row.original.father.phone}
             </div>
             <div className="text-sm text-gray-400">
-              {info.row.original.fatherOccupation}
+              {info.row.original.father.occupation}
             </div>
           </div>
         ),
       }),
-      columnHelper.accessor("motherName", {
+      columnHelper.accessor("mother", {
         header: "Mother Name",
         cell: (info) => (
           <div>
-            <div>{info.row.original.motherName}</div>
+            <div>{info.row.original.mother.name}</div>
             <div className="text-sm text-gray-400">
-              {info.row.original.motherPhone}
+              {info.row.original.mother.phone}
             </div>
             <div className="text-sm text-gray-400">
-              {info.row.original.motherOccupation}
+              {info.row.original.mother.occupation}
             </div>
           </div>
         ),
       }),
-      columnHelper.accessor("admissionDate", {
+      columnHelper.accessor("createdAt", {
         header: "Admission Date",
-        cell: (info) => info.row.original.admissionDate,
+        cell: (info) => info.row.original.createdAt,
       }),
       columnHelper.accessor("referredBy", {
-        header: "Referred By",
+        header: "Referrer",
         cell: (info) => (
           <div>
-            <div>{info.row.original.referredBy.name}</div>
+            <div>{info.row.original.referredBy?.name}</div>
             <div className="text-sm text-gray-400">
-              {info.row.original.referredBy.phone}
+              {info.row.original.referredBy?.phone}
             </div>
           </div>
         ),
       }),
-      columnHelper.accessor("institute", {
+      columnHelper.accessor("instituteName", {
         header: "Institute",
         enableColumnFilter: true,
         cell: (info) => info.getValue(),
@@ -389,7 +409,8 @@ const AllStudentsComponent = () => {
                 <button
                   onClick={() => {
                     const studentsToDelete = filteredStudents.filter(
-                      (student) => selectedStudents.has(student.studentId)
+                      (student: IStudent) =>
+                        selectedStudents.has(student.studentId)
                     );
                     handleDelete(studentsToDelete);
                   }}
@@ -481,9 +502,9 @@ const AllStudentsComponent = () => {
                         className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
                       />
                       <label className="text-sm">
-                        {column.id === "firstName"
+                        {column.id === "name"
                           ? "Name"
-                          : column.id === "sex"
+                          : column.id === "gender"
                           ? "Gender"
                           : column.id.charAt(0).toUpperCase() +
                             column.id.slice(1)}
@@ -537,7 +558,7 @@ const AllStudentsComponent = () => {
                   </select>
                 </div>
 
-                {/* Sex Filter */}
+                {/* Gender Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Gender
@@ -545,14 +566,15 @@ const AllStudentsComponent = () => {
                   <select
                     className="w-full bg-gray-700 rounded p-1 text-sm"
                     value={
-                      (table.getColumn("sex")?.getFilterValue() as string) ?? ""
+                      (table.getColumn("gender")?.getFilterValue() as string) ??
+                      ""
                     }
                     onChange={(e) =>
-                      table.getColumn("sex")?.setFilterValue(e.target.value)
+                      table.getColumn("gender")?.setFilterValue(e.target.value)
                     }
                   >
                     <option value="">All</option>
-                    {uniqueValues.sex.map((value) => (
+                    {uniqueValues.gender.map((value) => (
                       <option key={value} value={value}>
                         {value === "male" ? "Male" : "Female"}
                       </option>
@@ -569,17 +591,17 @@ const AllStudentsComponent = () => {
                     className="w-full bg-gray-700 rounded p-1 text-sm"
                     value={
                       (table
-                        .getColumn("institute")
+                        .getColumn("instituteName")
                         ?.getFilterValue() as string) ?? ""
                     }
                     onChange={(e) =>
                       table
-                        .getColumn("institute")
+                        .getColumn("instituteName")
                         ?.setFilterValue(e.target.value)
                     }
                   >
                     <option value="">All</option>
-                    {uniqueValues.institute.map((value) => (
+                    {uniqueValues.instituteName.map((value) => (
                       <option key={value} value={value}>
                         {value}
                       </option>
@@ -591,7 +613,13 @@ const AllStudentsComponent = () => {
           </Menu>
         </div>
       </div>
-      {filteredStudents.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-4">Loading...</div>
+      ) : error ? (
+        <div className="text-center py-4 text-red-500">
+          Error loading students
+        </div>
+      ) : filteredStudents?.length === 0 ? (
         <div className="text-center py-4">No students found</div>
       ) : (
         <table className="w-full border border-gray-700 text-sm">
@@ -651,7 +679,7 @@ const AllStudentsComponent = () => {
                         <Link
                           href={`/students/${row.original.studentId}`}
                           className="absolute inset-0 z-0"
-                          aria-label={`View details for ${row.original.firstName} ${row.original.lastName}`}
+                          aria-label={`View details for ${row.original.name}`}
                         />
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -736,7 +764,7 @@ const AllStudentsComponent = () => {
         itemName={
           deletePopup.multipleStudents
             ? `Selected students`
-            : `${deletePopup.student?.firstName} ${deletePopup.student?.lastName}`
+            : `${deletePopup.student?.name}`
         }
       />
 

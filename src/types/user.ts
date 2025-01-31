@@ -1,12 +1,7 @@
-import { Status } from "@/enums/status-type.enum";
-import { UserType } from "@/enums/user-type.enum";
-
 export interface IUser {
+  profilePhoto: string;
   firstName: string;
   lastName: string;
   email: string;
-  primaryPhoneNumber: string;
-  status: Status;
-  userType: UserType;
-  accessToken: string;
+  primaryPhone: string;
 }

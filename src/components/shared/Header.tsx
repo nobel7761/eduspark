@@ -4,7 +4,6 @@ import UserAvatar from "./UserAvatar";
 import { loggedInUserData } from "../../../public/data/data";
 import { IoNotifications, IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
-import useUser from "@/hooks/use-user.hook";
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -12,9 +11,6 @@ interface HeaderProps {
 
 export default function Header({ isCollapsed }: HeaderProps) {
   const { searchQuery, setSearchQuery } = useSearch();
-  const { user } = useUser();
-
-  console.log("users", user);
 
   return (
     <header

@@ -33,7 +33,7 @@ export interface FormData {
     referrerFee: number;
     comments?: string;
   };
-  photo?: string;
+  photo?: File;
 }
 
 export interface StepperFormProps {
@@ -43,6 +43,8 @@ export interface StepperFormProps {
     component: React.ReactNode;
   }[];
   onSubmit: (data: FormData) => void;
+  isSubmitting?: boolean;
+  error?: string;
 }
 
 export type FormFields =

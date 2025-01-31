@@ -1,47 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Sex } from "@/types/student";
+import { useEffect, useState } from "react";
+
 import Link from "next/link";
-import { allStudentsList } from "../../../../public/data/students";
 import { useParams } from "next/navigation";
-import { IStudent } from "@/types/student";
+import { Gender, IStudent } from "@/types/student";
+import PageLoader from "@/components/shared/PageLoader";
 
 const EditStudentComponent = () => {
   const params = useParams();
-  const [student, setStudent] = useState<IStudent>({
-    firstName: "",
-    lastName: "",
-    class: 0,
-    sex: Sex.MALE,
-    presentAddress: "",
-    permanentAddress: "",
-    institute: "",
-    primaryPhone: "",
-    secondaryPhone: "",
-    fatherName: "",
-    fatherOccupation: "",
-    fatherPhone: "",
-    motherName: "",
-    motherOccupation: "",
-    motherPhone: "",
-    studentId: "",
-    photo: "",
-    referredBy: {
-      name: "",
-      phone: "",
-    },
-    admissionDate: "",
-  });
+  const [student, setStudent] = useState<IStudent | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchStudent = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/students/${params.studentId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch student");
+      }
+      const data = await response.json();
+      setStudent(data.data);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const foundStudent = allStudentsList.find(
-      (s) => s.studentId === params.studentId
-    );
-    if (foundStudent) {
-      setStudent(foundStudent);
+    if (params.studentId) {
+      fetchStudent();
     }
   }, [params.studentId]);
+
+  if (loading) {
+    return <PageLoader loading={true} />;
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error: {error.message}</div>;
+  }
+
+  if (!student) {
+    return <div>Student not found</div>;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,53 +76,42 @@ const EditStudentComponent = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
-                First Name
-              </label>
+              <label className="block text-sm font-medium mb-1">Name</label>
               <input
                 type="text"
-                value={student.firstName}
+                value={student?.name}
                 onChange={(e) =>
-                  setStudent({ ...student, firstName: e.target.value })
+                  setStudent({ ...student, name: e.target.value })
                 }
                 className="w-full p-2 border rounded"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={student.lastName}
-                onChange={(e) =>
-                  setStudent({ ...student, lastName: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-              />
-            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Class</label>
               <input
                 type="number"
-                value={student.class}
+                value={student?.class}
                 onChange={(e) =>
-                  setStudent({ ...student, class: parseInt(e.target.value) })
+                  setStudent({ ...student, class: e.target.value })
                 }
                 className="w-full p-2 border rounded"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Sex</label>
+              <label className="block text-sm font-medium mb-1">Gender</label>
               <select
-                value={student.sex}
+                value={student?.gender}
                 onChange={(e) =>
-                  setStudent({ ...student, sex: e.target.value as Sex })
+                  setStudent({
+                    ...student,
+                    gender: e.target.value as Gender,
+                  })
                 }
                 className="w-full p-2 border rounded"
               >
-                <option value={Sex.MALE}>Male</option>
-                <option value={Sex.FEMALE}>Female</option>
+                <option value={Gender.MALE}>Male</option>
+                <option value={Gender.FEMALE}>Female</option>
               </select>
             </div>
             <div>
@@ -124,9 +120,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.institute}
+                value={student?.instituteName}
                 onChange={(e) =>
-                  setStudent({ ...student, institute: e.target.value })
+                  setStudent({
+                    ...student,
+                    instituteName: e.target.value,
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -137,14 +136,14 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="date"
-                value={student.admissionDate}
+                value={student?.createdAt}
                 onChange={(e) =>
-                  setStudent({ ...student, admissionDate: e.target.value })
+                  setStudent({ ...student, createdAt: e.target.value })
                 }
                 className="w-full p-2 border rounded"
               />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium mb-1">
                 Photo URL
               </label>
@@ -156,14 +155,14 @@ const EditStudentComponent = () => {
                 }
                 className="w-full p-2 border rounded"
               />
-            </div>
+            </div> */}
             <div>
               <label className="block text-sm font-medium mb-1">
                 Student ID
               </label>
               <input
                 type="text"
-                value={student.studentId}
+                value={student?.studentId}
                 onChange={(e) =>
                   setStudent({ ...student, studentId: e.target.value })
                 }
@@ -186,9 +185,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.primaryPhone}
+                value={student?.primaryPhone}
                 onChange={(e) =>
-                  setStudent({ ...student, primaryPhone: e.target.value })
+                  setStudent({
+                    ...student,
+                    primaryPhone: e.target.value,
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -199,9 +201,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.secondaryPhone}
+                value={student?.secondaryPhone}
                 onChange={(e) =>
-                  setStudent({ ...student, secondaryPhone: e.target.value })
+                  setStudent({
+                    ...student,
+                    secondaryPhone: e.target.value,
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -211,9 +216,12 @@ const EditStudentComponent = () => {
                 Present Address
               </label>
               <textarea
-                value={student.presentAddress}
+                value={student?.presentAddress}
                 onChange={(e) =>
-                  setStudent({ ...student, presentAddress: e.target.value })
+                  setStudent({
+                    ...student,
+                    presentAddress: e.target.value,
+                  })
                 }
                 className="w-full p-2 border rounded"
                 rows={3}
@@ -224,9 +232,12 @@ const EditStudentComponent = () => {
                 Permanent Address
               </label>
               <textarea
-                value={student.permanentAddress}
+                value={student?.permanentAddress}
                 onChange={(e) =>
-                  setStudent({ ...student, permanentAddress: e.target.value })
+                  setStudent({
+                    ...student,
+                    permanentAddress: e.target.value,
+                  })
                 }
                 className="w-full p-2 border rounded"
                 rows={3}
@@ -247,9 +258,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.fatherName}
+                value={student?.father.name}
                 onChange={(e) =>
-                  setStudent({ ...student, fatherName: e.target.value })
+                  setStudent({
+                    ...student,
+                    father: { ...student.father, name: e.target.value },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -260,9 +274,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.fatherPhone}
+                value={student?.father.phone}
                 onChange={(e) =>
-                  setStudent({ ...student, fatherPhone: e.target.value })
+                  setStudent({
+                    ...student,
+                    father: { ...student.father, phone: e.target.value },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -273,9 +290,15 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.fatherOccupation}
+                value={student?.father.occupation}
                 onChange={(e) =>
-                  setStudent({ ...student, fatherOccupation: e.target.value })
+                  setStudent({
+                    ...student,
+                    father: {
+                      ...student.father,
+                      occupation: e.target.value,
+                    },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -295,9 +318,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.motherName}
+                value={student?.mother.name}
                 onChange={(e) =>
-                  setStudent({ ...student, motherName: e.target.value })
+                  setStudent({
+                    ...student,
+                    mother: { ...student.mother, name: e.target.value },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -308,9 +334,12 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.motherPhone}
+                value={student?.mother.phone}
                 onChange={(e) =>
-                  setStudent({ ...student, motherPhone: e.target.value })
+                  setStudent({
+                    ...student,
+                    mother: { ...student.mother, phone: e.target.value },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -321,9 +350,15 @@ const EditStudentComponent = () => {
               </label>
               <input
                 type="text"
-                value={student.motherOccupation}
+                value={student?.mother.occupation}
                 onChange={(e) =>
-                  setStudent({ ...student, motherOccupation: e.target.value })
+                  setStudent({
+                    ...student,
+                    mother: {
+                      ...student.mother,
+                      occupation: e.target.value,
+                    },
+                  })
                 }
                 className="w-full p-2 border rounded"
               />
@@ -337,41 +372,44 @@ const EditStudentComponent = () => {
             Referral Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium mb-1">
                 Referred By Name
               </label>
               <input
                 type="text"
-                value={student.referredBy.name}
+                value={student?.referredBy?.name}
                 onChange={(e) =>
                   setStudent({
                     ...student,
-                    referredBy: { ...student.referredBy, name: e.target.value },
+                    referredBy: {
+                      ...student?.referredBy,
+                      name: e.target.value,
+                    },
                   })
                 }
                 className="w-full p-2 border rounded"
               />
-            </div>
-            <div>
+            </div> */}
+            {/* <div>
               <label className="block text-sm font-medium mb-1">
                 Referred By Phone
               </label>
               <input
                 type="text"
-                value={student.referredBy.phone}
+                value={student?.referredBy?.phone}
                 onChange={(e) =>
                   setStudent({
                     ...student,
                     referredBy: {
-                      ...student.referredBy,
+                      ...student?.referredBy,
                       phone: e.target.value,
                     },
                   })
                 }
                 className="w-full p-2 border rounded"
               />
-            </div>
+            </div> */}
           </div>
         </div>
 
