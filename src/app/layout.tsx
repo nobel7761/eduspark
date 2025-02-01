@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import LoaderComponent from "@/components/UI/LoaderComponent";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
   title: "EduSpark",
@@ -16,6 +18,18 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <LoaderComponent />
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
         {children}
       </body>
     </html>

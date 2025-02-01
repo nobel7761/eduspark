@@ -1,24 +1,51 @@
-export enum PaymentType {
-  FIXED = "FIXED",
-  CLASS_BASED = "CLASS_BASED",
-}
+import { Gender, PaymentMethod } from "@/enums/teachers.enum";
 
 export interface ITeacher {
-  firstName: string;
-  lastName: string;
-  primaryPhone: string;
-  secondaryPhone: string;
-  paymentType: PaymentType;
-  nidNumber: string;
-  photo: string;
+  _id: string;
+  name: string;
   teacherId: string;
-  address: string;
+  gender: Gender;
+  primaryPhone: string;
+  secondaryPhone?: string;
+  photo?: string;
+  attachments?: Array<{
+    [key: string]: string;
+  }>;
+  email?: string;
+  nidNumber?: string;
+  presentAddress: string;
+  permanentAddress?: string;
+  father: {
+    name: string;
+    phone: string;
+  };
+  mother?: {
+    name: string;
+    phone: string;
+  };
+  paymentMethod: PaymentMethod;
+  paymentPerClass: number | null;
+  paymentPerMonth: number | null;
+  isRunningStudent: boolean;
   educationalBackground: {
-    sscInstitute: string;
-    sscPassingYear: string;
-    sscGroup: string;
-    hscInstitute: string;
-    hscPassingYear: string;
-    hscGroup: string;
+    university: {
+      institute: string;
+      department: string;
+      admissionYear?: number | null;
+      passingYear?: number | null;
+      cgpa?: number | null;
+    };
+    ssc: {
+      year: number;
+      group: string;
+      result: number;
+      institute: string;
+    };
+    hsc: {
+      year: number;
+      group: string;
+      result: number;
+      institute: string;
+    };
   };
 }

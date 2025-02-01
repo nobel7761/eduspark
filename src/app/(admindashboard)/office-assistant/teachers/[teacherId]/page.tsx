@@ -1,9 +1,8 @@
-// import TeacherDetailsComponent from "@/components/page/Teachers/TeacherDetailsComponent";
+import TeacherDetailsComponent from "@/components/page/Teachers/TeacherDetailsComponent";
 import { NextPage } from "next";
 
 const TeacherDetailsPage: NextPage = () => {
-  // return <TeacherDetailsComponent />;
-  return <div>Teacher Details Page</div>;
+  return <TeacherDetailsComponent />;
 };
 
 export default TeacherDetailsPage;

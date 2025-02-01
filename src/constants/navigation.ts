@@ -44,15 +44,13 @@ export const adminNavigation = [
     children: [
       { name: "Earnings", href: "/accounts/earnings" },
       { name: "Expenses", href: "/accounts/expenses" },
+      { name: "Investments", href: "/accounts/investments" },
     ],
   },
   {
-    name: "Management Hours",
+    name: "Management Timings",
     icon: "⏰",
-    children: [
-      { name: "Submit Timing", href: "/management-hours/submit-timing" },
-      { name: "Reports", href: "/management-hours/reports" },
-    ],
+    href: "/management-timings",
   },
   {
     name: "Attendance",
