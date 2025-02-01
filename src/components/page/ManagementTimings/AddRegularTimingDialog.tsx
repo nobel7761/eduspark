@@ -11,6 +11,7 @@ import { BsFillTrashFill } from "react-icons/bs";
 import { useState, useEffect } from "react";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import { IDirector } from "@/types/directors";
+import FailedPopup from "@/components/UI/FailedPopup";
 
 // Initialize dayjs plugins
 dayjs.extend(utc);
@@ -80,6 +81,11 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
     message: "",
   });
 
+  const [failedPopup, setFailedPopup] = useState({
+    isOpen: false,
+    message: "",
+  });
+
   const defaultValues = {
     directorId: "",
     date: "",
@@ -111,7 +117,6 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
   };
 
   const handleFormSubmit = async (data: RegularTimingFormData) => {
-    console.log("raw data", data);
     try {
       const baseDate = dayjs(data.date)
         .hour(0)
@@ -175,7 +180,29 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
         comments: data.comments,
       };
 
-      console.log("formattedData", formattedData);
+      // Add API call to store the data
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/management-regular-timing`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formattedData),
+        }
+      );
+
+      if (!response.ok) {
+        setFailedPopup({
+          isOpen: true,
+          message: "Failed to add regular timing",
+        });
+
+        // Close the failed popup after 4 seconds
+        setTimeout(() => {
+          setFailedPopup({ isOpen: false, message: "" });
+        }, 4000);
+      }
 
       // Show success popup with formatted date
       const formattedDate = dayjs(data.date).format("MMMM D, YYYY");
@@ -195,7 +222,15 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
         handleClose();
       }, 4000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "An error occurred");
+      setFailedPopup({
+        isOpen: true,
+        message: error instanceof Error ? error.message : "An error occurred",
+      });
+
+      // Close the failed popup after 4 seconds
+      setTimeout(() => {
+        setFailedPopup({ isOpen: false, message: "" });
+      }, 4000);
     }
   };
 
@@ -375,6 +410,12 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
         isOpen={successPopup.isOpen}
         onClose={() => setSuccessPopup({ isOpen: false, message: "" })}
         message={successPopup.message}
+        autoCloseDelay={4000}
+      />
+      <FailedPopup
+        isOpen={failedPopup.isOpen}
+        onClose={() => setFailedPopup({ isOpen: false, message: "" })}
+        message={failedPopup.message}
         autoCloseDelay={4000}
       />
     </Dialog>
