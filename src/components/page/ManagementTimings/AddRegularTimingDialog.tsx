@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog } from "@headlessui/react";
+import { Dialog, Listbox } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 import { useForm } from "react-hook-form";
 import dayjs from "dayjs";
@@ -12,6 +12,8 @@ import { useState, useEffect } from "react";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import { IDirector } from "@/types/directors";
 import FailedPopup from "@/components/UI/FailedPopup";
+import { HiChevronUpDown } from "react-icons/hi2";
+import { FaCheckCircle } from "react-icons/fa";
 
 // Initialize dayjs plugins
 dayjs.extend(utc);
@@ -43,11 +45,13 @@ type FormattedTimingData = {
 interface AddRegularTimingDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
 const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
   isOpen,
   onClose,
+  onSuccess,
 }) => {
   // Add state for directors
   const [allDirectors, setAllDirectors] = useState<IDirector[]>([]);
@@ -213,8 +217,9 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
         message: `Regular timing for ${directorName} added successfully on ${formattedDate}`,
       });
 
-      // Reset form and close dialog after delay
+      // Reset form and notify parent
       reset(defaultValues);
+      onSuccess();
 
       // Close the popup after 4 seconds
       setTimeout(() => {
@@ -280,19 +285,57 @@ const AddRegularTimingDialog: React.FC<AddRegularTimingDialogProps> = ({
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Select Director
                 </label>
-                <select
-                  {...register("directorId", {
-                    required: "Please select a director",
-                  })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                <Listbox
+                  value={watch("directorId")}
+                  onChange={(value) => setValue("directorId", value)}
                 >
-                  <option value="">Select director...</option>
-                  {allDirectors.map((director: IDirector) => (
-                    <option key={director._id} value={director._id}>
-                      {director.name}
-                    </option>
-                  ))}
-                </select>
+                  <div className="relative mt-1">
+                    <Listbox.Button className="relative w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-left text-white focus:ring-2 focus:ring-primary">
+                      <span className="block truncate">
+                        {allDirectors.find((d) => d._id === watch("directorId"))
+                          ?.name || "Select director..."}
+                      </span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <HiChevronUpDown
+                          className="h-5 w-5 text-gray-400"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </Listbox.Button>
+                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      {allDirectors.map((director) => (
+                        <Listbox.Option
+                          key={director._id}
+                          value={director._id}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                              active
+                                ? "bg-gray-700 text-white"
+                                : "text-gray-300"
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected ? "font-medium" : "font-normal"
+                                }`}
+                              >
+                                {director.name}
+                              </span>
+                              {selected ? (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                  <FaCheckCircle className="text-blue-600 mr-2" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </div>
+                </Listbox>
                 {errors.directorId && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.directorId.message}

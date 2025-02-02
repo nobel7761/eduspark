@@ -1,4 +1,5 @@
 import { FC, PropsWithChildren } from "react";
+import { ClipLoader } from "react-spinners";
 
 interface PageLoaderProps {
   fullHeight?: boolean;
@@ -17,10 +18,11 @@ const PageLoader: FC<PropsWithChildren<PageLoaderProps>> = ({
       {loading ? (
         <div
           className={`flex items-center justify-center ${
-            fullHeight ? "h-screen" : `h-[${height}vh]`
+            fullHeight ? "h-screen" : `h-[70vh]`
           }`}
+          style={!fullHeight ? { height: `${height}vh` } : undefined}
         >
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
+          <ClipLoader color="#111827" size={64} speedMultiplier={0.75} />
         </div>
       ) : (
         children

@@ -45,3 +45,9 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
 }
+
+.react-select-container .react-select__input-container,
+.react-select-container .react-select__placeholder,
+.react-select-container .react-select__single-value {
+  color: white !important;
+}

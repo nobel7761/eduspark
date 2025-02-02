@@ -1,7 +1,8 @@
-import { Dialog } from "@headlessui/react";
+import { Dialog, Listbox } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { HiChevronUpDown, HiCheck } from "react-icons/hi2";
 
 type AttendanceFormData = {
   staffId: string;
@@ -34,6 +35,7 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState("");
 
   const callApi = async (data: AttendanceFormData) => {
     try {
@@ -67,7 +69,8 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     try {
       const formattedData = {
         ...data,
-        staffName: data.staffId, // Using the selected name as both staffId and staffName
+        staffId: selectedPerson,
+        staffName: selectedPerson,
       };
       console.log(formattedData);
       await callApi(formattedData);
@@ -110,22 +113,59 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Select Person
                 </label>
-                <select
-                  {...register("staffId", {
-                    required: "Please select a staff member",
-                  })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Select staff...</option>
-                  {uniqueNames.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-                {errors.staffId && (
+                <Listbox value={selectedPerson} onChange={setSelectedPerson}>
+                  <div className="relative mt-1">
+                    <Listbox.Button className="relative w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-left text-white focus:ring-2 focus:ring-primary">
+                      <span className="block truncate">
+                        {selectedPerson || "Select staff..."}
+                      </span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <HiChevronUpDown
+                          className="h-5 w-5 text-gray-400"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </Listbox.Button>
+                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      {uniqueNames.map((name) => (
+                        <Listbox.Option
+                          key={name}
+                          value={name}
+                          className={({ active }) =>
+                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                              active
+                                ? "bg-primary/20 text-white"
+                                : "text-gray-200"
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected ? "font-medium" : "font-normal"
+                                }`}
+                              >
+                                {name}
+                              </span>
+                              {selected ? (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                  <HiCheck
+                                    className="h-5 w-5"
+                                    aria-hidden="true"
+                                  />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </div>
+                </Listbox>
+                {!selectedPerson && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errors.staffId.message}
+                    Please select a staff member
                   </p>
                 )}
               </div>

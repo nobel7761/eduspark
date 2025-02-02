@@ -14,13 +14,14 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { Menu } from "@headlessui/react";
-import { IoMdOptions } from "react-icons/io";
+import { IoMdOptions, IoMdArrowDropdown } from "react-icons/io";
 import { IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
 import { useForm } from "react-hook-form";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import FailedPopup from "@/components/UI/FailedPopup";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
+import { Listbox } from "@headlessui/react";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -352,23 +353,51 @@ const AttendanceComponent = () => {
                 {/* Name Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Name</label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                  <Listbox
                     value={
                       (table.getColumn("name")?.getFilterValue() as string) ??
                       ""
                     }
-                    onChange={(e) =>
-                      table.getColumn("name")?.setFilterValue(e.target.value)
+                    onChange={(value) =>
+                      table.getColumn("name")?.setFilterValue(value)
                     }
                   >
-                    <option value="">All</option>
-                    {uniqueValues.names.map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
+                        <span>
+                          {(table
+                            .getColumn("name")
+                            ?.getFilterValue() as string) || "All"}
+                        </span>
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                        <Listbox.Option
+                          value=""
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 px-4 ${
+                              active ? "bg-gray-600" : ""
+                            }`
+                          }
+                        >
+                          All
+                        </Listbox.Option>
+                        {uniqueValues.names.map((name) => (
+                          <Listbox.Option
+                            key={name}
+                            value={name}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active ? "bg-gray-600" : ""
+                              }`
+                            }
+                          >
+                            {name}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
                 </div>
 
                 {/* Designation Filter */}
@@ -376,26 +405,52 @@ const AttendanceComponent = () => {
                   <label className="block text-sm font-medium mb-1">
                     Designation
                   </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                  <Listbox
                     value={
                       (table
                         .getColumn("designation")
                         ?.getFilterValue() as string) ?? ""
                     }
-                    onChange={(e) =>
-                      table
-                        .getColumn("designation")
-                        ?.setFilterValue(e.target.value)
+                    onChange={(value) =>
+                      table.getColumn("designation")?.setFilterValue(value)
                     }
                   >
-                    <option value="">All</option>
-                    {uniqueValues.designations.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
+                        <span>
+                          {(table
+                            .getColumn("designation")
+                            ?.getFilterValue() as string) || "All"}
+                        </span>
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                        <Listbox.Option
+                          value=""
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 px-4 ${
+                              active ? "bg-gray-600" : ""
+                            }`
+                          }
+                        >
+                          All
+                        </Listbox.Option>
+                        {uniqueValues.designations.map((designation) => (
+                          <Listbox.Option
+                            key={designation}
+                            value={designation}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active ? "bg-gray-600" : ""
+                              }`
+                            }
+                          >
+                            {designation}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
                 </div>
 
                 {/* Status Filter */}
@@ -403,42 +458,101 @@ const AttendanceComponent = () => {
                   <label className="block text-sm font-medium mb-1">
                     Status
                   </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                  <Listbox
                     value={
                       (table.getColumn("status")?.getFilterValue() as string) ??
                       ""
                     }
-                    onChange={(e) =>
-                      table.getColumn("status")?.setFilterValue(e.target.value)
+                    onChange={(value) =>
+                      table.getColumn("status")?.setFilterValue(value)
                     }
                   >
-                    <option value="">All</option>
-                    <option value="Present">Present</option>
-                    <option value="Absent">Absent</option>
-                  </select>
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
+                        <span>
+                          {(table
+                            .getColumn("status")
+                            ?.getFilterValue() as string) || "All"}
+                        </span>
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                        <Listbox.Option
+                          value=""
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 px-4 ${
+                              active ? "bg-gray-600" : ""
+                            }`
+                          }
+                        >
+                          All
+                        </Listbox.Option>
+                        {["Present", "Absent"].map((status) => (
+                          <Listbox.Option
+                            key={status}
+                            value={status}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active ? "bg-gray-600" : ""
+                              }`
+                            }
+                          >
+                            {status}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
                 </div>
 
                 {/* Year Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Year</label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                  <Listbox
                     value={
                       (table.getColumn("year")?.getFilterValue() as string) ??
                       ""
                     }
-                    onChange={(e) =>
-                      table.getColumn("year")?.setFilterValue(e.target.value)
+                    onChange={(value) =>
+                      table.getColumn("year")?.setFilterValue(value)
                     }
                   >
-                    <option value="">All</option>
-                    {uniqueValues.years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
+                        <span>
+                          {(table
+                            .getColumn("year")
+                            ?.getFilterValue() as string) || "All"}
+                        </span>
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                        <Listbox.Option
+                          value=""
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 px-4 ${
+                              active ? "bg-gray-600" : ""
+                            }`
+                          }
+                        >
+                          All
+                        </Listbox.Option>
+                        {uniqueValues.years.map((year) => (
+                          <Listbox.Option
+                            key={year}
+                            value={year}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active ? "bg-gray-600" : ""
+                              }`
+                            }
+                          >
+                            {year}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
                 </div>
 
                 {/* Month Filter */}
@@ -446,25 +560,61 @@ const AttendanceComponent = () => {
                   <label className="block text-sm font-medium mb-1">
                     Month
                   </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                  <Listbox
                     value={
                       (table.getColumn("month")?.getFilterValue() as string) ??
                       ""
                     }
-                    onChange={(e) =>
-                      table.getColumn("month")?.setFilterValue(e.target.value)
+                    onChange={(value) =>
+                      table.getColumn("month")?.setFilterValue(value)
                     }
                   >
-                    <option value="">All</option>
-                    {uniqueValues.months.map((month) => (
-                      <option key={month} value={month}>
-                        {new Date(2024, month).toLocaleString("default", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
+                        <span>
+                          {table.getColumn("month")?.getFilterValue() !==
+                          undefined
+                            ? new Date(
+                                2024,
+                                parseInt(
+                                  table
+                                    .getColumn("month")
+                                    ?.getFilterValue() as string
+                                )
+                              ).toLocaleString("default", { month: "long" })
+                            : "All"}
+                        </span>
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                        <Listbox.Option
+                          value=""
+                          className={({ active }) =>
+                            `cursor-pointer select-none relative py-2 px-4 ${
+                              active ? "bg-gray-600" : ""
+                            }`
+                          }
+                        >
+                          All
+                        </Listbox.Option>
+                        {uniqueValues.months.map((month) => (
+                          <Listbox.Option
+                            key={month}
+                            value={month}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active ? "bg-gray-600" : ""
+                              }`
+                            }
+                          >
+                            {new Date(2024, month).toLocaleString("default", {
+                              month: "long",
+                            })}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
                 </div>
               </div>
             </Menu.Items>
@@ -558,19 +708,34 @@ const AttendanceComponent = () => {
             of {table.getFilteredRowModel().rows.length} entries
           </span>
 
-          <select
+          <Listbox
             value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value));
+            onChange={(value) => {
+              table.setPageSize(Number(value));
             }}
-            className="bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {PAGE_SIZES.map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
+            <div className="relative">
+              <Listbox.Button className="bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-between min-w-[100px]">
+                <span>Show {table.getState().pagination.pageSize}</span>
+                <IoMdArrowDropdown className="h-5 w-5" />
+              </Listbox.Button>
+              <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
+                {PAGE_SIZES.map((pageSize) => (
+                  <Listbox.Option
+                    key={pageSize}
+                    value={pageSize}
+                    className={({ active }) =>
+                      `cursor-pointer select-none relative py-2 px-4 ${
+                        active ? "bg-gray-600" : ""
+                      }`
+                    }
+                  >
+                    Show {pageSize}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
         </div>
 
         <div className="flex items-center gap-x-4">
