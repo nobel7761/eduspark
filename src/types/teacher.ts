@@ -1,32 +1,35 @@
-import { Gender, PaymentMethod } from "@/enums/teachers.enum";
+import { Gender, Group } from "@/enums/common.enum";
+import { PaymentMethod } from "@/enums/teachers.enum";
 
 export interface ITeacher {
-  _id: string;
-  name: string;
-  teacherId: string;
+  // Personal Information
+  firstName: string;
+  lastName: string;
   gender: Gender;
+  joiningDate: Date;
   primaryPhone: string;
   secondaryPhone?: string;
-  photo?: string;
-  attachments?: Array<{
-    [key: string]: string;
-  }>;
-  email?: string;
+  email?: string | null;
   nidNumber?: string;
+  teacherId: string;
+  comments?: string;
+  // Address Information
   presentAddress: string;
   permanentAddress?: string;
+
+  // Parents Information
   father: {
     name: string;
     phone: string;
   };
-  mother?: {
+  mother: {
     name: string;
     phone: string;
   };
-  paymentMethod: PaymentMethod;
-  paymentPerClass: number | null;
-  paymentPerMonth: number | null;
-  isRunningStudent: boolean;
+
+  isCurrentlyStudying: boolean;
+
+  // Educational Background
   educationalBackground: {
     university: {
       institute: string;
@@ -35,17 +38,24 @@ export interface ITeacher {
       passingYear?: number | null;
       cgpa?: number | null;
     };
-    ssc: {
-      year: number;
-      group: string;
-      result: number;
-      institute: string;
-    };
     hsc: {
-      year: number;
-      group: string;
-      result: number;
       institute: string;
+      group: Group | null;
+      year: number;
+      result: number;
+    };
+    ssc: {
+      institute: string;
+      group: Group | null;
+      year: number;
+      result: number;
     };
   };
+
+  // Payment Information
+  paymentMethod: PaymentMethod;
+  paymentPerClass?: number;
+  paymentPerMonth?: number;
 }
+
+export type ITeacherWithoutId = Omit<ITeacher, "teacherId">;

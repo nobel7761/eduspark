@@ -12,14 +12,14 @@ export const adminNavigation = [
   //     { name: "Add Student", href: "/students/create" },
   //   ],
   // },
-  // {
-  //   name: "Office Assistant",
-  //   icon: "👨‍🏫",
-  //   children: [
-  //     { name: "Teachers", href: "office-assistant/teachers" },
-  //     { name: "Bua", href: "office-assistant/bua" },
-  //   ],
-  // },
+  {
+    name: "Office Assistant",
+    icon: "👨‍🏫",
+    children: [
+      { name: "Teachers", href: "/office-assistant/teachers" },
+      { name: "Bua", href: "/office-assistant/bua" },
+    ],
+  },
   {
     name: "Class",
     icon: "🏛️",

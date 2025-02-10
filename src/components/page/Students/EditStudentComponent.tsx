@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Gender, IStudent } from "@/types/student";
+import { IStudent } from "@/types/student";
 import PageLoader from "@/components/shared/PageLoader";
+import { Gender } from "@/enums/common.enum";
 
 const EditStudentComponent = () => {
   const params = useParams();
@@ -83,7 +83,7 @@ const EditStudentComponent = () => {
                 onChange={(e) =>
                   setStudent({ ...student, name: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
 
@@ -95,7 +95,7 @@ const EditStudentComponent = () => {
                 onChange={(e) =>
                   setStudent({ ...student, class: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -108,10 +108,10 @@ const EditStudentComponent = () => {
                     gender: e.target.value as Gender,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               >
-                <option value={Gender.MALE}>Male</option>
-                <option value={Gender.FEMALE}>Female</option>
+                <option value={Gender.Male}>Male</option>
+                <option value={Gender.Female}>Female</option>
               </select>
             </div>
             <div>
@@ -127,7 +127,7 @@ const EditStudentComponent = () => {
                     instituteName: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -140,7 +140,7 @@ const EditStudentComponent = () => {
                 onChange={(e) =>
                   setStudent({ ...student, createdAt: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             {/* <div>
@@ -166,7 +166,7 @@ const EditStudentComponent = () => {
                 onChange={(e) =>
                   setStudent({ ...student, studentId: e.target.value })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
                 disabled
               />
             </div>
@@ -192,7 +192,7 @@ const EditStudentComponent = () => {
                     primaryPhone: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -208,7 +208,7 @@ const EditStudentComponent = () => {
                     secondaryPhone: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div className="md:col-span-2">
@@ -223,7 +223,7 @@ const EditStudentComponent = () => {
                     presentAddress: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
                 rows={3}
               />
             </div>
@@ -239,7 +239,7 @@ const EditStudentComponent = () => {
                     permanentAddress: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
                 rows={3}
               />
             </div>
@@ -265,7 +265,7 @@ const EditStudentComponent = () => {
                     father: { ...student.father, name: e.target.value },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -281,7 +281,7 @@ const EditStudentComponent = () => {
                     father: { ...student.father, phone: e.target.value },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -300,7 +300,7 @@ const EditStudentComponent = () => {
                     },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
           </div>
@@ -325,7 +325,7 @@ const EditStudentComponent = () => {
                     mother: { ...student.mother, name: e.target.value },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -341,7 +341,7 @@ const EditStudentComponent = () => {
                     mother: { ...student.mother, phone: e.target.value },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
             <div>
@@ -360,7 +360,7 @@ const EditStudentComponent = () => {
                     },
                   })
                 }
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded bg-primary/10"
               />
             </div>
           </div>

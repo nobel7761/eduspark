@@ -1,3 +1,5 @@
+import { Gender } from "@/enums/common.enum";
+
 export enum StudentClass {
   DRAWING = "drawing",
   ARABIC = "arabic",
@@ -12,11 +14,6 @@ export enum StudentClass {
   CLASS_10 = 10,
   CLASS_11 = 11,
   CLASS_12 = 12,
-}
-
-export enum Gender {
-  MALE = "male",
-  FEMALE = "female",
 }
 
 export enum Religion {

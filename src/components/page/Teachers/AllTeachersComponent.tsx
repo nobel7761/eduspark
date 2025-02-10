@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -28,113 +28,8 @@ import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
 import { ITeacher } from "@/types/teacher";
 import { searchTeacher } from "@/utils/search/teacherSearch";
-import { Gender, PaymentMethod } from "@/enums/teachers.enum";
-
-export const teachersData = [
-  {
-    _id: "t001",
-    name: "John Doe",
-    gender: Gender.MALE,
-    teacherId: "1234567890",
-    primaryPhone: "+8801712345678",
-    secondaryPhone: "+8801812345678",
-    photo: "path/to/photo.jpg",
-    attachments: [
-      { key: "sscCertificate", value: "path/to/ssc.pdf" },
-      { key: "hscCertificate", value: "path/to/hsc.pdf" },
-      { key: "otherCertificate", value: "path/to/other.pdf" },
-    ],
-    email: "john.doe@email.com",
-    nidNumber: "1234567890",
-    presentAddress: "123 Current Street, City",
-    permanentAddress: "456 Home Street, Hometown",
-    father: {
-      name: "Robert Doe",
-      phone: "+8801612345678",
-    },
-    mother: {
-      name: "Jane Doe",
-      phone: "+8801912345678",
-    },
-    paymentMethod: PaymentMethod.CLASS,
-    paymentPerClass: 100, // only if paymentMethod is fixed
-    paymentPerMonth: null, // only if paymentMethod is monthly
-    isRunningStudent: true,
-    educationalBackground: {
-      university: {
-        institute: "Example University",
-        department: "Computer Science",
-        admissionYear: 2020, // only if isRunningStudent is true
-        passingYear: null, // only if isRunningStudent is false
-        cgpa: 3.75, // only if isRunningStudent is true
-      },
-      ssc: {
-        year: 2016,
-        group: "Science",
-        result: 5.0,
-        institute: "Example School",
-      },
-      hsc: {
-        year: 2018,
-        group: "Science",
-        result: 5.0,
-        institute: "Example College",
-      },
-    },
-  },
-  // Example of a graduated teacher with monthly payment
-  {
-    _id: "t002",
-    name: "Jane Smith",
-    gender: Gender.FEMALE,
-    teacherId: "1234567890",
-    primaryPhone: "+8801723456789",
-    secondaryPhone: "+8801823456789",
-    photo: "path/to/photo2.jpg",
-    attachments: [
-      { key: "sscCertificate", value: "path/to/ssc2.pdf" },
-      { key: "hscCertificate", value: "path/to/hsc2.pdf" },
-      { key: "otherCertificate", value: "path/to/other2.pdf" },
-    ],
-    email: "jane.smith@email.com",
-    nidNumber: "9876543210",
-    presentAddress: "789 Present Street, City",
-    permanentAddress: "321 Home Street, Hometown",
-    father: {
-      name: "William Smith",
-      phone: "+8801623456789",
-    },
-    mother: {
-      name: "Mary Smith",
-      phone: "+8801923456789",
-    },
-    paymentMethod: PaymentMethod.MONTHLY,
-    paymentPerClass: null,
-    paymentPerMonth: 30000,
-    isRunningStudent: false,
-    educationalBackground: {
-      university: {
-        institute: "Another University",
-        department: "Physics",
-        admissionYear: null,
-        passingYear: 2022,
-        cgpa: null,
-      },
-      ssc: {
-        year: 2014,
-        group: "Science",
-        result: 4.95,
-        institute: "Another School",
-      },
-      hsc: {
-        year: 2016,
-        group: "Science",
-        result: 4.92,
-        institute: "Another College",
-      },
-    },
-  },
-];
+import { PaymentMethod } from "@/enums/teachers.enum";
+import { Gender } from "@/enums/common.enum";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -168,16 +63,44 @@ const AllTeachersComponent = () => {
   const [selectedTeachers, setSelectedTeachers] = useState<Set<string>>(
     new Set()
   );
+  const [allTeachersList, setAllTeachersList] = useState<ITeacher[] | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const columnHelper = createColumnHelper<ITeacher>();
 
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/teachers`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch teachers");
+        }
+        const data = await response.json();
+        setAllTeachersList(data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
+
   // Filter students based on search query
   const filteredTeachers = React.useMemo(() => {
-    return teachersData.filter((teacher) => {
+    if (!allTeachersList) return [];
+    return allTeachersList.filter((teacher) => {
       if (!searchQuery?.trim()) return true;
-      return searchTeacher(teacher, searchQuery);
+      return searchTeacher(teacher as ITeacher, searchQuery);
     });
-  }, [searchQuery]);
+  }, [searchQuery, allTeachersList]);
 
   const handleEdit = useCallback(
     (teacherId: string) => {
@@ -281,13 +204,14 @@ const AllTeachersComponent = () => {
         enableSorting: false,
         enableHiding: false,
       }),
-      columnHelper.accessor("name", {
+      columnHelper.accessor("firstName", {
         header: "Name",
         cell: (info) => (
           <div className="flex items-center gap-x-2">
             <div>
               <div>
-                {info.row.original.name} ({info.row.original.teacherId})
+                {info.row.original.firstName} {info.row.original.lastName} (
+                {info.row.original.teacherId})
               </div>
               <div className="text-sm text-gray-400">
                 {info.row.original.primaryPhone}
@@ -302,17 +226,21 @@ const AllTeachersComponent = () => {
           <>
             <div>
               <div>
-                {info.row.original.father.name}{" "}
+                {info.row.original.father?.name || "-"}{" "}
                 <span className="text-gray-400">
-                  {`(${info.row.original.father.phone})`}
+                  {info.row.original.father?.phone
+                    ? `(${info.row.original.father.phone})`
+                    : ""}
                 </span>
               </div>
             </div>
             <div>
               <div>
-                {info.row.original.mother?.name}{" "}
+                {info.row.original.mother?.name || "-"}{" "}
                 <span className="text-gray-400">
-                  {`(${info.row.original.mother?.phone})`}
+                  {info.row.original.mother?.phone
+                    ? `(${info.row.original.mother.phone})`
+                    : ""}
                 </span>
               </div>
             </div>
@@ -323,7 +251,7 @@ const AllTeachersComponent = () => {
         header: "NID Number",
         cell: (info) => (
           <div>
-            <div>{info.row.original.nidNumber}</div>
+            <div>{info.row.original.nidNumber || "-"}</div>
           </div>
         ),
       }),
@@ -332,12 +260,9 @@ const AllTeachersComponent = () => {
         cell: (info) => (
           <div>
             <div>
-              {info.row.original.paymentMethod === PaymentMethod.CLASS
-                ? "Class"
-                : "Monthly"}{" "}
-              {info.row.original.paymentPerClass
-                ? info.row.original.paymentPerClass
-                : info.row.original.paymentPerMonth}
+              {info.row.original.paymentMethod === PaymentMethod.PerClass
+                ? `Class ($${info.row.original.paymentPerClass})`
+                : `Monthly ($${info.row.original.paymentPerMonth || "-"})`}
             </div>
           </div>
         ),
@@ -346,7 +271,7 @@ const AllTeachersComponent = () => {
         header: "Present Address",
         cell: (info) => (
           <div>
-            <div>{info.row.original.presentAddress}</div>
+            <div>{info.row.original.presentAddress || "-"}</div>
           </div>
         ),
       }),
@@ -354,7 +279,7 @@ const AllTeachersComponent = () => {
         header: "Permanent Address",
         cell: (info) => (
           <div>
-            <div>{info.row.original.permanentAddress}</div>
+            <div>{info.row.original.permanentAddress || "-"}</div>
           </div>
         ),
       }),
@@ -366,7 +291,7 @@ const AllTeachersComponent = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleEdit(info.getValue());
+                handleEdit(info.row.original.teacherId);
               }}
               className="text-blue-500 hover:text-blue-400 text-2xl"
             >
@@ -443,13 +368,13 @@ const AllTeachersComponent = () => {
               // Format the display value based on filter type and value
               let displayValue = String(filter.value);
               if (filter.id === "gender") {
-                displayValue = filter.value === Gender.MALE ? "Male" : "Female";
+                displayValue = filter.value === Gender.Male ? "Male" : "Female";
               } else if (filter.id === "paymentMethod") {
                 switch (filter.value) {
-                  case PaymentMethod.CLASS:
+                  case PaymentMethod.PerClass:
                     displayValue = "Class";
                     break;
-                  case PaymentMethod.MONTHLY:
+                  case PaymentMethod.Monthly:
                     displayValue = "Monthly";
                     break;
                   default:
@@ -488,6 +413,13 @@ const AllTeachersComponent = () => {
         </div>
 
         <div className="flex items-center gap-x-4">
+          <Link
+            href="/office-assistant/teachers/create"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+          >
+            Add Teacher
+          </Link>
+
           <Menu as="div" className="relative">
             <Menu.Button className="text-3xl text-gray-400 hover:text-white">
               <MdViewColumn />
@@ -550,8 +482,8 @@ const AllTeachersComponent = () => {
                     }
                   >
                     <option value="">All</option>
-                    <option value={PaymentMethod.CLASS}>Class</option>
-                    <option value={PaymentMethod.MONTHLY}>Monthly</option>
+                    <option value={PaymentMethod.PerClass}>Class</option>
+                    <option value={PaymentMethod.Monthly}>Monthly</option>
                   </select>
                 </div>
               </div>
@@ -559,8 +491,33 @@ const AllTeachersComponent = () => {
           </Menu>
         </div>
       </div>
-      {filteredTeachers.length === 0 ? (
-        <div className="text-center py-4">No teachers found</div>
+      {isLoading ? (
+        <div className="text-center py-8 text-gray-400">
+          <div
+            className="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent rounded-full"
+            role="status"
+          >
+            <span className="sr-only">Loading...</span>
+          </div>
+          <div className="mt-2">Loading teachers...</div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <div className="text-red-500 text-lg mb-2">
+            Error loading teachers
+          </div>
+          <div className="text-gray-400">{error.message}</div>
+        </div>
+      ) : filteredTeachers.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-gray-400 text-lg mb-2">No teachers found</div>
+          {searchQuery && (
+            <div className="text-gray-500">
+              Try adjusting your search or filters to find what you&apos;re
+              looking for
+            </div>
+          )}
+        </div>
       ) : (
         <table className="w-full border border-gray-700 text-sm">
           <thead className="bg-gray-800 text-gray-400">
@@ -619,7 +576,7 @@ const AllTeachersComponent = () => {
                         <Link
                           href={`/office-assistant/teachers/${row.original.teacherId}`}
                           className="absolute inset-0 z-0"
-                          aria-label={`View details for ${row.original.name}`}
+                          aria-label={`View details for ${row.original.firstName} ${row.original.lastName}`}
                         />
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -704,7 +661,7 @@ const AllTeachersComponent = () => {
         itemName={
           deletePopup.multipleTeachers
             ? `Selected teachers`
-            : `${deletePopup.teacher?.name}`
+            : `${deletePopup.teacher?.firstName} ${deletePopup.teacher?.lastName}`
         }
       />
 

@@ -51,3 +51,32 @@
 .react-select-container .react-select__single-value {
   color: white !important;
 }
+
+/* React Date Picker */
+.react-date-picker {
+  background-color: #374151;
+  border-radius: 0.375rem;
+}
+
+.react-date-picker__wrapper {
+  border: none !important;
+}
+
+.react-date-picker__inputGroup__input {
+  color: white;
+}
+
+.react-date-picker__calendar .react-calendar {
+  background-color: #374151;
+  color: white;
+  border: 1px solid #4b5563;
+  border-radius: 0.375rem;
+}
+
+.react-calendar__tile--active {
+  background-color: #3b82f6 !important;
+}
+
+.react-calendar__tile:hover {
+  background-color: #4b5563;
+}

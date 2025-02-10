@@ -1,121 +1,323 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-// import Image from "next/image";
-import { teachersData } from "./AllTeachersComponent";
+import { ITeacher } from "@/types/teacher";
+import { PaymentMethod } from "@/enums/teachers.enum";
+import {
+  FaUser,
+  FaPhone,
+  FaDollarSign,
+  FaUsers,
+  FaGraduationCap,
+  FaComment,
+} from "react-icons/fa";
+
 const TeacherDetailsComponent = () => {
   const params = useParams();
-  const teacher = teachersData.find((s) => s.teacherId === params.teacherId);
+  const [teacher, setTeacher] = useState<ITeacher | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchTeacher = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${params.teacherId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch teacher");
+      }
+      const data = await response.json();
+      setTeacher(data);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  console.log(teacher);
+
+  useEffect(() => {
+    if (params.teacherId) {
+      fetchTeacher();
+    }
+  }, [params.teacherId]);
+
+  if (loading) {
+    return <div className="text-center py-4">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-4 text-red-500">
+        Error: {error.message}
+      </div>
+    );
+  }
 
   if (!teacher) {
     return <div>Teacher not found</div>;
   }
+
   return (
-    <div className="p-4">
-      <div className="flex justify-end mb-4 gap-4">
-        <Link
-          href="/office-assistant/teachers"
-          className="inline-block px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
-        >
-          ← Back to Teachers
-        </Link>
-        <Link
-          href={`/office-assistant/teachers/edit/${teacher.teacherId}`}
-          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Edit Teacher
-        </Link>
+    <div className="p-6 max-w-7xl mx-auto bg-primary text-white rounded-md">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-white">Teacher Details</h1>
+        <div className="flex gap-4">
+          <Link
+            href="/office-assistant/teachers"
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+          >
+            ← Back to Teachers
+          </Link>
+          <Link
+            href={`/office-assistant/teachers/edit/${teacher?.teacherId}`}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Edit Teacher
+          </Link>
+        </div>
       </div>
-      <h1 className="text-2xl font-bold mb-4">Teacher Details</h1>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border border-primary p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-3 text-primary">
-            Personal Information
-          </h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Name:</span> {teacher.name}
-            </p>
-            <p>
-              <span className="font-medium">Teacher ID:</span>{" "}
-              {teacher.teacherId}
-            </p>
-            <p>
-              <span className="font-medium">NID Number:</span>{" "}
-              {teacher.nidNumber}
-            </p>
+        {/* Personal & Contact Section */}
+        <div className="space-y-6">
+          {/* Personal Information */}
+          <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+              <FaUser className="w-5 h-5" />
+              Personal Information
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <InfoItem
+                label="Name"
+                value={`${teacher?.firstName} ${teacher?.lastName}`}
+              />
+              <InfoItem label="Gender" value={teacher?.gender} />
+              <InfoItem label="Teacher ID" value={teacher?.teacherId} />
+              <InfoItem label="NID" value={teacher?.nidNumber || "-"} />
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+              <FaPhone className="w-5 h-5" />
+              Contact Information
+            </h2>
+            <div className="space-y-3">
+              <InfoItem label="Primary Phone" value={teacher?.primaryPhone} />
+              <InfoItem
+                label="Secondary Phone"
+                value={teacher?.secondaryPhone || "-"}
+              />
+              <InfoItem label="Email" value={teacher?.email || "-"} />
+              <InfoItem
+                label="Present Address"
+                value={teacher?.presentAddress}
+              />
+              <InfoItem
+                label="Permanent Address"
+                value={teacher?.permanentAddress || "-"}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="border border-primary p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-3 text-primary">
-            Contact Information
-          </h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Primary Phone:</span>{" "}
-              {teacher.primaryPhone}
-            </p>
-            <p>
-              <span className="font-medium">Secondary Phone:</span>{" "}
-              {teacher.secondaryPhone}
-            </p>
-            <p>
-              <span className="font-medium">Address:</span>{" "}
-              {teacher.presentAddress}
-            </p>
+        {/* Payment & Parents Section */}
+        <div className="space-y-6">
+          {/* Payment Information */}
+          <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+              <FaDollarSign className="w-5 h-5" />
+              Payment Information
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <InfoItem
+                label="Joining Date"
+                value={
+                  teacher?.joiningDate
+                    ? new Date(teacher.joiningDate).toLocaleDateString()
+                    : "-"
+                }
+              />
+              <InfoItem label="Payment Method" value={teacher?.paymentMethod} />
+              {teacher?.paymentMethod === PaymentMethod.PerClass && (
+                <InfoItem
+                  label="Payment Per Class"
+                  value={`${teacher?.paymentPerClass} BDT`}
+                />
+              )}
+              {teacher?.paymentMethod === PaymentMethod.Monthly && (
+                <InfoItem
+                  label="Payment Per Month"
+                  value={`${teacher?.paymentPerMonth} BDT`}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Parents Information - Modified for full height */}
+          <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6 flex-1">
+            <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+              <FaUsers className="w-5 h-5" />
+              Parents Information
+            </h2>
+            <div className="grid grid-cols-1 gap-4 h-full">
+              <div className="border-b pb-3 flex-1">
+                <h3 className="font-medium text-gray-700 mb-2">
+                  Father&apos;s Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <InfoItem label="Name" value={teacher?.father?.name} />
+                  <InfoItem label="Phone" value={teacher?.father?.phone} />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-700 mb-2">
+                  Mother&apos;s Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <InfoItem label="Name" value={teacher?.mother?.name} />
+                  <InfoItem label="Phone" value={teacher?.mother?.phone} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="border border-primary p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-3 text-primary">
+      {/* Educational Background - Full Width */}
+      <div className="mt-6">
+        <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6">
+          <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+            <FaGraduationCap className="w-5 h-5" />
             Educational Background
           </h2>
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">SSC Institute:</span>{" "}
-              {teacher.educationalBackground.ssc.institute}
-            </p>
-            <p>
-              <span className="font-medium">SSC Group:</span>{" "}
-              {teacher.educationalBackground.ssc.group}
-            </p>
-            <p>
-              <span className="font-medium">SSC Passing Year:</span>{" "}
-              {teacher.educationalBackground.ssc.year}
-            </p>
-            <p>
-              <span className="font-medium">HSC Institute:</span>{" "}
-              {teacher.educationalBackground.hsc.institute}
-            </p>
-            <p>
-              <span className="font-medium">HSC Group:</span>{" "}
-              {teacher.educationalBackground.hsc.group}
-            </p>
-            <p>
-              <span className="font-medium">HSC Passing Year:</span>{" "}
-              {teacher.educationalBackground.hsc.year}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* University Information */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-bold text-primary mb-3">
+                University Information
+              </h3>
+              <div className="space-y-2">
+                <InfoItem
+                  label="Institute"
+                  value={teacher?.educationalBackground?.university?.institute}
+                />
+                <InfoItem
+                  label="Department"
+                  value={teacher?.educationalBackground?.university?.department}
+                />
+                {teacher?.isCurrentlyStudying ? (
+                  <InfoItem
+                    label="Admission Year"
+                    value={
+                      teacher?.educationalBackground?.university?.admissionYear
+                    }
+                  />
+                ) : (
+                  <>
+                    <InfoItem
+                      label="Passing Year"
+                      value={
+                        teacher?.educationalBackground?.university?.passingYear
+                      }
+                    />
+                    <InfoItem
+                      label="CGPA"
+                      value={teacher?.educationalBackground?.university?.cgpa}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* HSC Information */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-bold text-primary mb-3">HSC Information</h3>
+              <div className="space-y-2">
+                <InfoItem
+                  label="Institute"
+                  value={teacher?.educationalBackground?.hsc?.institute}
+                />
+                <InfoItem
+                  label="Group"
+                  value={teacher?.educationalBackground?.hsc?.group}
+                />
+                <InfoItem
+                  label="Passing Year"
+                  value={teacher?.educationalBackground?.hsc?.year}
+                />
+                <InfoItem
+                  label="GPA"
+                  value={teacher?.educationalBackground?.hsc?.result}
+                />
+              </div>
+            </div>
+
+            {/* SSC Information */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-bold text-primary mb-3">SSC Information</h3>
+              <div className="space-y-2">
+                <InfoItem
+                  label="Institute"
+                  value={teacher?.educationalBackground?.ssc?.institute}
+                />
+                <InfoItem
+                  label="Group"
+                  value={teacher?.educationalBackground?.ssc?.group}
+                />
+                <InfoItem
+                  label="Passing Year"
+                  value={teacher?.educationalBackground?.ssc?.year}
+                />
+                <InfoItem
+                  label="GPA"
+                  value={teacher?.educationalBackground?.ssc?.result}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Comments Section */}
+      <div className="mt-6">
+        <div className="bg-white rounded-lg shadow-md border-t-4 border-red-600 p-6">
+          <h2 className="text-xl font-semibold mb-4 text-primary flex items-center gap-2">
+            <FaComment className="w-5 h-5" />
+            Comments
+          </h2>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {teacher?.comments || "No comments available"}
             </p>
           </div>
         </div>
-
-        {/* {teacher.photo && (
-          <div className="border border-primary p-4 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3 text-primary">
-              Teacher Photo
-            </h2>
-            <Image
-              src={teacher.photo}
-              alt={`${teacher.name}'s photo`}
-              width={192}
-              height={192}
-              className="object-cover rounded-lg"
-            />
-          </div>
-        )} */}
       </div>
+    </div>
+  );
+};
+
+// Helper component for consistent info display
+const InfoItem = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | Date | null | undefined;
+}) => {
+  const displayValue =
+    value instanceof Date ? value.toLocaleDateString() : String(value || "-");
+  return (
+    <div>
+      <span className="text-sm text-gray-600 font-bold">{label}</span>
+      <p className="text-gray-700 font-light">{displayValue}</p>
     </div>
   );
 };
