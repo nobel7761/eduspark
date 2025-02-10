@@ -26,6 +26,7 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
+import { Gender } from "@/enums/common.enum";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -297,9 +298,9 @@ const AllStudentsComponent = () => {
         cell: (info) => {
           const genderValue = info.row.original.gender;
           switch (genderValue) {
-            case "male":
+            case Gender.Male:
               return "Male";
-            case "female":
+            case Gender.Female:
               return "Female";
             default:
               return genderValue;
@@ -576,7 +577,7 @@ const AllStudentsComponent = () => {
                     <option value="">All</option>
                     {uniqueValues.gender.map((value) => (
                       <option key={value} value={value}>
-                        {value === "male" ? "Male" : "Female"}
+                        {value === Gender.Male ? "Male" : "Female"}
                       </option>
                     ))}
                   </select>
