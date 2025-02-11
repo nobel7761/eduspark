@@ -149,25 +149,75 @@ const AllTeachersComponent = () => {
     }
   };
 
-  const confirmDelete = () => {
-    // Implement delete logic here
-    if (deletePopup.multipleTeachers) {
-      console.log(
-        "Deleting multiple teachers:",
-        deletePopup.multipleTeachers.map((t) => t.teacherId)
-      );
-      setSelectedTeachers(new Set());
-    } else if (deletePopup.teacher) {
-      console.log("Deleting teacher:", deletePopup.teacher.teacherId);
-    }
+  const confirmDelete = async () => {
+    try {
+      if (deletePopup.multipleTeachers) {
+        // Delete multiple teachers
+        const teacherIds = deletePopup.multipleTeachers.map((t) => t.teacherId);
+        console.log("teacherIds", teacherIds);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/teachers/bulk-delete`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(teacherIds),
+          }
+        );
 
-    setDeletePopup({ isOpen: false, teacher: null, multipleTeachers: null });
-    setSuccessPopup({
-      isOpen: true,
-      message: deletePopup.multipleTeachers
-        ? "Selected teachers deleted successfully"
-        : "Teacher deleted successfully",
-    });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to delete teachers");
+        }
+
+        // Update the teachers list after successful deletion
+        // Only remove the successfully deleted teachers
+        const updatedTeachers = allTeachersList?.filter(
+          (teacher) => !data.details.success.includes(teacher.teacherId)
+        );
+
+        setAllTeachersList(updatedTeachers || null);
+        setDeletePopup({
+          isOpen: false,
+          teacher: null,
+          multipleTeachers: null,
+        });
+
+        // Show success message with details if there were any failures
+        setSuccessPopup({
+          isOpen: true,
+          message: data.message,
+        });
+
+        // Clear selected teachers that were successfully deleted
+        const newSelected = new Set(selectedTeachers);
+        data.details.success.forEach((id: string) => newSelected.delete(id));
+        setSelectedTeachers(newSelected);
+      } else if (deletePopup.teacher) {
+        // Delete single teacher
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${deletePopup.teacher.teacherId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to delete teacher");
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting teacher(s):", error);
+      setDeletePopup({ isOpen: false, teacher: null, multipleTeachers: null });
+      // Show error message to the user
+      setSuccessPopup({
+        isOpen: true,
+        message:
+          error instanceof Error ? error.message : "Failed to delete teachers",
+      });
+    }
   };
 
   const columns = React.useMemo(
@@ -660,7 +710,7 @@ const AllTeachersComponent = () => {
         onDelete={confirmDelete}
         itemName={
           deletePopup.multipleTeachers
-            ? `Selected teachers`
+            ? `Confirm`
             : `${deletePopup.teacher?.firstName} ${deletePopup.teacher?.lastName}`
         }
       />
