@@ -25,7 +25,7 @@
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
+  scrollbar-color: #111827 #173f66;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -33,12 +33,12 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #173f66;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #111827;
   border-radius: 4px;
 }
 

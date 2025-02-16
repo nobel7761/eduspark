@@ -78,7 +78,7 @@ const EditTeacherComponent = () => {
 
       setSuccessPopup(true);
       setTimeout(() => {
-        router.push("/office-assistant/teachers");
+        router.push("/employees/teachers");
       }, 2000);
     } catch (error) {
       console.error("Error updating teacher:", error);
@@ -120,13 +120,13 @@ const EditTeacherComponent = () => {
     <div className="container mx-auto p-4 rounded-md bg-primary">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">
-          Edit Teacher Information
+          Edit Employee Information
         </h1>
         <Link
-          href="/office-assistant/teachers"
+          href="/employees/employees"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          ← Back to Teachers
+          ← Back to Employees
         </Link>
       </div>
 
@@ -1005,7 +1005,7 @@ const EditTeacherComponent = () => {
 
         <div className="flex justify-end gap-4">
           <Link
-            href="/office-assistant/teachers"
+            href="/employees/teachers"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
           >
             Cancel

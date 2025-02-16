@@ -16,7 +16,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
     <header
       className={`h-[10vh] p-4 bg-white shadow flex items-center justify-between gap-x-4 overflow-visible fixed top-0 right-0 ${
         isCollapsed ? "left-16" : "left-64"
-      } transition-all duration-300 z-50`}
+      } transition-all duration-300 z-40`}
     >
       <div className="text-gray-500 w-11/12 relative">
         <input

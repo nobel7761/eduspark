@@ -65,19 +65,19 @@ const TeacherDetailsComponent = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto bg-primary text-white rounded-md">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Teacher Details</h1>
+        <h1 className="text-3xl font-bold text-white">Employee Details</h1>
         <div className="flex gap-4">
           <Link
-            href="/office-assistant/teachers"
+            href="/employees/employees"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
           >
-            ← Back to Teachers
+            ← Back to Employees
           </Link>
           <Link
-            href={`/office-assistant/teachers/edit/${teacher?.teacherId}`}
+            href={`/employees/edit/${teacher?.teacherId}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           >
-            Edit Teacher
+            Edit Employee
           </Link>
         </div>
       </div>

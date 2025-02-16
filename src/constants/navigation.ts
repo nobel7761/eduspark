@@ -1,68 +1,80 @@
 export const adminNavigation = [
   {
-    name: "Dashboard",
-    icon: "🏠",
-    href: "/",
-  },
-  // {
-  //   name: "Students",
-  //   icon: "👨‍🎓",
-  //   children: [
-  //     { name: "All Students", href: "/students" },
-  //     { name: "Add Student", href: "/students/create" },
-  //   ],
-  // },
-  {
-    name: "Office Assistant",
-    icon: "👨‍🏫",
-    children: [
-      { name: "Teachers", href: "/office-assistant/teachers" },
-      { name: "Bua", href: "/office-assistant/bua" },
+    category: "ANALYTICS",
+    items: [
+      {
+        name: "Dashboard",
+        icon: "🏠",
+        href: "/",
+      },
+      // {
+      //   name: "Reports",
+      //   icon: "📊",
+      //   href: "/reports",
+      // },
     ],
   },
   {
-    name: "Class",
-    icon: "🏛️",
-    href: "/class",
+    category: "EDUCATION",
+    items: [
+      {
+        name: "Class",
+        icon: "🏛️",
+        href: "/class",
+      },
+      {
+        name: "Students",
+        icon: "👨‍🎓",
+        children: [
+          { name: "All Students", href: "/students" },
+          { name: "Add Student", href: "/students/create" },
+        ],
+      },
+      // {
+      //   name: "Routine",
+      //   icon: "📋",
+      //   href: "/routine",
+      // },
+    ],
   },
-  // {
-  //   name: "Routine",
-  //   icon: "📋",
-  //   href: "/routine",
-  // },
-  // {
-  //   name: "Calendar",
-  //   icon: "📅",
-  //   href: "/calendar",
-  // },
-  // {
-  //   name: "Accounts",
-  //   icon: "💰",
-  //   children: [
-  //     { name: "Earnings", href: "/accounts/earnings" },
-  //     { name: "Expenses", href: "/accounts/expenses" },
-  //     { name: "Investments", href: "/accounts/investments" },
-  //   ],
-  // },
   {
-    name: "Management Timings",
-    icon: "⏰",
-    href: "/management-timings",
+    category: "EMPLOYEE MANAGEMENT",
+    items: [
+      {
+        name: "Employees",
+        icon: "👨‍🏫",
+        href: "/employees",
+      },
+    ],
+  },
+  {
+    category: "DIRECTOR MANAGEMENT",
+    items: [
+      {
+        name: "Management Timings",
+        icon: "⏰",
+        href: "/management-timings",
+      },
+      // {
+      //   name: "Attendance",
+      //   icon: "📝",
+      //   href: "/attendance",
+      // },
+    ],
   },
   // {
-  //   name: "Attendance",
-  //   icon: "📝",
-  //   href: "/attendance",
-  // },
-  // {
-  //   name: "Upcoming Students",
-  //   icon: "👶",
-  //   href: "/upcoming-students",
-  // },
-  // {
-  //   name: "Settings",
-  //   icon: "⚙️",
-  //   href: "/settings",
+  //   category: "FINANCE",
+  //   items: [
+  //     {
+  //       name: "Accounts",
+  //       icon: "💰",
+  //       children: [
+  //         { name: "Earnings", href: "/accounts/earnings" },
+  //         { name: "Expenses", href: "/accounts/expenses" },
+  //         { name: "Investments", href: "/accounts/investments" },
+  //       ],
+  //     },
+  //   ],
   // },
 ];
 

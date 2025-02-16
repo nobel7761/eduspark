@@ -10,7 +10,7 @@ interface NavigationChild {
   href: string;
 }
 
-interface NavigationItem {
+export interface NavigationItem {
   name: string;
   icon: string;
   href?: string;
@@ -49,7 +49,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full p-3 hover:bg-gray-500/10 cursor-pointer flex items-center ${
+        className={`w-full p-3 hover:bg-[#EBF5FF]/10 rounded-md cursor-pointer flex items-center ${
           isCollapsed ? "justify-center" : "justify-between"
         }`}
         type="button"
@@ -84,15 +84,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               isCollapsed ? "absolute left-full top-0 ml-1 w-48" : "w-full"
             } overflow-hidden`}
           >
-            <ul className="bg-primary">
+            <ul className="bg-[#173F66]">
               {items.children?.map((child) => (
                 <li key={child.name}>
                   <Link
                     href={child.href}
                     className={`block p-3 ${
                       isCollapsed ? "" : "pl-12"
-                    } hover:bg-gray-500/10 ${
-                      pathname === child.href ? "bg-gray-500/80" : ""
+                    }  rounded-md mx-2 my-1.5 ${
+                      pathname === child.href
+                        ? "bg-[#EBF5FF] text-[#173F66] font-semibold"
+                        : "hover:bg-[#EBF5FF]/10"
                     }`}
                   >
                     {child.name}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import CustomDropdown from "../UI/CustomDropdown";
+import CustomDropdown, { NavigationItem } from "../UI/CustomDropdown";
 import Image from "next/image";
 import logo from "/public/images/eduspark-logo-nobg.png";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
@@ -19,7 +19,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
 
   return (
     <aside
-      className={`bg-primary flex flex-col fixed h-screen transition-all duration-300 ${
+      className={`bg-[#173F66] flex flex-col fixed h-screen transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
@@ -65,7 +65,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
       {/* Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-20 bg-blue-600 text-white p-0.5 rounded-full hover:bg-blue-700 transition-colors"
+        className="absolute -right-3 top-24 bg-red-600 text-white p-0.5 rounded-full hover:bg-red-700 transition-colors"
       >
         {isCollapsed ? (
           <MdKeyboardArrowRight size={16} />
@@ -74,37 +74,55 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
         )}
       </button>
 
-      <nav className="flex-1 text-white">
-        <ul>
-          {adminNavigation.map((item) => {
-            const isActive = pathname === item.href;
-            const hasChildren = item.children && item.children.length > 0;
+      <nav className="flex-1 text-sm text-white overflow-y-auto custom-scrollbar">
+        <ul className="space-y-4 py-4">
+          {adminNavigation.map((category) => (
+            <li key={category.category}>
+              {!isCollapsed && (
+                <div className="px-4 py-2 text-xs font-semibold text-gray-400">
+                  {category.category}
+                </div>
+              )}
+              <ul>
+                {category.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  const hasChildren =
+                    "children" in item &&
+                    Array.isArray(item.children) &&
+                    item.children.length > 0;
 
-            return (
-              <li key={item.name}>
-                {hasChildren ? (
-                  <CustomDropdown
-                    items={item}
-                    pathname={pathname}
-                    isCollapsed={isCollapsed}
-                  />
-                ) : (
-                  <Link
-                    href={item.href || "#"}
-                    className={`p-3 cursor-pointer flex items-center ${
-                      isActive ? "bg-gray-500/20" : "hover:bg-gray-500/10"
-                    } ${isCollapsed ? "justify-center" : ""}`}
-                    {...(isCollapsed ? { title: item.name } : {})}
-                  >
-                    <span className={`${isCollapsed ? "text-2xl" : "mr-3"}`}>
-                      {item.icon}
-                    </span>
-                    {!isCollapsed && item.name}
-                  </Link>
-                )}
-              </li>
-            );
-          })}
+                  return (
+                    <li key={item.name} className="mx-2 mb-1.5">
+                      {hasChildren ? (
+                        <CustomDropdown
+                          items={item as NavigationItem}
+                          pathname={pathname}
+                          isCollapsed={isCollapsed}
+                        />
+                      ) : (
+                        <Link
+                          href={item.href || "#"}
+                          className={`p-3 cursor-pointer flex items-center  rounded-md ${
+                            isActive
+                              ? "bg-[#EBF5FF] text-[#173F66] font-semibold"
+                              : "hover:bg-[#EBF5FF]/10"
+                          } ${isCollapsed ? "justify-center" : ""}`}
+                          {...(isCollapsed ? { title: item.name } : {})}
+                        >
+                          <span
+                            className={`${isCollapsed ? "text-2xl" : "mr-3"}`}
+                          >
+                            {item.icon}
+                          </span>
+                          {!isCollapsed && item.name}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+          ))}
         </ul>
       </nav>
     </aside>

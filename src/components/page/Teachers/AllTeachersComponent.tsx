@@ -104,7 +104,7 @@ const AllTeachersComponent = () => {
 
   const handleEdit = useCallback(
     (teacherId: string) => {
-      router.push(`/office-assistant/teachers/edit/${teacherId}`);
+      router.push(`/employees/edit/${teacherId}`);
     },
     [router]
   );
@@ -156,7 +156,7 @@ const AllTeachersComponent = () => {
         const teacherIds = deletePopup.multipleTeachers.map((t) => t.teacherId);
         console.log("teacherIds", teacherIds);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/teachers/bulk-delete`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees/bulk-delete`,
           {
             method: "DELETE",
             headers: {
@@ -198,7 +198,7 @@ const AllTeachersComponent = () => {
       } else if (deletePopup.teacher) {
         // Delete single teacher
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${deletePopup.teacher.teacherId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/${deletePopup.teacher.teacherId}`,
           {
             method: "DELETE",
           }
@@ -388,7 +388,7 @@ const AllTeachersComponent = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold">All Teachers</h1>
+            <h1 className="text-lg font-semibold">All Employees</h1>
             {selectedTeachers.size > 0 && (
               <div className="flex items-center gap-2">
                 <button
@@ -464,7 +464,7 @@ const AllTeachersComponent = () => {
 
         <div className="flex items-center gap-x-4">
           <Link
-            href="/office-assistant/teachers/create"
+            href="/employees/create"
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
           >
             Add Teacher
@@ -560,7 +560,7 @@ const AllTeachersComponent = () => {
         </div>
       ) : filteredTeachers.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-gray-400 text-lg mb-2">No teachers found</div>
+          <div className="text-gray-400 text-lg mb-2">No employee found</div>
           {searchQuery && (
             <div className="text-gray-500">
               Try adjusting your search or filters to find what you&apos;re
@@ -624,7 +624,7 @@ const AllTeachersComponent = () => {
                     ) : (
                       <div className="relative">
                         <Link
-                          href={`/office-assistant/teachers/${row.original.teacherId}`}
+                          href={`/employees/${row.original.teacherId}`}
                           className="absolute inset-0 z-0"
                           aria-label={`View details for ${row.original.firstName} ${row.original.lastName}`}
                         />

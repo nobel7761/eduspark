@@ -315,7 +315,7 @@ const CreateTeacherComponent = () => {
       console.log("result", result);
       setSuccessPopup(true);
       setTimeout(() => {
-        router.push("/office-assistant/teachers");
+        router.push("/employees/teachers");
       }, 2000);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
@@ -345,14 +345,14 @@ const CreateTeacherComponent = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 rounded-md bg-primary">
+    <div className="mx-auto p-4 rounded-md bg-primary">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Create New Teacher</h1>
         <Link
-          href="/office-assistant/teachers"
+          href="/employees"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          ← Back to Teachers
+          ← Back to Employees
         </Link>
       </div>
 
@@ -1204,7 +1204,7 @@ const CreateTeacherComponent = () => {
         <div className="flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => router.push("/office-assistant/teachers")}
+            onClick={() => router.push("/employees/teachers")}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
             Cancel
