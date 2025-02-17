@@ -421,12 +421,13 @@ const CreateEmployeeComponent = () => {
             </p>
           )}
         </div>
-
-        {/* Photo Upload and Personal Information Section */}
-        <div className="flex items-center">
-          {/* Photo Upload Section */}
-          <div className="flex-shrink-0">
-            {/* <div className="w-[250px] h-[250px] relative">
+        {selectedEmployeeType && (
+          <>
+            {/* Photo Upload and Personal Information Section */}
+            <div className="flex items-center">
+              {/* Photo Upload Section */}
+              <div className="flex-shrink-0">
+                {/* <div className="w-[250px] h-[250px] relative">
               <div className="w-full h-full flex justify-center items-center overflow-hidden bg-gray-600 rounded-full">
                 {photoPreview ? (
                   <Image
@@ -461,826 +462,894 @@ const CreateEmployeeComponent = () => {
                 <MdCloudUpload className="text-3xl text-primary hover:text-white transition-colors" />
               </label>
             </div> */}
-          </div>
-
-          {/* Personal Information */}
-          <div className="bg-gray-800 p-6 rounded-lg flex-grow">
-            <h2 className="text-xl font-bold mb-4 text-white">
-              Personal Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  {...register("firstName")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.firstName.message as string}
-                  </p>
-                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  {...register("lastName")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.lastName.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Joining Date
-                </label>
-                <input
-                  type="date"
-                  onChange={(e) => {
-                    const selectedDate = e.target.value
-                      ? new Date(e.target.value)
-                      : null;
-                    setJoiningDate(selectedDate);
-                    if (selectedDate) setValue("joiningDate", selectedDate);
-                  }}
-                  value={
-                    joiningDate ? joiningDate.toISOString().split("T")[0] : ""
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  required
-                />
-                {errors.joiningDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.joiningDate.message as string}
-                  </p>
-                )}
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Gender
-                </label>
-                <Listbox
-                  value={selectedGender}
-                  onChange={(value) => {
-                    setSelectedGender(value);
-                    setValue("gender", value as Gender);
-                  }}
-                >
-                  <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-                      <span className="block truncate">
-                        {getDisplayText(selectedGender)}
-                      </span>
-                      <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                        <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                      </span>
-                    </Listbox.Button>
-                    <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                      {Object.values(Gender).map((gender) => (
-                        <Listbox.Option
-                          key={gender}
-                          value={gender}
-                          className={({ active }) =>
-                            `${active ? "bg-primary text-white" : "text-white"}
-                            cursor-pointer select-none relative py-2 pl-10 pr-4`
-                          }
-                        >
-                          {({ selected }) => (
-                            <>
-                              <span
-                                className={`${
-                                  selected ? "font-medium" : "font-normal"
-                                } block truncate`}
-                              >
-                                {capitalizeFirstLetter(gender)}
-                              </span>
-                              {selected && (
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                  <FaCheckCircle className="w-5 h-5" />
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </div>
-                </Listbox>
-                {errors.gender && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.gender.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Primary Phone
-                </label>
-                <input
-                  type="tel"
-                  {...register("primaryPhone")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.primaryPhone && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.primaryPhone.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Secondary Phone
-                </label>
-                <input
-                  type="tel"
-                  {...register("secondaryPhone")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  {...register("email")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.email.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  NID Number
-                </label>
-                <input
-                  type="text"
-                  {...register("nidNumber")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Information */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-bold mb-4 text-white">
-            Payment Information
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-white">
-                Payment Method
-              </label>
-              <Listbox
-                value={selectedPaymentMethod}
-                onChange={(value) => {
-                  setSelectedPaymentMethod(value);
-                  setValue("paymentMethod", value as PaymentMethod);
-                }}
-              >
-                <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-                    <span className="block truncate">
-                      {getDisplayText(selectedPaymentMethod, "Payment")}
-                    </span>
-                    <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                      <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                    </span>
-                  </Listbox.Button>
-                  <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                    {Object.values(PaymentMethod).map((method) => (
-                      <Listbox.Option
-                        key={method}
-                        value={method}
-                        className={({ active }) =>
-                          `${active ? "bg-primary text-white" : "text-white"}
-                          cursor-pointer select-none relative py-2 pl-10 pr-4`
-                        }
-                      >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={`${
-                                selected ? "font-medium" : "font-normal"
-                              } block truncate`}
-                            >
-                              {capitalizeFirstLetter(method)}
-                            </span>
-                            {selected && (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                <FaCheckCircle className="w-5 h-5" />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Listbox.Option>
-                    ))}
-                  </Listbox.Options>
-                </div>
-              </Listbox>
-              {errors.paymentMethod && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.paymentMethod.message as string}
-                </p>
-              )}
-            </div>
-
-            {selectedPaymentMethod === PaymentMethod.PerClass && (
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Payment Per Class
-                </label>
-                <input
-                  type="number"
-                  {...register("paymentPerClass")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.paymentPerClass && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.paymentPerClass.message as string}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {selectedPaymentMethod === PaymentMethod.Monthly && (
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Payment Per Month
-                </label>
-                <input
-                  type="number"
-                  {...register("paymentPerMonth")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.paymentPerMonth && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.paymentPerMonth.message as string}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Address and Parents Information Container */}
-        <div className="flex gap-6">
-          {/* Address Information */}
-          <div className="bg-gray-800 p-6 rounded-lg flex-1">
-            <h2 className="text-xl font-bold mb-4 text-white">
-              Address Information
-            </h2>
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Present Address
-                </label>
-                <textarea
-                  {...register("presentAddress")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  rows={3}
-                />
-                {errors.presentAddress && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.presentAddress.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Permanent Address
-                </label>
-                <textarea
-                  {...register("permanentAddress")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Parents Information */}
-          <div className="bg-gray-800 p-6 rounded-lg flex-1">
-            <h2 className="text-xl font-bold mb-4 text-white">
-              Parents Information
-            </h2>
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Father&apos;s Name
-                </label>
-                <input
-                  type="text"
-                  {...register("father.name")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.father?.name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.father.name.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Father&apos;s Phone
-                </label>
-                <input
-                  type="tel"
-                  {...register("father.phone")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.father?.phone && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.father.phone.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Mother&apos;s Name
-                </label>
-                <input
-                  type="text"
-                  {...register("mother.name")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.mother?.name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.mother.name.message as string}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Mother&apos;s Phone
-                </label>
-                <input
-                  type="tel"
-                  {...register("mother.phone")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.mother?.phone && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.mother.phone.message as string}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Educational Background */}
-        <div className="bg-gray-800 p-6 rounded-lg mt-6">
-          <h2 className="text-xl font-bold mb-4 text-white">
-            Educational Background
-          </h2>
-
-          {/* University Information */}
-          <div className="border border-white rounded-lg p-4 mb-4">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-white">
-                University Information
-              </h3>
-              <label className="flex items-center space-x-2 text-white">
-                <input
-                  type="checkbox"
-                  checked={isCurrentlyStudying}
-                  onChange={handleIsCurrentlyStudyingChange}
-                  className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
-                />
-                <span>Currently Studying</span>
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Institute
-                </label>
-                <input
-                  type="text"
-                  {...register("educationalBackground.university.institute")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.educationalBackground?.university?.institute && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {
-                      errors.educationalBackground.university.institute
-                        .message as string
-                    }
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  {...register("educationalBackground.university.department")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.educationalBackground?.university?.department && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {
-                      errors.educationalBackground.university.department
-                        .message as string
-                    }
-                  </p>
-                )}
-              </div>
-
-              {!isCurrentlyStudying ? (
-                <>
+              {/* Personal Information */}
+              <div className="bg-gray-800 p-6 rounded-lg flex-grow">
+                <h2 className="text-xl font-bold mb-4 text-white">
+                  Personal Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/*First Name */}
                   <div>
                     <label className="block text-sm font-medium mb-1 text-white">
-                      Passing Year
+                      First Name
                     </label>
                     <input
-                      type="number"
-                      {...register(
-                        "educationalBackground.university.passingYear"
-                      )}
+                      type="text"
+                      {...register("firstName")}
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
                     />
-                    {errors.educationalBackground?.university?.passingYear && (
+                    {errors.firstName && (
                       <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.university.passingYear
-                            .message as string
-                        }
+                        {errors.firstName.message as string}
                       </p>
                     )}
                   </div>
 
+                  {/* Last Name */}
                   <div>
                     <label className="block text-sm font-medium mb-1 text-white">
-                      CGPA
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      {...register("lastName")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.lastName && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.lastName.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Joining Date */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Joining Date
+                    </label>
+                    <input
+                      type="date"
+                      onChange={(e) => {
+                        const selectedDate = e.target.value
+                          ? new Date(e.target.value)
+                          : null;
+                        setJoiningDate(selectedDate);
+                        if (selectedDate) setValue("joiningDate", selectedDate);
+                      }}
+                      value={
+                        joiningDate
+                          ? joiningDate.toISOString().split("T")[0]
+                          : ""
+                      }
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    {errors.joiningDate && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.joiningDate.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Gender
+                    </label>
+                    <Listbox
+                      value={selectedGender}
+                      onChange={(value) => {
+                        setSelectedGender(value);
+                        setValue("gender", value as Gender);
+                      }}
+                    >
+                      <div className="relative mt-1">
+                        <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                          <span className="block truncate">
+                            {getDisplayText(selectedGender)}
+                          </span>
+                          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                            <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                          </span>
+                        </Listbox.Button>
+                        <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                          {Object.values(Gender).map((gender) => (
+                            <Listbox.Option
+                              key={gender}
+                              value={gender}
+                              className={({ active }) =>
+                                `${
+                                  active
+                                    ? "bg-primary text-white"
+                                    : "text-white"
+                                }
+                            cursor-pointer select-none relative py-2 pl-10 pr-4`
+                              }
+                            >
+                              {({ selected }) => (
+                                <>
+                                  <span
+                                    className={`${
+                                      selected ? "font-medium" : "font-normal"
+                                    } block truncate`}
+                                  >
+                                    {capitalizeFirstLetter(gender)}
+                                  </span>
+                                  {selected && (
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                      <FaCheckCircle className="w-5 h-5" />
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </div>
+                    </Listbox>
+                    {errors.gender && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.gender.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Primary Phone */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Primary Phone
+                    </label>
+                    <input
+                      type="tel"
+                      {...register("primaryPhone")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.primaryPhone && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.primaryPhone.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Secondary Phone */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Secondary Phone
+                    </label>
+                    <input
+                      type="tel"
+                      {...register("secondaryPhone")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  {selectedEmployeeType === EmployeeType.Teacher && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          {...register("email")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.email && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.email.message as string}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* NID Number */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      NID Number
+                    </label>
+                    <input
+                      type="text"
+                      {...register("nidNumber")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-bold mb-4 text-white">
+                Payment Information
+              </h2>
+
+              {selectedEmployeeType === EmployeeType.Teacher && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-white">
+                        Payment Method
+                      </label>
+                      <Listbox
+                        value={selectedPaymentMethod}
+                        onChange={(value) => {
+                          setSelectedPaymentMethod(value);
+                          setValue("paymentMethod", value as PaymentMethod);
+                        }}
+                      >
+                        <div className="relative mt-1">
+                          <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                            <span className="block truncate">
+                              {getDisplayText(selectedPaymentMethod, "Payment")}
+                            </span>
+                            <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                              <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                            </span>
+                          </Listbox.Button>
+                          <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                            {Object.values(PaymentMethod).map((method) => (
+                              <Listbox.Option
+                                key={method}
+                                value={method}
+                                className={({ active }) =>
+                                  `${
+                                    active
+                                      ? "bg-primary text-white"
+                                      : "text-white"
+                                  }
+                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                                }
+                              >
+                                {({ selected }) => (
+                                  <>
+                                    <span
+                                      className={`${
+                                        selected ? "font-medium" : "font-normal"
+                                      } block truncate`}
+                                    >
+                                      {capitalizeFirstLetter(method)}
+                                    </span>
+                                    {selected && (
+                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                        <FaCheckCircle className="w-5 h-5" />
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </div>
+                      </Listbox>
+                      {errors.paymentMethod && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.paymentMethod.message as string}
+                        </p>
+                      )}
+                    </div>
+
+                    {selectedPaymentMethod === PaymentMethod.PerClass && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Payment Per Class
+                        </label>
+                        <input
+                          type="number"
+                          {...register("paymentPerClass")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.paymentPerClass && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.paymentPerClass.message as string}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedPaymentMethod === PaymentMethod.Monthly && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Payment Per Month
+                        </label>
+                        <input
+                          type="number"
+                          {...register("paymentPerMonth")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.paymentPerMonth && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.paymentPerMonth.message as string}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {selectedEmployeeType === EmployeeType.Cleaner && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Payment Per Month
                     </label>
                     <input
                       type="number"
-                      step="0.01"
-                      {...register("educationalBackground.university.cgpa")}
+                      {...register("paymentPerMonth")}
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
                     />
-                    {errors.educationalBackground?.university?.cgpa && (
+                    {errors.paymentPerMonth && (
                       <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.university.cgpa
-                            .message as string
-                        }
+                        {errors.paymentPerMonth.message as string}
                       </p>
                     )}
                   </div>
                 </>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-white">
-                    Admission Year
-                  </label>
-                  <input
-                    type="number"
-                    {...register(
-                      "educationalBackground.university.admissionYear"
-                    )}
-                    className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.educationalBackground?.university?.admissionYear && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {
-                        errors.educationalBackground.university.admissionYear
-                          .message as string
-                      }
-                    </p>
-                  )}
-                </div>
               )}
             </div>
-          </div>
 
-          {/* HSC and SSC Information */}
-          <div className="flex gap-4">
-            {/* HSC Information */}
-            <div className="flex-1 border border-white rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-3 text-white">
-                HSC Information
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-white">
-                    Institute
-                  </label>
-                  <input
-                    type="text"
-                    {...register("educationalBackground.hsc.institute")}
-                    className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.educationalBackground?.hsc?.institute && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {
-                        errors.educationalBackground.hsc.institute
-                          .message as string
-                      }
-                    </p>
-                  )}
-                </div>
-
-                {/* Group, Year, Result in one line */}
-                <div className="flex gap-4">
-                  <div className="flex-1">
+            {/* Address and Parents Information Container */}
+            <div className="flex gap-6">
+              {/* Address Information */}
+              <div className="bg-gray-800 p-6 rounded-lg flex-1">
+                <h2 className="text-xl font-bold mb-4 text-white">
+                  Address Information
+                </h2>
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
                     <label className="block text-sm font-medium mb-1 text-white">
-                      Group
+                      Present Address
                     </label>
-                    <Listbox
-                      value={selectedHscGroup}
-                      onChange={(value) => {
-                        setSelectedHscGroup(value);
-                        setValue(
-                          "educationalBackground.hsc.group",
-                          value as Group
-                        );
-                      }}
-                    >
-                      <div className="relative mt-1">
-                        <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-                          <span className="block truncate">
-                            {getDisplayText(selectedHscGroup)}
-                          </span>
-                          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                            <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                          {Object.values(Group).map((group) => (
-                            <Listbox.Option
-                              key={group}
-                              value={group}
-                              className={({ active }) =>
-                                `${
-                                  active
-                                    ? "bg-primary text-white"
-                                    : "text-white"
-                                }
-                                cursor-pointer select-none relative py-2 pl-10 pr-4`
-                              }
-                            >
-                              {({ selected }) => (
-                                <>
-                                  <span
-                                    className={`${
-                                      selected ? "font-medium" : "font-normal"
-                                    } block truncate`}
-                                  >
-                                    {capitalizeFirstLetter(group)}
-                                  </span>
-                                  {selected && (
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                      <FaCheckCircle className="w-5 h-5" />
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </Listbox.Option>
-                          ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
-                  </div>
-
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium mb-1 text-white">
-                      Year
-                    </label>
-                    <input
-                      type="number"
-                      {...register("educationalBackground.hsc.year")}
+                    <textarea
+                      {...register("presentAddress")}
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      rows={3}
                     />
-                    {errors.educationalBackground?.hsc?.year && (
+                    {errors.presentAddress && (
                       <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.hsc.year
-                            .message as string
-                        }
+                        {errors.presentAddress.message as string}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex-1">
+                  <div>
                     <label className="block text-sm font-medium mb-1 text-white">
-                      Result
+                      Permanent Address
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register("educationalBackground.hsc.result")}
+                    <textarea
+                      {...register("permanentAddress")}
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      rows={3}
                     />
-                    {errors.educationalBackground?.hsc?.result && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.hsc.result
-                            .message as string
-                        }
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* SSC Information */}
-            <div className="flex-1 border border-white rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-3 text-white">
-                SSC Information
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-white">
-                    Institute
-                  </label>
-                  <input
-                    type="text"
-                    {...register("educationalBackground.ssc.institute")}
-                    className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.educationalBackground?.ssc?.institute && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {
-                        errors.educationalBackground.ssc.institute
-                          .message as string
-                      }
-                    </p>
-                  )}
-                </div>
-
-                {/* Group, Year, Result in one line */}
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium mb-1 text-white">
-                      Group
-                    </label>
-                    <Listbox
-                      value={selectedSscGroup}
-                      onChange={(value) => {
-                        setSelectedSscGroup(value);
-                        setValue(
-                          "educationalBackground.ssc.group",
-                          value as Group
-                        );
-                      }}
-                    >
-                      <div className="relative mt-1">
-                        <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-                          <span className="block truncate">
-                            {getDisplayText(selectedSscGroup)}
-                          </span>
-                          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                            <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                          {Object.values(Group).map((group) => (
-                            <Listbox.Option
-                              key={group}
-                              value={group}
-                              className={({ active }) =>
-                                `${
-                                  active
-                                    ? "bg-primary text-white"
-                                    : "text-white"
-                                }
-                                cursor-pointer select-none relative py-2 pl-10 pr-4`
-                              }
-                            >
-                              {({ selected }) => (
-                                <>
-                                  <span
-                                    className={`${
-                                      selected ? "font-medium" : "font-normal"
-                                    } block truncate`}
-                                  >
-                                    {capitalizeFirstLetter(group)}
-                                  </span>
-                                  {selected && (
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                                      <FaCheckCircle className="w-5 h-5" />
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </Listbox.Option>
-                          ))}
-                        </Listbox.Options>
+              {/* Parents Information */}
+              {selectedEmployeeType === EmployeeType.Teacher && (
+                <>
+                  <div className="bg-gray-800 p-6 rounded-lg flex-1">
+                    <h2 className="text-xl font-bold mb-4 text-white">
+                      Parents Information
+                    </h2>
+                    <div className="grid grid-cols-1 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Father&apos;s Name
+                        </label>
+                        <input
+                          type="text"
+                          {...register("father.name")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.father?.name && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.father.name.message as string}
+                          </p>
+                        )}
                       </div>
-                    </Listbox>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Father&apos;s Phone
+                        </label>
+                        <input
+                          type="tel"
+                          {...register("father.phone")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.father?.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.father.phone.message as string}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Mother&apos;s Name
+                        </label>
+                        <input
+                          type="text"
+                          {...register("mother.name")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.mother?.name && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.mother.name.message as string}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Mother&apos;s Phone
+                        </label>
+                        <input
+                          type="tel"
+                          {...register("mother.phone")}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.mother?.phone && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.mother.phone.message as string}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Educational Background */}
+            {selectedEmployeeType === EmployeeType.Teacher && (
+              <>
+                <div className="bg-gray-800 p-6 rounded-lg mt-6">
+                  <h2 className="text-xl font-bold mb-4 text-white">
+                    Educational Background
+                  </h2>
+
+                  {/* University Information */}
+                  <div className="border border-white rounded-lg p-4 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-lg font-semibold text-white">
+                        University Information
+                      </h3>
+                      <label className="flex items-center space-x-2 text-white">
+                        <input
+                          type="checkbox"
+                          checked={isCurrentlyStudying}
+                          onChange={handleIsCurrentlyStudyingChange}
+                          className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+                        />
+                        <span>Currently Studying</span>
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Institute
+                        </label>
+                        <input
+                          type="text"
+                          {...register(
+                            "educationalBackground.university.institute"
+                          )}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.educationalBackground?.university
+                          ?.institute && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {
+                              errors.educationalBackground.university.institute
+                                .message as string
+                            }
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Department
+                        </label>
+                        <input
+                          type="text"
+                          {...register(
+                            "educationalBackground.university.department"
+                          )}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                        />
+                        {errors.educationalBackground?.university
+                          ?.department && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {
+                              errors.educationalBackground.university.department
+                                .message as string
+                            }
+                          </p>
+                        )}
+                      </div>
+
+                      {!isCurrentlyStudying ? (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Passing Year
+                            </label>
+                            <input
+                              type="number"
+                              {...register(
+                                "educationalBackground.university.passingYear"
+                              )}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.university
+                              ?.passingYear && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.university
+                                    .passingYear.message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              CGPA
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register(
+                                "educationalBackground.university.cgpa"
+                              )}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.university?.cgpa && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.university.cgpa
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-white">
+                            Admission Year
+                          </label>
+                          <input
+                            type="number"
+                            {...register(
+                              "educationalBackground.university.admissionYear"
+                            )}
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          />
+                          {errors.educationalBackground?.university
+                            ?.admissionYear && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.educationalBackground.university
+                                  .admissionYear.message as string
+                              }
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium mb-1 text-white">
-                      Year
-                    </label>
-                    <input
-                      type="number"
-                      {...register("educationalBackground.ssc.year")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                    />
-                    {errors.educationalBackground?.ssc?.year && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.ssc.year
-                            .message as string
-                        }
-                      </p>
-                    )}
-                  </div>
+                  {/* HSC and SSC Information */}
+                  <div className="flex gap-4">
+                    {/* HSC Information */}
+                    <div className="flex-1 border border-white rounded-lg p-4">
+                      <h3 className="text-lg font-semibold mb-3 text-white">
+                        HSC Information
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-white">
+                            Institute
+                          </label>
+                          <input
+                            type="text"
+                            {...register("educationalBackground.hsc.institute")}
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          />
+                          {errors.educationalBackground?.hsc?.institute && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.educationalBackground.hsc.institute
+                                  .message as string
+                              }
+                            </p>
+                          )}
+                        </div>
 
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium mb-1 text-white">
-                      Result
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      {...register("educationalBackground.ssc.result")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                    />
-                    {errors.educationalBackground?.ssc?.result && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {
-                          errors.educationalBackground.ssc.result
-                            .message as string
-                        }
-                      </p>
-                    )}
+                        {/* Group, Year, Result in one line */}
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Group
+                            </label>
+                            <Listbox
+                              value={selectedHscGroup}
+                              onChange={(value) => {
+                                setSelectedHscGroup(value);
+                                setValue(
+                                  "educationalBackground.hsc.group",
+                                  value as Group
+                                );
+                              }}
+                            >
+                              <div className="relative mt-1">
+                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                                  <span className="block truncate">
+                                    {getDisplayText(selectedHscGroup)}
+                                  </span>
+                                  <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                                    <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                                  </span>
+                                </Listbox.Button>
+                                <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                                  {Object.values(Group).map((group) => (
+                                    <Listbox.Option
+                                      key={group}
+                                      value={group}
+                                      className={({ active }) =>
+                                        `${
+                                          active
+                                            ? "bg-primary text-white"
+                                            : "text-white"
+                                        }
+                                cursor-pointer select-none relative py-2 pl-10 pr-4`
+                                      }
+                                    >
+                                      {({ selected }) => (
+                                        <>
+                                          <span
+                                            className={`${
+                                              selected
+                                                ? "font-medium"
+                                                : "font-normal"
+                                            } block truncate`}
+                                          >
+                                            {capitalizeFirstLetter(group)}
+                                          </span>
+                                          {selected && (
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                              <FaCheckCircle className="w-5 h-5" />
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    </Listbox.Option>
+                                  ))}
+                                </Listbox.Options>
+                              </div>
+                            </Listbox>
+                          </div>
+
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Year
+                            </label>
+                            <input
+                              type="number"
+                              {...register("educationalBackground.hsc.year")}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.hsc?.year && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.hsc.year
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Result
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register("educationalBackground.hsc.result")}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.hsc?.result && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.hsc.result
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SSC Information */}
+                    <div className="flex-1 border border-white rounded-lg p-4">
+                      <h3 className="text-lg font-semibold mb-3 text-white">
+                        SSC Information
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-white">
+                            Institute
+                          </label>
+                          <input
+                            type="text"
+                            {...register("educationalBackground.ssc.institute")}
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          />
+                          {errors.educationalBackground?.ssc?.institute && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.educationalBackground.ssc.institute
+                                  .message as string
+                              }
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Group, Year, Result in one line */}
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Group
+                            </label>
+                            <Listbox
+                              value={selectedSscGroup}
+                              onChange={(value) => {
+                                setSelectedSscGroup(value);
+                                setValue(
+                                  "educationalBackground.ssc.group",
+                                  value as Group
+                                );
+                              }}
+                            >
+                              <div className="relative mt-1">
+                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                                  <span className="block truncate">
+                                    {getDisplayText(selectedSscGroup)}
+                                  </span>
+                                  <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                                    <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                                  </span>
+                                </Listbox.Button>
+                                <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                                  {Object.values(Group).map((group) => (
+                                    <Listbox.Option
+                                      key={group}
+                                      value={group}
+                                      className={({ active }) =>
+                                        `${
+                                          active
+                                            ? "bg-primary text-white"
+                                            : "text-white"
+                                        }
+                                cursor-pointer select-none relative py-2 pl-10 pr-4`
+                                      }
+                                    >
+                                      {({ selected }) => (
+                                        <>
+                                          <span
+                                            className={`${
+                                              selected
+                                                ? "font-medium"
+                                                : "font-normal"
+                                            } block truncate`}
+                                          >
+                                            {capitalizeFirstLetter(group)}
+                                          </span>
+                                          {selected && (
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                              <FaCheckCircle className="w-5 h-5" />
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    </Listbox.Option>
+                                  ))}
+                                </Listbox.Options>
+                              </div>
+                            </Listbox>
+                          </div>
+
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Year
+                            </label>
+                            <input
+                              type="number"
+                              {...register("educationalBackground.ssc.year")}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.ssc?.year && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.ssc.year
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Result
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              {...register("educationalBackground.ssc.result")}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            />
+                            {errors.educationalBackground?.ssc?.result && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.educationalBackground.ssc.result
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Comments Section */}
-        <div className="bg-gray-800 p-6 rounded-lg mt-6">
-          <h2 className="text-xl font-bold mb-4 text-white">Comments</h2>
-          <div>
-            <textarea
-              {...register("comments")}
-              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-              rows={3}
-              placeholder="Add any additional comments..."
-            />
-            {errors.comments && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.comments.message as string}
-              </p>
+              </>
             )}
-          </div>
-        </div>
 
-        <div className="flex justify-end gap-4">
-          <button
-            type="button"
-            onClick={() => router.push("/employees/employees")}
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Create Employee
-          </button>
-        </div>
+            {/* Comments Section */}
+            <div className="bg-gray-800 p-6 rounded-lg mt-6">
+              <h2 className="text-xl font-bold mb-4 text-white">Comments</h2>
+              <div>
+                <textarea
+                  {...register("comments")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  rows={3}
+                  placeholder="Add any additional comments..."
+                />
+                {errors.comments && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.comments.message as string}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => router.push("/employees/employees")}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Create Employee
+              </button>
+            </div>
+          </>
+        )}{" "}
       </form>
 
       <SuccessPopup
