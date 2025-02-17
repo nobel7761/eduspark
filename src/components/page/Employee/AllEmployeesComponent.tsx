@@ -26,15 +26,17 @@ import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
-import { ITeacher } from "@/types/teacher";
-import { searchTeacher } from "@/utils/search/teacherSearch";
-import { PaymentMethod } from "@/enums/teachers.enum";
-import { Gender } from "@/enums/common.enum";
+import { Gender, PaymentMethod } from "@/enums/common.enum";
+import { IEmployee } from "@/types/employee";
+import { searchEmployee } from "@/utils/search/employeeSearch";
+import { EmployeeType } from "@/enums/employees.enum";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
 const DEFAULT_VISIBLE_COLUMNS = {
   name: true,
+  employeeType: true,
   primaryPhone: true,
   nidNumber: true,
   presentAddress: true,
@@ -42,16 +44,16 @@ const DEFAULT_VISIBLE_COLUMNS = {
   paymentMethod: false,
 };
 
-const AllTeachersComponent = () => {
+const AllEmployeesComponent = () => {
   const router = useRouter();
   const { searchQuery } = useSearch();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [deletePopup, setDeletePopup] = useState<{
     isOpen: boolean;
-    teacher: ITeacher | null;
-    multipleTeachers: ITeacher[] | null;
-  }>({ isOpen: false, teacher: null, multipleTeachers: null });
+    employee: IEmployee | null;
+    multipleEmployees: IEmployee[] | null;
+  }>({ isOpen: false, employee: null, multipleEmployees: null });
   const [successPopup, setSuccessPopup] = useState<{
     isOpen: boolean;
     message: string;
@@ -60,29 +62,29 @@ const AllTeachersComponent = () => {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     DEFAULT_VISIBLE_COLUMNS
   );
-  const [selectedTeachers, setSelectedTeachers] = useState<Set<string>>(
+  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(
     new Set()
   );
-  const [allTeachersList, setAllTeachersList] = useState<ITeacher[] | null>(
+  const [allEmployeesList, setAllEmployeesList] = useState<IEmployee[] | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const columnHelper = createColumnHelper<ITeacher>();
+  const columnHelper = createColumnHelper<IEmployee>();
 
   useEffect(() => {
-    const fetchTeachers = async () => {
+    const fetchEmployees = async () => {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/teachers`
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch teachers");
+          throw new Error("Failed to fetch employees");
         }
         const data = await response.json();
-        setAllTeachersList(data);
+        setAllEmployeesList(data);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -90,71 +92,73 @@ const AllTeachersComponent = () => {
       }
     };
 
-    fetchTeachers();
+    fetchEmployees();
   }, []);
 
   // Filter students based on search query
-  const filteredTeachers = React.useMemo(() => {
-    if (!allTeachersList) return [];
-    return allTeachersList.filter((teacher) => {
+  const filteredEmployees = React.useMemo(() => {
+    if (!allEmployeesList) return [];
+    return allEmployeesList.filter((employee) => {
       if (!searchQuery?.trim()) return true;
-      return searchTeacher(teacher as ITeacher, searchQuery);
+      return searchEmployee(employee as IEmployee, searchQuery);
     });
-  }, [searchQuery, allTeachersList]);
+  }, [searchQuery, allEmployeesList]);
 
   const handleEdit = useCallback(
-    (teacherId: string) => {
-      router.push(`/employees/edit/${teacherId}`);
+    (employeeId: string) => {
+      router.push(`/employees/edit/${employeeId}`);
     },
     [router]
   );
 
   const handleSelectAll = useCallback(
-    (checked: boolean, table: Table<ITeacher>) => {
+    (checked: boolean, table: Table<IEmployee>) => {
       if (checked) {
         const allIds = table
           .getRowModel()
-          .rows.map((row) => row.original.teacherId);
-        setSelectedTeachers(new Set(allIds));
+          .rows.map((row) => row.original.employeeId);
+        setSelectedEmployees(new Set(allIds));
       } else {
-        setSelectedTeachers(new Set());
+        setSelectedEmployees(new Set());
       }
     },
     []
   );
 
-  const handleSelectTeacher = (teacherId: string, checked: boolean) => {
-    const newSelected = new Set(selectedTeachers);
+  const handleSelectEmployee = (employeeId: string, checked: boolean) => {
+    const newSelected = new Set(selectedEmployees);
     if (checked) {
-      newSelected.add(teacherId);
+      newSelected.add(employeeId);
     } else {
-      newSelected.delete(teacherId);
+      newSelected.delete(employeeId);
     }
-    setSelectedTeachers(newSelected);
+    setSelectedEmployees(newSelected);
   };
 
-  const handleDelete = (teachers: ITeacher | ITeacher[]) => {
-    if (Array.isArray(teachers)) {
+  const handleDelete = (employees: IEmployee | IEmployee[]) => {
+    if (Array.isArray(employees)) {
       setDeletePopup({
         isOpen: true,
-        teacher: null,
-        multipleTeachers: teachers,
+        employee: null,
+        multipleEmployees: employees,
       });
     } else {
       setDeletePopup({
         isOpen: true,
-        teacher: teachers,
-        multipleTeachers: null,
+        employee: employees,
+        multipleEmployees: null,
       });
     }
   };
 
   const confirmDelete = async () => {
     try {
-      if (deletePopup.multipleTeachers) {
-        // Delete multiple teachers
-        const teacherIds = deletePopup.multipleTeachers.map((t) => t.teacherId);
-        console.log("teacherIds", teacherIds);
+      if (deletePopup.multipleEmployees) {
+        // Delete multiple employees
+        const employeeIds = deletePopup.multipleEmployees.map(
+          (e) => e.employeeId
+        );
+        console.log("employeeIds", employeeIds);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE}/employees/bulk-delete`,
           {
@@ -162,27 +166,27 @@ const AllTeachersComponent = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(teacherIds),
+            body: JSON.stringify(employeeIds),
           }
         );
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Failed to delete teachers");
+          throw new Error(data.message || "Failed to delete employees");
         }
 
-        // Update the teachers list after successful deletion
-        // Only remove the successfully deleted teachers
-        const updatedTeachers = allTeachersList?.filter(
-          (teacher) => !data.details.success.includes(teacher.teacherId)
+        // Update the employees list after successful deletion
+        // Only remove the successfully deleted employees
+        const updatedEmployees = allEmployeesList?.filter(
+          (employee) => !data.details.success.includes(employee.employeeId)
         );
 
-        setAllTeachersList(updatedTeachers || null);
+        setAllEmployeesList(updatedEmployees || null);
         setDeletePopup({
           isOpen: false,
-          teacher: null,
-          multipleTeachers: null,
+          employee: null,
+          multipleEmployees: null,
         });
 
         // Show success message with details if there were any failures
@@ -191,31 +195,35 @@ const AllTeachersComponent = () => {
           message: data.message,
         });
 
-        // Clear selected teachers that were successfully deleted
-        const newSelected = new Set(selectedTeachers);
+        // Clear selected employees that were successfully deleted
+        const newSelected = new Set(selectedEmployees);
         data.details.success.forEach((id: string) => newSelected.delete(id));
-        setSelectedTeachers(newSelected);
-      } else if (deletePopup.teacher) {
-        // Delete single teacher
+        setSelectedEmployees(newSelected);
+      } else if (deletePopup.employee) {
+        // Delete single employee
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/${deletePopup.teacher.teacherId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/${deletePopup.employee.employeeId}`,
           {
             method: "DELETE",
           }
         );
 
         if (!response.ok) {
-          throw new Error("Failed to delete teacher");
+          throw new Error("Failed to delete employee");
         }
       }
     } catch (error) {
-      console.error("Error deleting teacher(s):", error);
-      setDeletePopup({ isOpen: false, teacher: null, multipleTeachers: null });
+      console.error("Error deleting employee(s):", error);
+      setDeletePopup({
+        isOpen: false,
+        employee: null,
+        multipleEmployees: null,
+      });
       // Show error message to the user
       setSuccessPopup({
         isOpen: true,
         message:
-          error instanceof Error ? error.message : "Failed to delete teachers",
+          error instanceof Error ? error.message : "Failed to delete employees",
       });
     }
   };
@@ -232,7 +240,7 @@ const AllTeachersComponent = () => {
               table
                 .getRowModel()
                 .rows.every((row) =>
-                  selectedTeachers.has(row.original.teacherId)
+                  selectedEmployees.has(row.original.employeeId)
                 )
             }
             onChange={(e) => handleSelectAll(e.target.checked, table)}
@@ -243,9 +251,9 @@ const AllTeachersComponent = () => {
           <div onClick={(e) => e.stopPropagation()} className="relative z-20">
             <input
               type="checkbox"
-              checked={selectedTeachers.has(row.original.teacherId)}
+              checked={selectedEmployees.has(row.original.employeeId)}
               onChange={(e) =>
-                handleSelectTeacher(row.original.teacherId, e.target.checked)
+                handleSelectEmployee(row.original.employeeId, e.target.checked)
               }
               className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
             />
@@ -261,7 +269,7 @@ const AllTeachersComponent = () => {
             <div>
               <div>
                 {info.row.original.firstName} {info.row.original.lastName} (
-                {info.row.original.teacherId})
+                {info.row.original.employeeId})
               </div>
               <div className="text-sm text-gray-400">
                 {info.row.original.primaryPhone}
@@ -333,7 +341,23 @@ const AllTeachersComponent = () => {
           </div>
         ),
       }),
-      columnHelper.accessor("teacherId", {
+      columnHelper.accessor("employeeType", {
+        header: "Type",
+        cell: (info) => (
+          <div className="flex items-center gap-x-2">
+            <span
+              className={`px-2 py-1 rounded-full text-xs ${
+                info.row.original.employeeType === EmployeeType.Teacher
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {capitalizeFirstLetter(info.row.original.employeeType)}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("employeeId", {
         header: "Actions",
         cell: (info) => (
           <div className="flex gap-3 relative z-20">
@@ -341,7 +365,7 @@ const AllTeachersComponent = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleEdit(info.row.original.teacherId);
+                handleEdit(info.row.original.employeeId);
               }}
               className="text-blue-500 hover:text-blue-400 text-2xl"
             >
@@ -361,11 +385,11 @@ const AllTeachersComponent = () => {
         ),
       }),
     ],
-    [columnHelper, selectedTeachers]
-  ) as ColumnDef<ITeacher, unknown>[];
+    [columnHelper, selectedEmployees]
+  ) as ColumnDef<IEmployee, unknown>[];
 
   const table = useReactTable({
-    data: filteredTeachers,
+    data: filteredEmployees,
     columns,
     state: {
       sorting,
@@ -389,21 +413,21 @@ const AllTeachersComponent = () => {
         <div className="space-y-2">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-semibold">All Employees</h1>
-            {selectedTeachers.size > 0 && (
+            {selectedEmployees.size > 0 && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    const teachersToDelete = filteredTeachers.filter(
-                      (teacher) => selectedTeachers.has(teacher.teacherId)
+                    const employeesToDelete = filteredEmployees.filter(
+                      (employee) => selectedEmployees.has(employee.employeeId)
                     );
-                    handleDelete(teachersToDelete as ITeacher[]);
+                    handleDelete(employeesToDelete as IEmployee[]);
                   }}
                   className="px-3 py-1 text-sm text-red-400 hover:text-red-300 border border-red-400 hover:border-red-300 rounded-full"
                 >
-                  Delete Selected ({selectedTeachers.size})
+                  Delete Selected ({selectedEmployees.size})
                 </button>
                 <button
-                  onClick={() => setSelectedTeachers(new Set())}
+                  onClick={() => setSelectedEmployees(new Set())}
                   className="px-3 py-1 text-sm text-gray-400 hover:text-gray-300 border border-gray-400 hover:border-gray-300 rounded-full"
                 >
                   Reset
@@ -467,7 +491,7 @@ const AllTeachersComponent = () => {
             href="/employees/create"
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
           >
-            Add Teacher
+            Add Employee
           </Link>
 
           <Menu as="div" className="relative">
@@ -479,7 +503,7 @@ const AllTeachersComponent = () => {
               <div className="space-y-2">
                 {table.getAllLeafColumns().map((column) => {
                   // Skip the actions column from toggle
-                  if (column.id === "teacherId") return null;
+                  if (column.id === "employeeId") return null;
 
                   return (
                     <div key={column.id} className="flex items-center gap-x-2">
@@ -549,16 +573,16 @@ const AllTeachersComponent = () => {
           >
             <span className="sr-only">Loading...</span>
           </div>
-          <div className="mt-2">Loading teachers...</div>
+          <div className="mt-2">Loading employees...</div>
         </div>
       ) : error ? (
         <div className="text-center py-8">
           <div className="text-red-500 text-lg mb-2">
-            Error loading teachers
+            Error loading employees
           </div>
           <div className="text-gray-400">{error.message}</div>
         </div>
-      ) : filteredTeachers.length === 0 ? (
+      ) : filteredEmployees.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-gray-400 text-lg mb-2">No employee found</div>
           {searchQuery && (
@@ -614,7 +638,7 @@ const AllTeachersComponent = () => {
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="py-2 px-4 relative">
-                    {cell.column.id === "teacherId" ? (
+                    {cell.column.id === "employeeId" ? (
                       <div className="relative z-10">
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -624,7 +648,7 @@ const AllTeachersComponent = () => {
                     ) : (
                       <div className="relative">
                         <Link
-                          href={`/employees/${row.original.teacherId}`}
+                          href={`/employees/${row.original.employeeId}`}
                           className="absolute inset-0 z-0"
                           aria-label={`View details for ${row.original.firstName} ${row.original.lastName}`}
                         />
@@ -703,15 +727,15 @@ const AllTeachersComponent = () => {
         onClose={() =>
           setDeletePopup({
             isOpen: false,
-            teacher: null,
-            multipleTeachers: null,
+            employee: null,
+            multipleEmployees: null,
           })
         }
         onDelete={confirmDelete}
         itemName={
-          deletePopup.multipleTeachers
+          deletePopup.multipleEmployees
             ? `Confirm`
-            : `${deletePopup.teacher?.firstName} ${deletePopup.teacher?.lastName}`
+            : `${deletePopup.employee?.firstName} ${deletePopup.employee?.lastName}`
         }
       />
 
@@ -724,4 +748,4 @@ const AllTeachersComponent = () => {
   );
 };
 
-export default AllTeachersComponent;
+export default AllEmployeesComponent;

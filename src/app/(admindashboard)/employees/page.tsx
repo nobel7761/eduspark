@@ -1,8 +1,8 @@
-import AllTeachersComponent from "@/components/page/Teachers/AllTeachersComponent";
+import AllEmployeesComponent from "@/components/page/Employee/AllEmployeesComponent";
 import { NextPage } from "next";
 
-const AllTeachersPage: NextPage = () => {
-  return <AllTeachersComponent />;
+const AllEmployeesPage: NextPage = () => {
+  return <AllEmployeesComponent />;
 };
 
-export default AllTeachersPage;
+export default AllEmployeesPage;

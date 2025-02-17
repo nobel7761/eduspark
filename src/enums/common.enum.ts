@@ -8,3 +8,8 @@ export enum Gender {
   Male = "Male",
   Female = "Female",
 }
+
+export enum PaymentMethod {
+  PerClass = "Per Class",
+  Monthly = "Monthly",
+}

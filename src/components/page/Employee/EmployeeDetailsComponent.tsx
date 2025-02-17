@@ -3,8 +3,7 @@
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ITeacher } from "@/types/teacher";
-import { PaymentMethod } from "@/enums/teachers.enum";
+import { IEmployee } from "@/types/employee";
 import {
   FaUser,
   FaPhone,
@@ -13,24 +12,26 @@ import {
   FaGraduationCap,
   FaComment,
 } from "react-icons/fa";
+import { PaymentMethod } from "@/enums/common.enum";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
 
-const TeacherDetailsComponent = () => {
+const EmployeeDetailsComponent = () => {
   const params = useParams();
-  const [teacher, setTeacher] = useState<ITeacher | null>(null);
+  const [employee, setEmployee] = useState<IEmployee | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchTeacher = async () => {
+  const fetchEmployee = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${params.teacherId}`
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees/${params.employeeId}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch teacher");
+        throw new Error("Failed to fetch employee");
       }
       const data = await response.json();
-      setTeacher(data);
+      setEmployee(data);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -38,13 +39,13 @@ const TeacherDetailsComponent = () => {
     }
   };
 
-  console.log(teacher);
+  console.log(employee);
 
   useEffect(() => {
-    if (params.teacherId) {
-      fetchTeacher();
+    if (params.employeeId) {
+      fetchEmployee();
     }
-  }, [params.teacherId]);
+  }, [params.employeeId]);
 
   if (loading) {
     return <div className="text-center py-4">Loading...</div>;
@@ -58,8 +59,8 @@ const TeacherDetailsComponent = () => {
     );
   }
 
-  if (!teacher) {
-    return <div>Teacher not found</div>;
+  if (!employee) {
+    return <div>Employee not found</div>;
   }
 
   return (
@@ -68,13 +69,13 @@ const TeacherDetailsComponent = () => {
         <h1 className="text-3xl font-bold text-white">Employee Details</h1>
         <div className="flex gap-4">
           <Link
-            href="/employees/employees"
+            href="/employees"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
           >
             ← Back to Employees
           </Link>
           <Link
-            href={`/employees/edit/${teacher?.teacherId}`}
+            href={`/employees/edit/${employee?.employeeId}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           >
             Edit Employee
@@ -94,11 +95,15 @@ const TeacherDetailsComponent = () => {
             <div className="grid grid-cols-2 gap-4">
               <InfoItem
                 label="Name"
-                value={`${teacher?.firstName} ${teacher?.lastName}`}
+                value={`${employee?.firstName} ${employee?.lastName}`}
               />
-              <InfoItem label="Gender" value={teacher?.gender} />
-              <InfoItem label="Teacher ID" value={teacher?.teacherId} />
-              <InfoItem label="NID" value={teacher?.nidNumber || "-"} />
+              <InfoItem label="Gender" value={employee?.gender} />
+              <InfoItem label="Employee ID" value={employee?.employeeId} />
+              <InfoItem label="NID" value={employee?.nidNumber || "-"} />
+              <InfoItem
+                label="Employee Type"
+                value={capitalizeFirstLetter(employee?.employeeType)}
+              />
             </div>
           </div>
 
@@ -109,19 +114,19 @@ const TeacherDetailsComponent = () => {
               Contact Information
             </h2>
             <div className="space-y-3">
-              <InfoItem label="Primary Phone" value={teacher?.primaryPhone} />
+              <InfoItem label="Primary Phone" value={employee?.primaryPhone} />
               <InfoItem
                 label="Secondary Phone"
-                value={teacher?.secondaryPhone || "-"}
+                value={employee?.secondaryPhone || "-"}
               />
-              <InfoItem label="Email" value={teacher?.email || "-"} />
+              <InfoItem label="Email" value={employee?.email || "-"} />
               <InfoItem
                 label="Present Address"
-                value={teacher?.presentAddress}
+                value={employee?.presentAddress}
               />
               <InfoItem
                 label="Permanent Address"
-                value={teacher?.permanentAddress || "-"}
+                value={employee?.permanentAddress || "-"}
               />
             </div>
           </div>
@@ -139,22 +144,25 @@ const TeacherDetailsComponent = () => {
               <InfoItem
                 label="Joining Date"
                 value={
-                  teacher?.joiningDate
-                    ? new Date(teacher.joiningDate).toLocaleDateString()
+                  employee?.joiningDate
+                    ? new Date(employee.joiningDate).toLocaleDateString()
                     : "-"
                 }
               />
-              <InfoItem label="Payment Method" value={teacher?.paymentMethod} />
-              {teacher?.paymentMethod === PaymentMethod.PerClass && (
+              <InfoItem
+                label="Payment Method"
+                value={employee?.paymentMethod}
+              />
+              {employee?.paymentMethod === PaymentMethod.PerClass && (
                 <InfoItem
                   label="Payment Per Class"
-                  value={`${teacher?.paymentPerClass} BDT`}
+                  value={`${employee?.paymentPerClass} BDT`}
                 />
               )}
-              {teacher?.paymentMethod === PaymentMethod.Monthly && (
+              {employee?.paymentMethod === PaymentMethod.Monthly && (
                 <InfoItem
                   label="Payment Per Month"
-                  value={`${teacher?.paymentPerMonth} BDT`}
+                  value={`${employee?.paymentPerMonth} BDT`}
                 />
               )}
             </div>
@@ -172,8 +180,8 @@ const TeacherDetailsComponent = () => {
                   Father&apos;s Information
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoItem label="Name" value={teacher?.father?.name} />
-                  <InfoItem label="Phone" value={teacher?.father?.phone} />
+                  <InfoItem label="Name" value={employee?.father?.name} />
+                  <InfoItem label="Phone" value={employee?.father?.phone} />
                 </div>
               </div>
               <div className="flex-1">
@@ -181,8 +189,8 @@ const TeacherDetailsComponent = () => {
                   Mother&apos;s Information
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <InfoItem label="Name" value={teacher?.mother?.name} />
-                  <InfoItem label="Phone" value={teacher?.mother?.phone} />
+                  <InfoItem label="Name" value={employee?.mother?.name} />
+                  <InfoItem label="Phone" value={employee?.mother?.phone} />
                 </div>
               </div>
             </div>
@@ -207,17 +215,19 @@ const TeacherDetailsComponent = () => {
               <div className="space-y-2">
                 <InfoItem
                   label="Institute"
-                  value={teacher?.educationalBackground?.university?.institute}
+                  value={employee?.educationalBackground?.university?.institute}
                 />
                 <InfoItem
                   label="Department"
-                  value={teacher?.educationalBackground?.university?.department}
+                  value={
+                    employee?.educationalBackground?.university?.department
+                  }
                 />
-                {teacher?.isCurrentlyStudying ? (
+                {employee?.isCurrentlyStudying ? (
                   <InfoItem
                     label="Admission Year"
                     value={
-                      teacher?.educationalBackground?.university?.admissionYear
+                      employee?.educationalBackground?.university?.admissionYear
                     }
                   />
                 ) : (
@@ -225,12 +235,12 @@ const TeacherDetailsComponent = () => {
                     <InfoItem
                       label="Passing Year"
                       value={
-                        teacher?.educationalBackground?.university?.passingYear
+                        employee?.educationalBackground?.university?.passingYear
                       }
                     />
                     <InfoItem
                       label="CGPA"
-                      value={teacher?.educationalBackground?.university?.cgpa}
+                      value={employee?.educationalBackground?.university?.cgpa}
                     />
                   </>
                 )}
@@ -243,19 +253,19 @@ const TeacherDetailsComponent = () => {
               <div className="space-y-2">
                 <InfoItem
                   label="Institute"
-                  value={teacher?.educationalBackground?.hsc?.institute}
+                  value={employee?.educationalBackground?.hsc?.institute}
                 />
                 <InfoItem
                   label="Group"
-                  value={teacher?.educationalBackground?.hsc?.group}
+                  value={employee?.educationalBackground?.hsc?.group}
                 />
                 <InfoItem
                   label="Passing Year"
-                  value={teacher?.educationalBackground?.hsc?.year}
+                  value={employee?.educationalBackground?.hsc?.year}
                 />
                 <InfoItem
                   label="GPA"
-                  value={teacher?.educationalBackground?.hsc?.result}
+                  value={employee?.educationalBackground?.hsc?.result}
                 />
               </div>
             </div>
@@ -266,19 +276,19 @@ const TeacherDetailsComponent = () => {
               <div className="space-y-2">
                 <InfoItem
                   label="Institute"
-                  value={teacher?.educationalBackground?.ssc?.institute}
+                  value={employee?.educationalBackground?.ssc?.institute}
                 />
                 <InfoItem
                   label="Group"
-                  value={teacher?.educationalBackground?.ssc?.group}
+                  value={employee?.educationalBackground?.ssc?.group}
                 />
                 <InfoItem
                   label="Passing Year"
-                  value={teacher?.educationalBackground?.ssc?.year}
+                  value={employee?.educationalBackground?.ssc?.year}
                 />
                 <InfoItem
                   label="GPA"
-                  value={teacher?.educationalBackground?.ssc?.result}
+                  value={employee?.educationalBackground?.ssc?.result}
                 />
               </div>
             </div>
@@ -295,7 +305,7 @@ const TeacherDetailsComponent = () => {
           </h2>
           <div className="p-4 bg-gray-50 rounded-lg">
             <p className="text-gray-700 whitespace-pre-wrap">
-              {teacher?.comments || "No comments available"}
+              {employee?.comments || "No comments available"}
             </p>
           </div>
         </div>
@@ -322,4 +332,4 @@ const InfoItem = ({
   );
 };
 
-export default TeacherDetailsComponent;
+export default EmployeeDetailsComponent;

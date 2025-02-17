@@ -3,8 +3,7 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { PaymentMethod } from "@/enums/teachers.enum";
-import { Gender } from "@/enums/common.enum";
+import { Gender, PaymentMethod } from "@/enums/common.enum";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,10 +12,11 @@ import FailedPopup from "@/components/UI/FailedPopup";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { Group } from "@/enums/common.enum";
-import { ITeacherWithoutId } from "@/types/teacher";
 import { FaCheckCircle } from "react-icons/fa";
+import { IEmployeeWithoutId } from "@/types/employee";
+import { EmployeeType } from "@/enums/employees.enum";
 
-// Form schema matches ITeacher interface but excludes auto-generated fields
+// Form schema matches IE interface but excludes auto-generated fields
 const schema = yup.object({
   firstName: yup
     .string()
@@ -229,6 +229,10 @@ const schema = yup.object({
       .required(),
   }),
   comments: yup.string().optional(),
+  employeeType: yup
+    .mixed<EmployeeType>()
+    .oneOf(Object.values(EmployeeType))
+    .required("Employee type is required"),
 });
 
 // Add this helper function near the top of the file, after the imports
@@ -236,7 +240,7 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 
-const CreateTeacherComponent = () => {
+const CreateEmployeeComponent = () => {
   const router = useRouter();
   const [successPopup, setSuccessPopup] = useState(false);
   const [failedPopup, setFailedPopup] = useState(false);
@@ -248,8 +252,10 @@ const CreateTeacherComponent = () => {
   const [joiningDate, setJoiningDate] = useState<Date | null>(null);
   const [isCurrentlyStudying, setIsCurrentlyStudying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>(
-    "Failed to create teacher. Please try again."
+    "Failed to create employee. Please try again."
   );
+  const [selectedEmployeeType, setSelectedEmployeeType] =
+    useState<EmployeeType | null>(null);
 
   const {
     register,
@@ -288,12 +294,12 @@ const CreateTeacherComponent = () => {
     }
   };
 
-  const onSubmit = async (data: Partial<ITeacherWithoutId>) => {
+  const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
     console.log("Form data being submitted:", data);
     console.log("isCurrentlyStudying value:", data.isCurrentlyStudying);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/teachers`,
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
         {
           method: "POST",
           headers: {
@@ -315,22 +321,22 @@ const CreateTeacherComponent = () => {
       console.log("result", result);
       setSuccessPopup(true);
       setTimeout(() => {
-        router.push("/employees/teachers");
+        router.push("/employees");
       }, 2000);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         error.inner.forEach((err) => {
-          setError(err.path as keyof ITeacherWithoutId, {
+          setError(err.path as keyof IEmployeeWithoutId, {
             type: "manual",
             message: err.message,
           });
         });
       }
-      console.error("Error creating teacher:", error);
+      console.error("Error creating employee:", error);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Failed to create teacher. Please try again."
+          : "Failed to create employee. Please try again."
       );
       setFailedPopup(true);
     }
@@ -347,7 +353,7 @@ const CreateTeacherComponent = () => {
   return (
     <div className="mx-auto p-4 rounded-md bg-primary">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Create New Teacher</h1>
+        <h1 className="text-2xl font-bold text-white">Create New Employee</h1>
         <Link
           href="/employees"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -357,6 +363,65 @@ const CreateTeacherComponent = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Employee Type */}
+        <div className="bg-gray-800 p-6 rounded-lg flex-grow">
+          <label className="block text-sm font-medium mb-1 text-white">
+            Employee Type
+          </label>
+          <Listbox
+            value={selectedEmployeeType}
+            onChange={(value) => {
+              setSelectedEmployeeType(value);
+              setValue("employeeType", value as EmployeeType);
+            }}
+          >
+            <div className="relative mt-1">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                <span className="block truncate">
+                  {getDisplayText(selectedEmployeeType)}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                {Object.values(EmployeeType).map((type) => (
+                  <Listbox.Option
+                    key={type}
+                    value={type}
+                    className={({ active }) =>
+                      `${active ? "bg-primary text-white" : "text-white"}
+                      cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {capitalizeFirstLetter(type)}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+          {errors.employeeType && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.employeeType.message as string}
+            </p>
+          )}
+        </div>
+
         {/* Photo Upload and Personal Information Section */}
         <div className="flex items-center">
           {/* Photo Upload Section */}
@@ -1204,7 +1269,7 @@ const CreateTeacherComponent = () => {
         <div className="flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => router.push("/employees/teachers")}
+            onClick={() => router.push("/employees/employees")}
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
             Cancel
@@ -1213,7 +1278,7 @@ const CreateTeacherComponent = () => {
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Create Teacher
+            Create Employee
           </button>
         </div>
       </form>
@@ -1221,7 +1286,7 @@ const CreateTeacherComponent = () => {
       <SuccessPopup
         isOpen={successPopup}
         onClose={() => setSuccessPopup(false)}
-        message="Teacher created successfully!"
+        message="Employee created successfully!"
       />
       <FailedPopup
         isOpen={failedPopup}
@@ -1232,4 +1297,4 @@ const CreateTeacherComponent = () => {
   );
 };
 
-export default CreateTeacherComponent;
+export default CreateEmployeeComponent;

@@ -1,7 +1,6 @@
-import { ITeacher } from "@/types/teacher";
 import { getNestedValue } from "./studentSearch";
-
-export const teacherSearchableFields: (keyof ITeacher | string)[] = [
+import { IEmployee } from "@/types/employee";
+export const employeeSearchableFields: (keyof IEmployee | string)[] = [
   "firstName",
   "lastName",
   "address",
@@ -13,14 +12,14 @@ export const teacherSearchableFields: (keyof ITeacher | string)[] = [
   "educationalBackground.institution",
 ];
 
-export const searchTeacher = (
-  teacher: ITeacher,
+export const searchEmployee = (
+  employee: IEmployee,
   searchTerm: string
 ): boolean => {
   const term = searchTerm.toLowerCase().trim();
 
-  return teacherSearchableFields.some((field) => {
-    const value = getNestedValue(teacher, field as string);
+  return employeeSearchableFields.some((field) => {
+    const value = getNestedValue(employee, field as string);
     return value?.toString().toLowerCase().includes(term);
   });
 };

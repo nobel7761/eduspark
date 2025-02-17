@@ -1,21 +1,21 @@
 "use client";
 
-import { ITeacher } from "@/types/teacher";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PaymentMethod } from "@/enums/teachers.enum";
 import { Gender, Group } from "@/enums/common.enum";
 import PageLoader from "@/components/shared/PageLoader";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
+import { IEmployee } from "@/types/employee";
+import { PaymentMethod } from "@/enums/employees.enum";
 
-const EditTeacherComponent = () => {
+const EditEmployeeComponent = () => {
   const params = useParams();
   const router = useRouter();
-  const [teacher, setTeacher] = useState<ITeacher | null>(null);
+  const [employee, setEmployee] = useState<IEmployee | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [successPopup, setSuccessPopup] = useState(false);
@@ -24,17 +24,17 @@ const EditTeacherComponent = () => {
   const [selectedHscGroup, setSelectedHscGroup] = useState<Group | null>(null);
   const [selectedSscGroup, setSelectedSscGroup] = useState<Group | null>(null);
 
-  const fetchTeacher = async () => {
+  const fetchEmployee = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${params.teacherId}`
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees/${params.employeeId}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch teacher");
+        throw new Error("Failed to fetch employee");
       }
       const data = await response.json();
-      setTeacher(data);
+      setEmployee(data);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -42,46 +42,46 @@ const EditTeacherComponent = () => {
     }
   };
 
-  console.log(teacher);
+  console.log(employee);
 
   useEffect(() => {
-    if (params.teacherId) {
-      fetchTeacher();
+    if (params.employeeId) {
+      fetchEmployee();
     }
-  }, [params.teacherId]);
+  }, [params.employeeId]);
 
   useEffect(() => {
-    if (teacher) {
-      setSelectedPaymentMethod(teacher.paymentMethod as PaymentMethod);
-      setSelectedHscGroup(teacher.educationalBackground?.hsc?.group || null);
-      setSelectedSscGroup(teacher.educationalBackground?.ssc?.group || null);
+    if (employee) {
+      setSelectedPaymentMethod(employee.paymentMethod as PaymentMethod);
+      setSelectedHscGroup(employee.educationalBackground?.hsc?.group || null);
+      setSelectedSscGroup(employee.educationalBackground?.ssc?.group || null);
     }
-  }, [teacher]);
+  }, [employee]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/teachers/${params.teacherId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees/${params.employeeId}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(teacher),
+          body: JSON.stringify(employee),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to update teacher");
+        throw new Error("Failed to update employee");
       }
 
       setSuccessPopup(true);
       setTimeout(() => {
-        router.push("/employees/teachers");
+        router.push("/employees/employees");
       }, 2000);
     } catch (error) {
-      console.error("Error updating teacher:", error);
+      console.error("Error updating employee:", error);
     }
   };
 
@@ -99,10 +99,10 @@ const EditTeacherComponent = () => {
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
 
   useEffect(() => {
-    if (teacher) {
-      setSelectedGender(teacher.gender);
+    if (employee) {
+      setSelectedGender(employee.gender);
     }
-  }, [teacher]);
+  }, [employee]);
 
   if (loading) {
     return <PageLoader loading={true} />;
@@ -112,8 +112,8 @@ const EditTeacherComponent = () => {
     return <div className="text-red-500">Error: {error.message}</div>;
   }
 
-  if (!teacher) {
-    return <div>Teacher not found</div>;
+  if (!employee) {
+    return <div>Employee not found</div>;
   }
 
   return (
@@ -123,7 +123,7 @@ const EditTeacherComponent = () => {
           Edit Employee Information
         </h1>
         <Link
-          href="/employees/employees"
+          href="/employees"
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           ← Back to Employees
@@ -144,9 +144,9 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="text"
-                value={teacher?.firstName}
+                value={employee?.firstName}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, firstName: e.target.value })
+                  setEmployee({ ...employee, firstName: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -159,24 +159,24 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="text"
-                value={teacher?.lastName}
+                value={employee?.lastName}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, lastName: e.target.value })
+                  setEmployee({ ...employee, lastName: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            {/* Teacher ID */}
+            {/* Employee ID */}
             <div>
               <label className="block text-sm font-medium mb-1 text-white">
-                Teacher ID
+                Employee ID
               </label>
               <input
                 type="text"
-                value={teacher?.teacherId}
+                value={employee?.employeeId}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, teacherId: e.target.value })
+                  setEmployee({ ...employee, employeeId: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -191,7 +191,7 @@ const EditTeacherComponent = () => {
                 value={selectedGender}
                 onChange={(value) => {
                   setSelectedGender(value);
-                  setTeacher({ ...teacher, gender: value as Gender });
+                  setEmployee({ ...employee, gender: value as Gender });
                 }}
               >
                 <div className="relative mt-1">
@@ -243,9 +243,9 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="text"
-                value={teacher?.primaryPhone}
+                value={employee?.primaryPhone}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, primaryPhone: e.target.value })
+                  setEmployee({ ...employee, primaryPhone: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -258,9 +258,9 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="text"
-                value={teacher?.secondaryPhone}
+                value={employee?.secondaryPhone}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, secondaryPhone: e.target.value })
+                  setEmployee({ ...employee, secondaryPhone: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -273,9 +273,9 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="email"
-                value={teacher?.email || ""}
+                value={employee?.email || ""}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, email: e.target.value })
+                  setEmployee({ ...employee, email: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -288,9 +288,9 @@ const EditTeacherComponent = () => {
               </label>
               <input
                 type="text"
-                value={teacher?.nidNumber || ""}
+                value={employee?.nidNumber || ""}
                 onChange={(e) =>
-                  setTeacher({ ...teacher, nidNumber: e.target.value })
+                  setEmployee({ ...employee, nidNumber: e.target.value })
                 }
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -312,15 +312,15 @@ const EditTeacherComponent = () => {
               <input
                 type="date"
                 value={
-                  teacher?.joiningDate
-                    ? new Date(teacher.joiningDate).toISOString().split("T")[0]
+                  employee?.joiningDate
+                    ? new Date(employee.joiningDate).toISOString().split("T")[0]
                     : ""
                 }
                 onChange={(e) => {
                   const date = e.target.value
                     ? new Date(e.target.value)
                     : new Date();
-                  setTeacher({ ...teacher, joiningDate: date });
+                  setEmployee({ ...employee, joiningDate: date });
                 }}
                 className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               />
@@ -335,8 +335,8 @@ const EditTeacherComponent = () => {
                 value={selectedPaymentMethod}
                 onChange={(value) => {
                   setSelectedPaymentMethod(value);
-                  setTeacher({
-                    ...teacher,
+                  setEmployee({
+                    ...employee,
                     paymentMethod: value as PaymentMethod,
                   });
                 }}
@@ -391,10 +391,10 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="number"
-                  value={teacher?.paymentPerClass || ""}
+                  value={employee?.paymentPerClass || ""}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       paymentPerClass: Number(e.target.value),
                     })
                   }
@@ -410,10 +410,10 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="number"
-                  value={teacher?.paymentPerMonth || ""}
+                  value={employee?.paymentPerMonth || ""}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       paymentPerMonth: Number(e.target.value),
                     })
                   }
@@ -437,9 +437,9 @@ const EditTeacherComponent = () => {
                   Present Address
                 </label>
                 <textarea
-                  value={teacher?.presentAddress || ""}
+                  value={employee?.presentAddress || ""}
                   onChange={(e) =>
-                    setTeacher({ ...teacher, presentAddress: e.target.value })
+                    setEmployee({ ...employee, presentAddress: e.target.value })
                   }
                   className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
                   rows={3}
@@ -450,9 +450,12 @@ const EditTeacherComponent = () => {
                   Permanent Address
                 </label>
                 <textarea
-                  value={teacher?.permanentAddress || ""}
+                  value={employee?.permanentAddress || ""}
                   onChange={(e) =>
-                    setTeacher({ ...teacher, permanentAddress: e.target.value })
+                    setEmployee({
+                      ...employee,
+                      permanentAddress: e.target.value,
+                    })
                   }
                   className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
                   rows={3}
@@ -479,11 +482,11 @@ const EditTeacherComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={teacher?.father?.name || ""}
+                      value={employee?.father?.name || ""}
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
-                          father: { ...teacher?.father, name: e.target.value },
+                        setEmployee({
+                          ...employee,
+                          father: { ...employee?.father, name: e.target.value },
                         })
                       }
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
@@ -495,11 +498,14 @@ const EditTeacherComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={teacher?.father?.phone || ""}
+                      value={employee?.father?.phone || ""}
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
-                          father: { ...teacher?.father, phone: e.target.value },
+                        setEmployee({
+                          ...employee,
+                          father: {
+                            ...employee?.father,
+                            phone: e.target.value,
+                          },
                         })
                       }
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
@@ -520,11 +526,11 @@ const EditTeacherComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={teacher?.mother?.name || ""}
+                      value={employee?.mother?.name || ""}
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
-                          mother: { ...teacher?.mother, name: e.target.value },
+                        setEmployee({
+                          ...employee,
+                          mother: { ...employee?.mother, name: e.target.value },
                         })
                       }
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
@@ -536,11 +542,14 @@ const EditTeacherComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={teacher?.mother?.phone || ""}
+                      value={employee?.mother?.phone || ""}
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
-                          mother: { ...teacher?.mother, phone: e.target.value },
+                        setEmployee({
+                          ...employee,
+                          mother: {
+                            ...employee?.mother,
+                            phone: e.target.value,
+                          },
                         })
                       }
                       className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
@@ -567,10 +576,13 @@ const EditTeacherComponent = () => {
               <label className="flex items-center space-x-2 text-white">
                 <input
                   type="checkbox"
-                  checked={teacher?.isCurrentlyStudying || false}
+                  checked={employee?.isCurrentlyStudying || false}
                   onChange={(e) => {
                     const isChecked = e.target.checked;
-                    setTeacher({ ...teacher, isCurrentlyStudying: isChecked });
+                    setEmployee({
+                      ...employee,
+                      isCurrentlyStudying: isChecked,
+                    });
                   }}
                   className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
                 />
@@ -585,15 +597,15 @@ const EditTeacherComponent = () => {
                 <input
                   type="text"
                   value={
-                    teacher?.educationalBackground?.university?.institute || ""
+                    employee?.educationalBackground?.university?.institute || ""
                   }
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         university: {
-                          ...teacher?.educationalBackground?.university,
+                          ...employee?.educationalBackground?.university,
                           institute: e.target.value,
                         },
                       },
@@ -610,15 +622,16 @@ const EditTeacherComponent = () => {
                 <input
                   type="text"
                   value={
-                    teacher?.educationalBackground?.university?.department || ""
+                    employee?.educationalBackground?.university?.department ||
+                    ""
                   }
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         university: {
-                          ...teacher?.educationalBackground?.university,
+                          ...employee?.educationalBackground?.university,
                           department: e.target.value,
                         },
                       },
@@ -628,7 +641,7 @@ const EditTeacherComponent = () => {
                 />
               </div>
 
-              {teacher?.isCurrentlyStudying ? (
+              {employee?.isCurrentlyStudying ? (
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">
                     Admission Year
@@ -636,16 +649,16 @@ const EditTeacherComponent = () => {
                   <input
                     type="number"
                     value={
-                      teacher?.educationalBackground?.university
+                      employee?.educationalBackground?.university
                         ?.admissionYear || ""
                     }
                     onChange={(e) =>
-                      setTeacher({
-                        ...teacher,
+                      setEmployee({
+                        ...employee,
                         educationalBackground: {
-                          ...teacher?.educationalBackground,
+                          ...employee?.educationalBackground,
                           university: {
-                            ...teacher?.educationalBackground?.university,
+                            ...employee?.educationalBackground?.university,
                             admissionYear: Number(e.target.value),
                           },
                         },
@@ -663,16 +676,16 @@ const EditTeacherComponent = () => {
                     <input
                       type="number"
                       value={
-                        teacher?.educationalBackground?.university
+                        employee?.educationalBackground?.university
                           ?.passingYear || ""
                       }
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
+                        setEmployee({
+                          ...employee,
                           educationalBackground: {
-                            ...teacher?.educationalBackground,
+                            ...employee?.educationalBackground,
                             university: {
-                              ...teacher?.educationalBackground?.university,
+                              ...employee?.educationalBackground?.university,
                               passingYear: Number(e.target.value),
                             },
                           },
@@ -690,15 +703,15 @@ const EditTeacherComponent = () => {
                       type="number"
                       step="0.01"
                       value={
-                        teacher?.educationalBackground?.university?.cgpa || ""
+                        employee?.educationalBackground?.university?.cgpa || ""
                       }
                       onChange={(e) =>
-                        setTeacher({
-                          ...teacher,
+                        setEmployee({
+                          ...employee,
                           educationalBackground: {
-                            ...teacher?.educationalBackground,
+                            ...employee?.educationalBackground,
                             university: {
-                              ...teacher?.educationalBackground?.university,
+                              ...employee?.educationalBackground?.university,
                               cgpa: Number(e.target.value),
                             },
                           },
@@ -724,14 +737,14 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={teacher?.educationalBackground?.hsc.institute}
+                  value={employee?.educationalBackground?.hsc.institute}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         hsc: {
-                          ...teacher?.educationalBackground?.hsc,
+                          ...employee?.educationalBackground?.hsc,
                           institute: e.target.value,
                         },
                       },
@@ -748,12 +761,12 @@ const EditTeacherComponent = () => {
                   value={selectedHscGroup}
                   onChange={(value) => {
                     setSelectedHscGroup(value);
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         hsc: {
-                          ...teacher?.educationalBackground?.hsc,
+                          ...employee?.educationalBackground?.hsc,
                           group: value as Group,
                         },
                       },
@@ -807,14 +820,14 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={teacher?.educationalBackground?.hsc.year}
+                  value={employee?.educationalBackground?.hsc.year}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         hsc: {
-                          ...teacher?.educationalBackground?.hsc,
+                          ...employee?.educationalBackground?.hsc,
                           year: Number(e.target.value),
                         },
                       },
@@ -830,14 +843,14 @@ const EditTeacherComponent = () => {
                 <input
                   type="number"
                   step="0.01"
-                  value={teacher?.educationalBackground?.hsc?.result || ""}
+                  value={employee?.educationalBackground?.hsc?.result || ""}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         hsc: {
-                          ...teacher?.educationalBackground?.hsc,
+                          ...employee?.educationalBackground?.hsc,
                           result: Number(e.target.value),
                         },
                       },
@@ -861,14 +874,14 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={teacher?.educationalBackground?.ssc.institute}
+                  value={employee?.educationalBackground?.ssc.institute}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         ssc: {
-                          ...teacher?.educationalBackground?.ssc,
+                          ...employee?.educationalBackground?.ssc,
                           institute: e.target.value,
                         },
                       },
@@ -885,12 +898,12 @@ const EditTeacherComponent = () => {
                   value={selectedSscGroup}
                   onChange={(value) => {
                     setSelectedSscGroup(value);
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         ssc: {
-                          ...teacher?.educationalBackground?.ssc,
+                          ...employee?.educationalBackground?.ssc,
                           group: value as Group,
                         },
                       },
@@ -944,14 +957,14 @@ const EditTeacherComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={teacher?.educationalBackground?.ssc.year}
+                  value={employee?.educationalBackground?.ssc.year}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         ssc: {
-                          ...teacher?.educationalBackground?.ssc,
+                          ...employee?.educationalBackground?.ssc,
                           year: Number(e.target.value),
                         },
                       },
@@ -967,14 +980,14 @@ const EditTeacherComponent = () => {
                 <input
                   type="number"
                   step="0.01"
-                  value={teacher?.educationalBackground?.ssc?.result || ""}
+                  value={employee?.educationalBackground?.ssc?.result || ""}
                   onChange={(e) =>
-                    setTeacher({
-                      ...teacher,
+                    setEmployee({
+                      ...employee,
                       educationalBackground: {
-                        ...teacher?.educationalBackground,
+                        ...employee?.educationalBackground,
                         ssc: {
-                          ...teacher?.educationalBackground?.ssc,
+                          ...employee?.educationalBackground?.ssc,
                           result: Number(e.target.value),
                         },
                       },
@@ -992,9 +1005,9 @@ const EditTeacherComponent = () => {
           <h2 className="text-xl font-semibold mb-4 text-white">Comments</h2>
           <div>
             <textarea
-              value={teacher?.comments || ""}
+              value={employee?.comments || ""}
               onChange={(e) =>
-                setTeacher({ ...teacher, comments: e.target.value })
+                setEmployee({ ...employee, comments: e.target.value })
               }
               className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
               rows={3}
@@ -1005,7 +1018,7 @@ const EditTeacherComponent = () => {
 
         <div className="flex justify-end gap-4">
           <Link
-            href="/employees/teachers"
+            href="/employees"
             className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
           >
             Cancel
@@ -1022,10 +1035,10 @@ const EditTeacherComponent = () => {
       <SuccessPopup
         isOpen={successPopup}
         onClose={() => setSuccessPopup(false)}
-        message="Teacher updated successfully!"
+        message="Employee updated successfully!"
       />
     </div>
   );
 };
 
-export default EditTeacherComponent;
+export default EditEmployeeComponent;

@@ -1,7 +1,7 @@
-import { Gender, Group } from "@/enums/common.enum";
-import { PaymentMethod } from "@/enums/teachers.enum";
+import { Gender, Group, PaymentMethod } from "@/enums/common.enum";
+import { EmployeeType } from "@/enums/employees.enum";
 
-export interface ITeacher {
+export interface IEmployee {
   // Personal Information
   firstName: string;
   lastName: string;
@@ -11,8 +11,9 @@ export interface ITeacher {
   secondaryPhone?: string;
   email?: string | null;
   nidNumber?: string;
-  teacherId: string;
+  employeeId: string;
   comments?: string;
+  employeeType: EmployeeType;
   // Address Information
   presentAddress: string;
   permanentAddress?: string;
@@ -58,4 +59,4 @@ export interface ITeacher {
   paymentPerMonth?: number;
 }
 
-export type ITeacherWithoutId = Omit<ITeacher, "teacherId">;
+export type IEmployeeWithoutId = Omit<IEmployee, "employeeId">;
