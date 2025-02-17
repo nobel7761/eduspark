@@ -3,14 +3,13 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Gender, Group } from "@/enums/common.enum";
+import { Gender, Group, PaymentMethod } from "@/enums/common.enum";
 import PageLoader from "@/components/shared/PageLoader";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployee } from "@/types/employee";
-import { PaymentMethod } from "@/enums/employees.enum";
 
 const EditEmployeeComponent = () => {
   const params = useParams();
