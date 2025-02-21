@@ -626,7 +626,7 @@ const CreateEmployeeComponent = () => {
                   </div>
 
                   {/* Email */}
-                  {selectedEmployeeType === EmployeeType.Teacher && (
+                  {selectedEmployeeType === EmployeeType.TEACHER && (
                     <>
                       <div>
                         <label className="block text-sm font-medium mb-1 text-white">
@@ -667,7 +667,7 @@ const CreateEmployeeComponent = () => {
                 Payment Information
               </h2>
 
-              {selectedEmployeeType === EmployeeType.Teacher && (
+              {selectedEmployeeType === EmployeeType.TEACHER && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -771,7 +771,7 @@ const CreateEmployeeComponent = () => {
                 </>
               )}
 
-              {selectedEmployeeType === EmployeeType.Cleaner && (
+              {selectedEmployeeType === EmployeeType.CLEANER && (
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-white">
@@ -830,7 +830,7 @@ const CreateEmployeeComponent = () => {
               </div>
 
               {/* Parents Information */}
-              {selectedEmployeeType === EmployeeType.Teacher && (
+              {selectedEmployeeType === EmployeeType.TEACHER && (
                 <>
                   <div className="bg-gray-800 p-6 rounded-lg flex-1">
                     <h2 className="text-xl font-bold mb-4 text-white">
@@ -907,7 +907,7 @@ const CreateEmployeeComponent = () => {
             </div>
 
             {/* Educational Background */}
-            {selectedEmployeeType === EmployeeType.Teacher && (
+            {selectedEmployeeType === EmployeeType.TEACHER && (
               <>
                 <div className="bg-gray-800 p-6 rounded-lg mt-6">
                   <h2 className="text-xl font-bold mb-4 text-white">
