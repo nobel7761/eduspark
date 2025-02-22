@@ -61,3 +61,7 @@ export interface IStudent {
   createdAt?: string;
   studentId: string;
 }
+
+export type IUpdateStudent = Partial<Omit<IStudent, "studentId">> & {
+  studentId: string; // keeping studentId required for identification
+};

@@ -39,8 +39,6 @@ const EmployeeDetailsComponent = () => {
     }
   };
 
-  console.log(employee);
-
   useEffect(() => {
     if (params.employeeId) {
       fetchEmployee();

@@ -261,7 +261,7 @@ const CreateEmployeeComponent = () => {
     register,
     handleSubmit,
     setValue,
-    watch,
+    // watch,
     setError,
     formState: { errors },
   } = useForm({
@@ -271,8 +271,7 @@ const CreateEmployeeComponent = () => {
     },
   });
 
-  const isCurrentlyStudyingValue = watch("isCurrentlyStudying");
-  console.log("isCurrentlyStudying (watched):", isCurrentlyStudyingValue); // Debugging
+  // const isCurrentlyStudyingValue = watch("isCurrentlyStudying");
 
   const handleIsCurrentlyStudyingChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -295,8 +294,6 @@ const CreateEmployeeComponent = () => {
   };
 
   const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
-    console.log("Form data being submitted:", data);
-    console.log("isCurrentlyStudying value:", data.isCurrentlyStudying);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
@@ -317,8 +314,8 @@ const CreateEmployeeComponent = () => {
         );
       }
 
-      const result = await response.json();
-      console.log("result", result);
+      await response.json();
+
       setSuccessPopup(true);
       setTimeout(() => {
         router.push("/employees");

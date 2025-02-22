@@ -7,25 +7,17 @@ import ParentsInfoStep from "./steps/ParentsInfo";
 import ReferralInfoStep from "./steps/ReferralInfo";
 import { FormData } from "@/types/stepperForm";
 import { useRouter } from "next/navigation";
-import SuccessPopup from "@/components/UI/SuccessPopup";
-import FailedPopup from "@/components/UI/FailedPopup";
 import { useCallback, useState } from "react";
-import { IStudent } from "@/types/student";
+import { toast } from "react-toastify";
 
 const CreateStudentComponent = () => {
   const router = useRouter();
-  const [openSuccessPopup, setOpenSuccessPopup] = useState<boolean>(false);
-  const [openFailedPopup, setOpenFailedPopup] = useState<boolean>(false);
 
-  const [createdData, setCreatedData] = useState<{ data: IStudent } | null>(
-    null
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const callApi = useCallback(async (data?: FormData) => {
     try {
-      setLoading(true);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/students`,
         {
@@ -37,17 +29,16 @@ const CreateStudentComponent = () => {
         }
       );
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to create student");
+        throw new Error(result.message || "Failed to create student");
       }
 
-      const result = await response.json();
-      setCreatedData(result);
+      return result;
     } catch (err) {
       setError(err as Error);
       throw err;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -76,18 +67,23 @@ const CreateStudentComponent = () => {
 
   const handleSubmit = async (data: FormData) => {
     try {
-      callApi(data);
-      if (createdData) {
-        setOpenSuccessPopup(true);
-        setTimeout(() => {
-          router.push("/students");
-        }, 2000);
-      } else {
-        setOpenFailedPopup(true);
+      setLoading(true);
+      const response = await callApi(data);
+
+      if (response) {
+        toast.success("Student created successfully!", {
+          onClose: () => {
+            router.push("/students");
+          },
+        });
       }
     } catch (err) {
       console.error("Error creating student:", err);
-      setOpenFailedPopup(true);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create student"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,19 +95,6 @@ const CreateStudentComponent = () => {
         onSubmit={handleSubmit}
         isSubmitting={loading}
         error={error?.message}
-      />
-
-      <SuccessPopup
-        isOpen={openSuccessPopup}
-        onClose={() => setOpenSuccessPopup(false)}
-        message={
-          "Student created successfully. You will be redirected to the students list page."
-        }
-      />
-      <FailedPopup
-        isOpen={openFailedPopup}
-        onClose={() => setOpenFailedPopup(false)}
-        message={"Failed to create student"}
       />
     </div>
   );

@@ -1,28 +1,41 @@
 import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { MdCloudUpload } from "react-icons/md";
+import {
+  // useEffect,
+  useState,
+} from "react";
+// import Image from "next/image";
+// import { MdCloudUpload } from "react-icons/md";
+import { Listbox } from "@headlessui/react";
+import { HiChevronUpDown } from "react-icons/hi2";
+import { FaCheckCircle } from "react-icons/fa";
 
 const PersonalInfoStep = () => {
   const {
     register,
     formState: { errors },
-    watch,
+    // watch,
+    setValue,
   } = useFormContext();
 
-  const photoFile = watch("photo");
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // const photoFile = watch("photo");
+  // const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<string>("");
+  const [selectedReligion, setSelectedReligion] = useState<string>("");
 
-  useEffect(() => {
-    if (photoFile && photoFile[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(photoFile[0]);
-    }
-  }, [photoFile]);
+  // useEffect(() => {
+  //   if (photoFile && photoFile[0]) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setPhotoPreview(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(photoFile[0]);
+  //   }
+  // }, [photoFile]);
+
+  // Replace the select element with Listbox
+  const genderOptions = ["Male", "Female"];
+  const religionOptions = ["Islam", "Hinduism", "Christianity", "Buddhism"];
 
   return (
     <motion.div
@@ -34,7 +47,7 @@ const PersonalInfoStep = () => {
       <h2 className="text-xl font-semibold mb-3">Personal Information</h2>
       <div className="flex justify-between items-center gap-x-3 my-10">
         {/* photo */}
-        <motion.div
+        {/* <motion.div
           className="w-1/3"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -85,9 +98,9 @@ const PersonalInfoStep = () => {
               <MdCloudUpload className="text-3xl text-primary hover:text-white transition-colors" />
             </motion.label>
           </div>
-        </motion.div>
+        </motion.div> */}
         {/* name, primaryPhone, secondaryPhone Info */}
-        <div className="w-2/3 flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-6">
           {" "}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -187,16 +200,58 @@ const PersonalInfoStep = () => {
           transition={{ duration: 0.3, delay: 0.5 }}
         >
           <label className="block text-sm font-medium mb-1">Gender</label>
-          <select
-            {...register("gender", {
-              required: "Gender is required",
-            })}
-            className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+          <Listbox
+            value={selectedGender}
+            onChange={(value) => {
+              setSelectedGender(value);
+              setValue("gender", value, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+            }}
           >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
+            <div className="relative mt-1">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                <span className="block truncate">
+                  {selectedGender || "Select Gender"}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+                {genderOptions.map((gender) => (
+                  <Listbox.Option
+                    key={gender}
+                    value={gender}
+                    className={({ active }) =>
+                      `${
+                        active ? "bg-primary text-white" : "text-white"
+                      } cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {gender}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
           {errors.gender && (
             <p className="text-red-500 text-xs mt-1">
               {errors.gender.message as string}
@@ -210,18 +265,60 @@ const PersonalInfoStep = () => {
           transition={{ duration: 0.3, delay: 0.6 }}
         >
           <label className="block text-sm font-medium mb-1">Religion</label>
-          <select
-            {...register("religion", {
-              required: "Religion is required",
-            })}
-            className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+          <Listbox
+            value={selectedReligion}
+            onChange={(value) => {
+              setSelectedReligion(value);
+              setValue("religion", value, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              });
+            }}
           >
-            <option value="">Select Religion</option>
-            <option value="Islam">Islam</option>
-            <option value="Hinduism">Hinduism</option>
-            <option value="Christianity">Christianity</option>
-            <option value="Buddhism">Buddhism</option>
-          </select>
+            <div className="relative mt-1">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                <span className="block truncate">
+                  {selectedReligion || "Select Religion"}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <div className="relative">
+                <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60 bottom-full mb-1">
+                  {religionOptions.map((religion) => (
+                    <Listbox.Option
+                      key={religion}
+                      value={religion}
+                      className={({ active }) =>
+                        `${
+                          active ? "bg-primary text-white" : "text-white"
+                        } cursor-pointer select-none relative py-2 pl-10 pr-4`
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span
+                            className={`${
+                              selected ? "font-medium" : "font-normal"
+                            } block truncate`}
+                          >
+                            {religion}
+                          </span>
+                          {selected && (
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                              <FaCheckCircle className="w-5 h-5" />
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </div>
+            </div>
+          </Listbox>
           {errors.religion && (
             <p className="text-red-500 text-xs mt-1">
               {errors.religion.message as string}

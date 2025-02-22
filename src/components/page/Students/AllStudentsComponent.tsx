@@ -27,6 +27,7 @@ import { MdViewColumn } from "react-icons/md";
 import { IoMdOptions } from "react-icons/io";
 import Link from "next/link";
 import { Gender } from "@/enums/common.enum";
+import { toast } from "react-toastify";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -38,7 +39,7 @@ const DEFAULT_VISIBLE_COLUMNS = {
   admissionDate: false,
   referrer: true,
   gender: false,
-  institute: false,
+  instituteName: false,
   studentId: true,
 };
 
@@ -91,8 +92,6 @@ const AllStudentsComponent = () => {
 
     fetchStudents();
   }, []);
-
-  console.log("allStudentsList", allStudentsList);
 
   const columnHelper = createColumnHelper<IStudent>();
 
@@ -184,25 +183,87 @@ const AllStudentsComponent = () => {
     }
   };
 
-  const confirmDelete = () => {
-    // Implement delete logic here
-    if (deletePopup.multipleStudents) {
-      console.log(
-        "Deleting multiple students:",
-        deletePopup.multipleStudents.map((s) => s.studentId)
-      );
-      setSelectedStudents(new Set());
-    } else if (deletePopup.student) {
-      console.log("Deleting student:", deletePopup.student.studentId);
-    }
+  const confirmDelete = async () => {
+    try {
+      if (deletePopup.multipleStudents) {
+        // Delete multiple students
+        const studentIds = deletePopup.multipleStudents.map((s) => s.studentId);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/students/bulk-delete`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(studentIds),
+          }
+        );
 
-    setDeletePopup({ isOpen: false, student: null, multipleStudents: null });
-    setSuccessPopup({
-      isOpen: true,
-      message: deletePopup.multipleStudents
-        ? "Selected students deleted successfully"
-        : "Student deleted successfully",
-    });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to delete students");
+        }
+
+        // Update the students list after successful deletion
+        const updatedStudents = allStudentsList?.filter(
+          (student) => !studentIds.includes(student.studentId)
+        );
+
+        setAllStudentsList(updatedStudents || null);
+        setSelectedStudents(new Set());
+
+        // Show success message with details if available
+        const successMessage = data.details
+          ? `Successfully deleted ${data.details.totalSuccess} students${
+              data.details.totalFailed > 0
+                ? ` (${data.details.totalFailed} failed)`
+                : ""
+            }`
+          : data.message || "Students deleted successfully";
+
+        toast.success(successMessage);
+
+        // If there were any failures, show them in separate error toasts
+        if (data.details?.failed?.length > 0) {
+          data.details.failed.forEach(
+            ({ id, reason }: { id: string; reason: string }) => {
+              toast.error(`Failed to delete student ${id}: ${reason}`);
+            }
+          );
+        }
+      } else if (deletePopup.student) {
+        // Delete single student
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/students/${deletePopup.student.studentId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to delete student");
+        }
+
+        // Update the students list after successful deletion
+        const updatedStudents = allStudentsList?.filter(
+          (student) => student.studentId !== deletePopup.student?.studentId
+        );
+
+        setAllStudentsList(updatedStudents || null);
+        toast.success(data.message || "Student deleted successfully");
+      }
+
+      setDeletePopup({ isOpen: false, student: null, multipleStudents: null });
+    } catch (error) {
+      console.error("Error deleting student(s):", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete student(s)"
+      );
+      setDeletePopup({ isOpen: false, student: null, multipleStudents: null });
+    }
   };
 
   const columns = React.useMemo(
@@ -310,51 +371,73 @@ const AllStudentsComponent = () => {
       }),
       columnHelper.accessor("father", {
         header: "Father Name",
-        cell: (info) => (
-          <div>
-            <div>{info.row.original.father.name}</div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.father.phone}
+        cell: (info) => {
+          const father = info.row.original.father;
+          if (!father?.name && !father?.phone && !father?.occupation) {
+            return <div>-</div>;
+          }
+          return (
+            <div>
+              <div>{father?.name}</div>
+              <div className="text-sm text-gray-400">{father?.phone}</div>
+              <div className="text-sm text-gray-400">{father?.occupation}</div>
             </div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.father.occupation}
-            </div>
-          </div>
-        ),
+          );
+        },
       }),
       columnHelper.accessor("mother", {
         header: "Mother Name",
-        cell: (info) => (
-          <div>
-            <div>{info.row.original.mother.name}</div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.mother.phone}
+        cell: (info) => {
+          const mother = info.row.original.mother;
+          if (!mother?.name && !mother?.phone && !mother?.occupation) {
+            return <div>-</div>;
+          }
+          return (
+            <div>
+              <div>{mother?.name}</div>
+              <div className="text-sm text-gray-400">{mother?.phone}</div>
+              <div className="text-sm text-gray-400">{mother?.occupation}</div>
             </div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.mother.occupation}
-            </div>
-          </div>
-        ),
+          );
+        },
       }),
       columnHelper.accessor("createdAt", {
         header: "Admission Date",
-        cell: (info) => info.row.original.createdAt,
+        cell: (info) => {
+          if (!info.getValue()) return "-";
+          const date = new Date(info.getValue() as string);
+          return date
+            .toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+            .replace(/(\d+)/, (match) => {
+              const day = parseInt(match);
+              return `${day}`;
+            });
+        },
       }),
       columnHelper.accessor("referredBy", {
         header: "Referrer",
-        cell: (info) => (
-          <div>
-            <div>{info.row.original.referredBy?.name}</div>
-            <div className="text-sm text-gray-400">
-              {info.row.original.referredBy?.phone}
+        cell: (info) => {
+          const referredBy = info.row.original.referredBy;
+          if (!referredBy?.name && !referredBy?.phone) {
+            return <div>-</div>;
+          }
+          return (
+            <div>
+              <div>{referredBy?.name}</div>
+              <div className="text-sm text-gray-400">{referredBy?.phone}</div>
             </div>
-          </div>
-        ),
+          );
+        },
       }),
+
       columnHelper.accessor("instituteName", {
         header: "Institute",
         enableColumnFilter: true,
-        cell: (info) => info.getValue(),
+        cell: (info) => info.getValue() || "-",
         enableHiding: true,
       }),
       columnHelper.accessor("studentId", {
@@ -615,13 +698,32 @@ const AllStudentsComponent = () => {
         </div>
       </div>
       {isLoading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="text-center py-8 text-gray-400">
+          <div
+            className="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent rounded-full"
+            role="status"
+          >
+            <span className="sr-only">Loading...</span>
+          </div>
+          <div className="mt-2">Loading students...</div>
+        </div>
       ) : error ? (
-        <div className="text-center py-4 text-red-500">
-          Error loading students
+        <div className="text-center py-8">
+          <div className="text-red-500 text-lg mb-2">
+            Error loading students
+          </div>
+          <div className="text-gray-400">{error.message}</div>
         </div>
       ) : filteredStudents?.length === 0 ? (
-        <div className="text-center py-4">No students found</div>
+        <div className="text-center py-16">
+          <div className="text-gray-400 text-lg mb-2">No student found</div>
+          {searchQuery && (
+            <div className="text-gray-500">
+              Try adjusting your search or filters to find what you&apos;re
+              looking for
+            </div>
+          )}
+        </div>
       ) : (
         <table className="w-full border border-gray-700 text-sm">
           <thead className="bg-gray-800 text-gray-400">
@@ -764,7 +866,7 @@ const AllStudentsComponent = () => {
         onDelete={confirmDelete}
         itemName={
           deletePopup.multipleStudents
-            ? `Selected students`
+            ? `Confirm`
             : `${deletePopup.student?.name}`
         }
       />

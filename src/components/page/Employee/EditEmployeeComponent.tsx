@@ -40,8 +40,6 @@ const EditEmployeeComponent = () => {
     }
   };
 
-  console.log(employee);
-
   useEffect(() => {
     if (params.employeeId) {
       fetchEmployee();

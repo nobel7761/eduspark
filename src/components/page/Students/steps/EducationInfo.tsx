@@ -4,20 +4,26 @@ import Select from "react-select";
 import { MultiValue } from "react-select";
 
 // Add these subject options
-const subjectOptions = [
+export const subjectOptions = [
   { value: "ict", label: "ICT" },
+  { value: "english1", label: "English 1st Paper" },
+  { value: "english2", label: "English 2nd Paper" },
   { value: "english", label: "English" },
+  { value: "bangla1", label: "Bangla 1st Paper" },
+  { value: "bangla2", label: "Bangla 2nd Paper" },
   { value: "bangla", label: "Bangla" },
+  { value: "physics1", label: "Physics 1st Paper" },
+  { value: "physics2", label: "Physics 2nd Paper" },
   { value: "physics", label: "Physics" },
+  { value: "chemistry1", label: "Chemistry 1st Paper" },
+  { value: "chemistry2", label: "Chemistry 2nd Paper" },
   { value: "chemistry", label: "Chemistry" },
+  { value: "biology1", label: "Biology 1st Paper" },
+  { value: "biology2", label: "Biology 2nd Paper" },
   { value: "biology", label: "Biology" },
   { value: "mathematics", label: "Mathematics" },
   { value: "accounting", label: "Accounting" },
   { value: "economics", label: "Economics" },
-  { value: "business_studies", label: "Business Studies" },
-  { value: "history", label: "History" },
-  { value: "civics", label: "Civics" },
-  { value: "geography", label: "Geography" },
 ];
 
 interface SubjectOption {
@@ -151,9 +157,48 @@ const EducationStep = () => {
               isMulti
               options={subjectOptions}
               onChange={handleSubjectChange}
-              className="react-select-container bg-primary"
+              className="react-select-container"
               classNamePrefix="react-select"
               value={watch("subjects")}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  backgroundColor: "#1f2937", // dark background
+                  borderColor: "#374151",
+                }),
+                menu: (base) => ({
+                  ...base,
+                  backgroundColor: "#1f2937", // dropdown background
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? "#374151" : "#1f2937",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#374151",
+                  },
+                }),
+                multiValue: (base) => ({
+                  ...base,
+                  backgroundColor: "#374151",
+                }),
+                multiValueLabel: (base) => ({
+                  ...base,
+                  color: "white",
+                }),
+                multiValueRemove: (base) => ({
+                  ...base,
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#4B5563",
+                    color: "white",
+                  },
+                }),
+                input: (base) => ({
+                  ...base,
+                  color: "white",
+                }),
+              }}
             />
             {errors.subjects && (
               <p className="text-red-500 text-xs mt-1">
