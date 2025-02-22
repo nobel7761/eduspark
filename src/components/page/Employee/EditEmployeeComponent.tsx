@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Gender, Group, PaymentMethod } from "@/enums/common.enum";
 import PageLoader from "@/components/shared/PageLoader";
-import SuccessPopup from "@/components/UI/SuccessPopup";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployee } from "@/types/employee";
+import { toast } from "react-toastify";
 
 const EditEmployeeComponent = () => {
   const params = useParams();
@@ -17,7 +17,6 @@ const EditEmployeeComponent = () => {
   const [employee, setEmployee] = useState<IEmployee | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [successPopup, setSuccessPopup] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
   const [selectedHscGroup, setSelectedHscGroup] = useState<Group | null>(null);
@@ -71,16 +70,21 @@ const EditEmployeeComponent = () => {
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to update employee");
+        throw new Error(data.message || "Failed to update employee");
       }
 
-      setSuccessPopup(true);
+      toast.success("Employee updated successfully!");
       setTimeout(() => {
-        router.push("/employees/employees");
+        router.push("/employees");
       }, 2000);
     } catch (error) {
       console.error("Error updating employee:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update employee"
+      );
     }
   };
 
@@ -1030,12 +1034,6 @@ const EditEmployeeComponent = () => {
           </button>
         </div>
       </form>
-
-      <SuccessPopup
-        isOpen={successPopup}
-        onClose={() => setSuccessPopup(false)}
-        message="Employee updated successfully!"
-      />
     </div>
   );
 };

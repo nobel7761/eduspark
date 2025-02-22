@@ -31,6 +31,7 @@ import { IEmployee } from "@/types/employee";
 import { searchEmployee } from "@/utils/search/employeeSearch";
 import { EmployeeType } from "@/enums/employees.enum";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
+import { toast } from "react-toastify";
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
@@ -158,7 +159,6 @@ const AllEmployeesComponent = () => {
         const employeeIds = deletePopup.multipleEmployees.map(
           (e) => e.employeeId
         );
-        console.log("employeeIds", employeeIds);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE}/employees/bulk-delete`,
           {
@@ -177,53 +177,51 @@ const AllEmployeesComponent = () => {
         }
 
         // Update the employees list after successful deletion
-        // Only remove the successfully deleted employees
         const updatedEmployees = allEmployeesList?.filter(
-          (employee) => !data.details.success.includes(employee.employeeId)
+          (employee) => !employeeIds.includes(employee.employeeId)
         );
 
         setAllEmployeesList(updatedEmployees || null);
-        setDeletePopup({
-          isOpen: false,
-          employee: null,
-          multipleEmployees: null,
-        });
-
-        // Show success message with details if there were any failures
-        setSuccessPopup({
-          isOpen: true,
-          message: data.message,
-        });
-
-        // Clear selected employees that were successfully deleted
-        const newSelected = new Set(selectedEmployees);
-        data.details.success.forEach((id: string) => newSelected.delete(id));
-        setSelectedEmployees(newSelected);
+        setSelectedEmployees(new Set());
+        toast.success(data.message || "Employees deleted successfully");
       } else if (deletePopup.employee) {
         // Delete single employee
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/${deletePopup.employee.employeeId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees/${deletePopup.employee.employeeId}`,
           {
             method: "DELETE",
           }
         );
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error("Failed to delete employee");
+          throw new Error(data.message || "Failed to delete employee");
         }
+
+        // Update the employees list after successful deletion
+        const updatedEmployees = allEmployeesList?.filter(
+          (employee) => employee.employeeId !== deletePopup.employee?.employeeId
+        );
+
+        setAllEmployeesList(updatedEmployees || null);
+        toast.success(data.message || "Employee deleted successfully");
       }
-    } catch (error) {
-      console.error("Error deleting employee(s):", error);
+
       setDeletePopup({
         isOpen: false,
         employee: null,
         multipleEmployees: null,
       });
-      // Show error message to the user
-      setSuccessPopup({
-        isOpen: true,
-        message:
-          error instanceof Error ? error.message : "Failed to delete employees",
+    } catch (error) {
+      console.error("Error deleting employee(s):", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete employee"
+      );
+      setDeletePopup({
+        isOpen: false,
+        employee: null,
+        multipleEmployees: null,
       });
     }
   };
