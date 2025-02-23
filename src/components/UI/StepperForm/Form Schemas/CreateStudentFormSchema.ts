@@ -25,12 +25,7 @@ export const personalInfoSchema = yup.object({
       "Please select a valid religion"
     ),
 
-  primaryPhone: yup
-    .string()
-    .required("Primary phone is required")
-    .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number must not exceed 15 digits"),
+  primaryPhone: yup.string().optional(),
 });
 
 export const educationAndAddressInfoSchema = yup.object({
