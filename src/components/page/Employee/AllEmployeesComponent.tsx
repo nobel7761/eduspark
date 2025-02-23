@@ -344,10 +344,10 @@ const AllEmployeesComponent = () => {
         cell: (info) => (
           <div className="flex items-center gap-x-2">
             <span
-              className={`px-2 py-1 rounded-full text-xs ${
+              className={`px-2 py-1 rounded-full text-xs text-white ${
                 info.row.original.employeeType === EmployeeType.TEACHER
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-800"
+                  ? "bg-green-600"
+                  : "bg-red-600"
               }`}
             >
               {capitalizeFirstLetter(info.row.original.employeeType)}

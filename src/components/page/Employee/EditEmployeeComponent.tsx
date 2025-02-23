@@ -43,11 +43,9 @@ const EditEmployeeComponent = () => {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors, isSubmitting },
     reset,
-    fields: paymentFields,
-    append: appendPayment,
-    remove: removePayment,
   } = useForm({
     resolver: yupResolver(extendedSchema),
   });
@@ -80,8 +78,6 @@ const EditEmployeeComponent = () => {
           : "",
       };
 
-      console.log("formattedData", formattedData);
-
       // Reset form with formatted data
       reset(formattedData);
 
@@ -106,14 +102,27 @@ const EditEmployeeComponent = () => {
   useEffect(() => {
     if (
       selectedPaymentMethod === PaymentMethod.PerClass &&
-      paymentFields.length === 0
+      paymentPerClassFields.length === 0
     ) {
-      appendPayment({ classes: [], amount: 0 });
+      appendPaymentPerClass({ classes: [], amount: 0 });
     }
-  }, [selectedPaymentMethod, appendPayment, paymentFields.length]);
+  }, [
+    selectedPaymentMethod,
+    appendPaymentPerClass,
+    paymentPerClassFields.length,
+  ]);
 
   const onSubmit = async (data: IEmployee) => {
     try {
+      // Ensure paymentPerClass is an empty array when payment method is Monthly
+      const formattedData = {
+        ...data,
+        paymentPerClass:
+          data.paymentMethod === PaymentMethod.Monthly
+            ? []
+            : data.paymentPerClass,
+      };
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/employees/${params.employeeId}`,
         {
@@ -121,7 +130,7 @@ const EditEmployeeComponent = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(formattedData),
         }
       );
 
@@ -247,7 +256,7 @@ const EditEmployeeComponent = () => {
                 }}
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
+                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                     <span className="block truncate">
                       {getDisplayText(selectedGender)}
                     </span>
@@ -396,10 +405,21 @@ const EditEmployeeComponent = () => {
                 onChange={(value) => {
                   setSelectedPaymentMethod(value);
                   setValue("paymentMethod", value as PaymentMethod);
+
+                  // Clear paymentPerClass when switching to Monthly
+                  if (value === PaymentMethod.Monthly) {
+                    setValue("paymentPerClass", []); // Set empty array instead of undefined
+                    setValue("paymentPerMonth", 0); // Initialize monthly payment
+                  }
+                  // Clear monthlyPayment when switching to PerClass
+                  else if (value === PaymentMethod.PerClass) {
+                    setValue("paymentPerMonth", undefined);
+                    appendPaymentPerClass({ classes: [], amount: 0 });
+                  }
                 }}
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
+                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                     <span className="block truncate">
                       {getDisplayText(selectedPaymentMethod, "Payment")}
                     </span>
@@ -447,18 +467,20 @@ const EditEmployeeComponent = () => {
 
             {/* Conditional Payment Fields */}
             {selectedPaymentMethod === PaymentMethod.PerClass && (
-              <div className="bg-gray-800 p-6 rounded-lg border border-white relative my-4">
+              <div className="col-span-1 md:col-span-2 bg-gray-800 p-6 rounded-lg border border-white relative my-4">
                 <div className="absolute -top-3 right-4">
                   <button
                     type="button"
-                    onClick={() => appendPayment({ classes: [], amount: 0 })}
+                    onClick={() =>
+                      appendPaymentPerClass({ classes: [], amount: 0 })
+                    }
                     className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
                   >
                     Add More Class Payment Details
                   </button>
                 </div>
 
-                {paymentFields.map((field, index) => (
+                {paymentPerClassFields.map((field, index) => (
                   <div
                     key={field.id}
                     className="relative border border-gray-700 rounded-lg p-4 text-primary mt-4"
@@ -552,10 +574,10 @@ const EditEmployeeComponent = () => {
                     </div>
 
                     {/* Delete button */}
-                    {paymentFields.length > 1 && (
+                    {paymentPerClassFields.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removePayment(index)}
+                        onClick={() => removePaymentPerClass(index)}
                         className="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 rounded-full p-1.5"
                       >
                         <BsFillTrashFill className="text-white text-xl" />
@@ -884,7 +906,7 @@ const EditEmployeeComponent = () => {
                   }}
                 >
                   <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                       <span className="block truncate">
                         {getDisplayText(selectedHscGroup)}
                       </span>
@@ -1004,7 +1026,7 @@ const EditEmployeeComponent = () => {
                   }}
                 >
                   <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                       <span className="block truncate">
                         {getDisplayText(selectedSscGroup)}
                       </span>
