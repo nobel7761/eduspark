@@ -152,10 +152,23 @@ const EmployeeDetailsComponent = () => {
                 value={employee?.paymentMethod}
               />
               {employee?.paymentMethod === PaymentMethod.PerClass && (
-                <InfoItem
-                  label="Payment Per Class"
-                  value={`${employee?.paymentPerClass} BDT`}
-                />
+                <div className="col-span-2">
+                  <h3 className="font-medium text-gray-700 mb-2">
+                    Payment Per Class
+                  </h3>
+                  <div className="space-y-2">
+                    {employee?.paymentPerClass?.map((payment, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <span className="text-gray-700">
+                          Class {formatClassRange(payment.classes)}:
+                        </span>
+                        <span className="font-light text-primary">
+                          {payment.amount} BDT
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
               {employee?.paymentMethod === PaymentMethod.Monthly && (
                 <InfoItem
@@ -328,6 +341,33 @@ const InfoItem = ({
       <p className="text-gray-700 font-light">{displayValue}</p>
     </div>
   );
+};
+
+const formatClassRange = (classes: string[]) => {
+  const sortedClasses = classes
+    .map(Number)
+    .filter((n) => !isNaN(n))
+    .sort((a, b) => a - b);
+
+  if (sortedClasses.length === 0) return classes.join(", ");
+
+  const ranges = [];
+  let start = sortedClasses[0];
+  let prev = start;
+
+  for (let i = 1; i <= sortedClasses.length; i++) {
+    if (i === sortedClasses.length || sortedClasses[i] !== prev + 1) {
+      ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+      if (i < sortedClasses.length) {
+        start = sortedClasses[i];
+        prev = start;
+      }
+    } else {
+      prev = sortedClasses[i];
+    }
+  }
+
+  return ranges.join(", ");
 };
 
 export default EmployeeDetailsComponent;

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Gender, PaymentMethod } from "@/enums/common.enum";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import SuccessPopup from "@/components/UI/SuccessPopup";
@@ -15,9 +15,29 @@ import { Group } from "@/enums/common.enum";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployeeWithoutId } from "@/types/employee";
 import { EmployeeType } from "@/enums/employees.enum";
+import Select from "react-select";
+import { useFieldArray } from "react-hook-form";
+import { BsFillTrashFill } from "react-icons/bs";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
+
+export const classOptions = [
+  { value: "3", label: "Class 3" },
+  { value: "4", label: "Class 4" },
+  { value: "5", label: "Class 5" },
+  { value: "6", label: "Class 6" },
+  { value: "7", label: "Class 7" },
+  { value: "8", label: "Class 8" },
+  { value: "9", label: "Class 9" },
+  { value: "10", label: "Class 10" },
+  { value: "11", label: "Class 11" },
+  { value: "12", label: "Class 12" },
+  { value: "arabic", label: "Arabic" },
+  { value: "spoken_english", label: "Spoken English" },
+  { value: "drawing", label: "Drawing" },
+];
 
 // Form schema matches IE interface but excludes auto-generated fields
-const schema = yup.object({
+export const schema = yup.object({
   firstName: yup
     .string()
     .required("First name is required")
@@ -81,15 +101,28 @@ const schema = yup.object({
     .mixed<PaymentMethod>()
     .oneOf(Object.values(PaymentMethod))
     .required("Payment method is required"),
-  paymentPerClass: yup.number().when("paymentMethod", {
+  paymentPerClass: yup.array().when("paymentMethod", {
     is: PaymentMethod.PerClass,
     then: () =>
       yup
-        .number()
-        .transform((value) => (isNaN(value) ? undefined : value))
-        .typeError("Payment per class must be a number")
-        .required("Payment per class is required")
-        .min(0, "Payment cannot be negative"),
+        .array()
+        .of(
+          yup.object({
+            classes: yup
+              .array()
+              .of(yup.string())
+              .min(1, "At least one class must be selected")
+              .required("Classes are required"),
+            amount: yup
+              .number()
+              .transform((value) => (isNaN(value) ? undefined : value))
+              .typeError("Payment amount must be a number")
+              .required("Payment amount is required")
+              .min(0, "Payment cannot be negative"),
+          })
+        )
+        .required("At least one class payment detail is required"),
+    otherwise: () => yup.array().nullable(),
   }),
   paymentPerMonth: yup.number().when("paymentMethod", {
     is: PaymentMethod.Monthly,
@@ -235,11 +268,6 @@ const schema = yup.object({
     .required("Employee type is required"),
 });
 
-// Add this helper function near the top of the file, after the imports
-const capitalizeFirstLetter = (string: string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-};
-
 const CreateEmployeeComponent = () => {
   const router = useRouter();
   const [successPopup, setSuccessPopup] = useState(false);
@@ -261,17 +289,26 @@ const CreateEmployeeComponent = () => {
     register,
     handleSubmit,
     setValue,
-    // watch,
+    watch,
+    control,
     setError,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       isCurrentlyStudying: false,
+      paymentPerClass: [],
     },
   });
 
-  // const isCurrentlyStudyingValue = watch("isCurrentlyStudying");
+  const {
+    fields: paymentFields,
+    append: appendPayment,
+    remove: removePayment,
+  } = useFieldArray({
+    control,
+    name: "paymentPerClass",
+  });
 
   const handleIsCurrentlyStudyingChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -293,7 +330,29 @@ const CreateEmployeeComponent = () => {
     }
   };
 
+  // Add this useEffect to initialize the first payment field when Per Class is selected
+  useEffect(() => {
+    if (
+      selectedPaymentMethod === PaymentMethod.PerClass &&
+      paymentFields.length === 0
+    ) {
+      appendPayment({ classes: [], amount: 0 });
+    }
+  }, [selectedPaymentMethod, appendPayment, paymentFields.length]);
+
   const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
+    if (data.paymentMethod === PaymentMethod.PerClass) {
+      // Ensure amounts are numbers
+      data.paymentPerClass = data.paymentPerClass?.map((detail) => ({
+        classes: detail.classes,
+        amount: Number(detail.amount),
+      }));
+    } else if (data.paymentMethod === PaymentMethod.Monthly) {
+      data.paymentPerMonth = Number(data.paymentPerMonth);
+      // Remove the per-class details as they're not needed
+      delete data.paymentPerClass;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
@@ -373,7 +432,7 @@ const CreateEmployeeComponent = () => {
             }}
           >
             <div className="relative mt-1">
-              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                 <span className="block truncate">
                   {getDisplayText(selectedEmployeeType)}
                 </span>
@@ -475,7 +534,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="text"
                       {...register("firstName")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                     {errors.firstName && (
                       <p className="text-red-500 text-xs mt-1">
@@ -492,7 +551,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="text"
                       {...register("lastName")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                     {errors.lastName && (
                       <p className="text-red-500 text-xs mt-1">
@@ -520,7 +579,7 @@ const CreateEmployeeComponent = () => {
                           ? joiningDate.toISOString().split("T")[0]
                           : ""
                       }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                       required
                     />
                     {errors.joiningDate && (
@@ -543,7 +602,7 @@ const CreateEmployeeComponent = () => {
                       }}
                     >
                       <div className="relative mt-1">
-                        <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                        <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                           <span className="block truncate">
                             {getDisplayText(selectedGender)}
                           </span>
@@ -601,7 +660,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="tel"
                       {...register("primaryPhone")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                     {errors.primaryPhone && (
                       <p className="text-red-500 text-xs mt-1">
@@ -618,7 +677,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="tel"
                       {...register("secondaryPhone")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                   </div>
 
@@ -632,7 +691,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="email"
                           {...register("email")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.email && (
                           <p className="text-red-500 text-xs mt-1">
@@ -651,7 +710,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="text"
                       {...register("nidNumber")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                   </div>
                 </div>
@@ -679,7 +738,7 @@ const CreateEmployeeComponent = () => {
                         }}
                       >
                         <div className="relative mt-1">
-                          <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                          <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                             <span className="block truncate">
                               {getDisplayText(selectedPaymentMethod, "Payment")}
                             </span>
@@ -729,24 +788,6 @@ const CreateEmployeeComponent = () => {
                       )}
                     </div>
 
-                    {selectedPaymentMethod === PaymentMethod.PerClass && (
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-white">
-                          Payment Per Class
-                        </label>
-                        <input
-                          type="number"
-                          {...register("paymentPerClass")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                        />
-                        {errors.paymentPerClass && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.paymentPerClass.message as string}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
                     {selectedPaymentMethod === PaymentMethod.Monthly && (
                       <div>
                         <label className="block text-sm font-medium mb-1 text-white">
@@ -755,7 +796,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="number"
                           {...register("paymentPerMonth")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.paymentPerMonth && (
                           <p className="text-red-500 text-xs mt-1">
@@ -768,6 +809,138 @@ const CreateEmployeeComponent = () => {
                 </>
               )}
 
+              {selectedEmployeeType === EmployeeType.TEACHER &&
+                selectedPaymentMethod === PaymentMethod.PerClass && (
+                  <div className="bg-gray-800 p-6 rounded-lg border border-white relative my-4">
+                    <div className="absolute -top-3 right-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          appendPayment({ classes: [], amount: 0 })
+                        }
+                        className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
+                      >
+                        Add More Class Payment Details
+                      </button>
+                    </div>
+
+                    {paymentFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="relative border border-gray-700 rounded-lg p-4 text-primary mt-4"
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Class Selection */}
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Select Classes
+                            </label>
+                            <Select
+                              isMulti
+                              options={classOptions}
+                              onChange={(newValue) => {
+                                const selectedClasses = newValue.map(
+                                  (option) => option.value
+                                );
+                                setValue(
+                                  `paymentPerClass.${index}.classes`,
+                                  selectedClasses,
+                                  {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                  }
+                                );
+                              }}
+                              value={classOptions.filter((option) =>
+                                watch(
+                                  `paymentPerClass.${index}.classes`
+                                )?.includes(option.value)
+                              )}
+                              className="react-select-container"
+                              classNamePrefix="react-select"
+                              styles={{
+                                control: (base) => ({
+                                  ...base,
+                                  background: "#1f2937",
+                                  borderColor: "#374151",
+                                  color: "white",
+                                }),
+                                menu: (base) => ({
+                                  ...base,
+                                  background: "#1f2937",
+                                  color: "white",
+                                }),
+                                option: (base, state) => ({
+                                  ...base,
+                                  backgroundColor: state.isFocused
+                                    ? "#374151"
+                                    : "#1f2937",
+                                  color: "white",
+                                  "&:hover": {
+                                    backgroundColor: "#374151",
+                                  },
+                                }),
+                                multiValue: (base) => ({
+                                  ...base,
+                                  backgroundColor: "#374151",
+                                }),
+                                multiValueLabel: (base) => ({
+                                  ...base,
+                                  color: "white",
+                                }),
+                                multiValueRemove: (base) => ({
+                                  ...base,
+                                  color: "white",
+                                  "&:hover": {
+                                    backgroundColor: "#4b5563",
+                                    color: "white",
+                                  },
+                                }),
+                                input: (base) => ({
+                                  ...base,
+                                  color: "white",
+                                }),
+                              }}
+                            />
+                            {errors.paymentPerClass &&
+                              errors.paymentPerClass[index]?.message && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    errors.paymentPerClass[index]
+                                      ?.message as string
+                                  }
+                                </p>
+                              )}
+                          </div>
+
+                          {/* Payment Amount */}
+                          <div>
+                            <label className="block text-sm font-medium mb-1 text-white">
+                              Payment Per Class
+                            </label>
+                            <input
+                              type="number"
+                              {...register(`paymentPerClass.${index}.amount`)}
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Only show delete button if there's more than one payment field */}
+                        {paymentFields.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removePayment(index)}
+                            className="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 rounded-full p-1.5"
+                          >
+                            <BsFillTrashFill className="text-white text-xl" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
               {selectedEmployeeType === EmployeeType.CLEANER && (
                 <>
                   <div>
@@ -777,7 +950,7 @@ const CreateEmployeeComponent = () => {
                     <input
                       type="number"
                       {...register("paymentPerMonth")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
                     {errors.paymentPerMonth && (
                       <p className="text-red-500 text-xs mt-1">
@@ -803,7 +976,7 @@ const CreateEmployeeComponent = () => {
                     </label>
                     <textarea
                       {...register("presentAddress")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                       rows={3}
                     />
                     {errors.presentAddress && (
@@ -819,7 +992,7 @@ const CreateEmployeeComponent = () => {
                     </label>
                     <textarea
                       {...register("permanentAddress")}
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                       rows={3}
                     />
                   </div>
@@ -841,7 +1014,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="text"
                           {...register("father.name")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.father?.name && (
                           <p className="text-red-500 text-xs mt-1">
@@ -857,7 +1030,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="tel"
                           {...register("father.phone")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.father?.phone && (
                           <p className="text-red-500 text-xs mt-1">
@@ -873,7 +1046,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="text"
                           {...register("mother.name")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.mother?.name && (
                           <p className="text-red-500 text-xs mt-1">
@@ -889,7 +1062,7 @@ const CreateEmployeeComponent = () => {
                         <input
                           type="tel"
                           {...register("mother.phone")}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.mother?.phone && (
                           <p className="text-red-500 text-xs mt-1">
@@ -937,7 +1110,7 @@ const CreateEmployeeComponent = () => {
                           {...register(
                             "educationalBackground.university.institute"
                           )}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.educationalBackground?.university
                           ?.institute && (
@@ -959,7 +1132,7 @@ const CreateEmployeeComponent = () => {
                           {...register(
                             "educationalBackground.university.department"
                           )}
-                          className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.educationalBackground?.university
                           ?.department && (
@@ -983,7 +1156,7 @@ const CreateEmployeeComponent = () => {
                               {...register(
                                 "educationalBackground.university.passingYear"
                               )}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.university
                               ?.passingYear && (
@@ -1006,7 +1179,7 @@ const CreateEmployeeComponent = () => {
                               {...register(
                                 "educationalBackground.university.cgpa"
                               )}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.university?.cgpa && (
                               <p className="text-red-500 text-xs mt-1">
@@ -1028,7 +1201,7 @@ const CreateEmployeeComponent = () => {
                             {...register(
                               "educationalBackground.university.admissionYear"
                             )}
-                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                           />
                           {errors.educationalBackground?.university
                             ?.admissionYear && (
@@ -1059,7 +1232,7 @@ const CreateEmployeeComponent = () => {
                           <input
                             type="text"
                             {...register("educationalBackground.hsc.institute")}
-                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                           />
                           {errors.educationalBackground?.hsc?.institute && (
                             <p className="text-red-500 text-xs mt-1">
@@ -1088,7 +1261,7 @@ const CreateEmployeeComponent = () => {
                               }}
                             >
                               <div className="relative mt-1">
-                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                                   <span className="block truncate">
                                     {getDisplayText(selectedHscGroup)}
                                   </span>
@@ -1142,7 +1315,7 @@ const CreateEmployeeComponent = () => {
                             <input
                               type="number"
                               {...register("educationalBackground.hsc.year")}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.hsc?.year && (
                               <p className="text-red-500 text-xs mt-1">
@@ -1162,7 +1335,7 @@ const CreateEmployeeComponent = () => {
                               type="number"
                               step="0.01"
                               {...register("educationalBackground.hsc.result")}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.hsc?.result && (
                               <p className="text-red-500 text-xs mt-1">
@@ -1190,7 +1363,7 @@ const CreateEmployeeComponent = () => {
                           <input
                             type="text"
                             {...register("educationalBackground.ssc.institute")}
-                            className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                            className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                           />
                           {errors.educationalBackground?.ssc?.institute && (
                             <p className="text-red-500 text-xs mt-1">
@@ -1219,7 +1392,7 @@ const CreateEmployeeComponent = () => {
                               }}
                             >
                               <div className="relative mt-1">
-                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                                <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                                   <span className="block truncate">
                                     {getDisplayText(selectedSscGroup)}
                                   </span>
@@ -1273,7 +1446,7 @@ const CreateEmployeeComponent = () => {
                             <input
                               type="number"
                               {...register("educationalBackground.ssc.year")}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.ssc?.year && (
                               <p className="text-red-500 text-xs mt-1">
@@ -1293,7 +1466,7 @@ const CreateEmployeeComponent = () => {
                               type="number"
                               step="0.01"
                               {...register("educationalBackground.ssc.result")}
-                              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                             {errors.educationalBackground?.ssc?.result && (
                               <p className="text-red-500 text-xs mt-1">
@@ -1309,44 +1482,73 @@ const CreateEmployeeComponent = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Comments Section */}
+                <div className="bg-gray-800 p-6 rounded-lg mt-6">
+                  <h2 className="text-xl font-bold mb-4 text-white">
+                    Comments
+                  </h2>
+                  <div>
+                    <textarea
+                      {...register("comments")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+                      rows={3}
+                      placeholder="Add any additional comments..."
+                    />
+                    {errors.comments && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.comments.message as string}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/employees/employees")}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Employee"
+                    )}
+                  </button>
+                </div>
               </>
             )}
-
-            {/* Comments Section */}
-            <div className="bg-gray-800 p-6 rounded-lg mt-6">
-              <h2 className="text-xl font-bold mb-4 text-white">Comments</h2>
-              <div>
-                <textarea
-                  {...register("comments")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
-                  rows={3}
-                  placeholder="Add any additional comments..."
-                />
-                {errors.comments && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.comments.message as string}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => router.push("/employees/employees")}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Create Employee
-              </button>
-            </div>
           </>
-        )}{" "}
+        )}
       </form>
 
       <SuccessPopup

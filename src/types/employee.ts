@@ -55,7 +55,10 @@ export interface IEmployee {
 
   // Payment Information
   paymentMethod: PaymentMethod;
-  paymentPerClass?: number;
+  paymentPerClass?: Array<{
+    classes: string[];
+    amount: number;
+  }>;
   paymentPerMonth?: number;
 }
 
