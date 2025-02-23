@@ -181,6 +181,22 @@ const EditStudentComponent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-white">
+                Student ID
+              </label>
+              <input
+                type="text"
+                {...register("studentId")}
+                className="w-full p-2 rounded bg-gray-800 focus:outline-none text-white"
+              />
+              {errors.studentId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.studentId.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-white">
                 Name
               </label>
               <input
