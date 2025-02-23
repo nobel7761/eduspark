@@ -26,10 +26,10 @@ export enum Religion {
 export interface IStudent {
   name: string;
   dateOfBirth: string;
+  admissionDate: string;
   gender: Gender;
   religion: Religion;
-  primaryPhone: string;
-  secondaryPhone?: string;
+  phoneNumber?: string;
   instituteName: string;
   class: string;
   group?: string;

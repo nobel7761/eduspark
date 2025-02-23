@@ -99,7 +99,7 @@ const PersonalInfoStep = () => {
             </motion.label>
           </div>
         </motion.div> */}
-        {/* name, primaryPhone, secondaryPhone Info */}
+        {/* name, phoneNumber, Info */}
         <div className="w-full flex flex-col gap-6">
           {" "}
           <motion.div
@@ -127,12 +127,12 @@ const PersonalInfoStep = () => {
             transition={{ duration: 0.3, delay: 0.7 }}
           >
             <label className="block text-sm font-medium mb-1">
-              Primary Phone
+              Phone Number
             </label>
             <input
               type="tel"
-              {...register("primaryPhone", {
-                required: "Primary phone is required",
+              {...register("phoneNumber", {
+                required: "Phone number is required",
                 pattern: {
                   value: /^[0-9+\-\s()]*$/,
                   message: "Please enter a valid phone number",
@@ -140,25 +140,11 @@ const PersonalInfoStep = () => {
               })}
               className="w-full p-2 rounded bg-gray-800 focus:outline-none"
             />
-            {errors.primaryPhone && (
+            {errors.phoneNumber && (
               <p className="text-red-500 text-xs mt-1">
-                {errors.primaryPhone.message as string}
+                {errors.phoneNumber.message as string}
               </p>
             )}
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.8 }}
-          >
-            <label className="block text-sm font-medium mb-1">
-              Secondary Phone
-            </label>
-            <input
-              type="tel"
-              {...register("secondaryPhone")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
-            />
           </motion.div>
         </div>
       </div>
@@ -190,6 +176,37 @@ const PersonalInfoStep = () => {
           {errors.dateOfBirth && (
             <p className="text-red-500 text-xs mt-1">
               {errors.dateOfBirth.message as string}
+            </p>
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.45 }}
+        >
+          <label className="block text-sm font-medium mb-1">
+            Admission Date
+          </label>
+          <input
+            type="date"
+            {...register("admissionDate", {
+              required: "Admission date is required",
+              validate: (value) => {
+                const date = new Date(value);
+                return !isNaN(date.getTime()) || "Invalid date format";
+              },
+              setValueAs: (value) => {
+                if (!value) return undefined;
+                const date = new Date(value);
+                return isNaN(date.getTime()) ? undefined : date;
+              },
+            })}
+            className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+          />
+          {errors.admissionDate && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.admissionDate.message as string}
             </p>
           )}
         </motion.div>

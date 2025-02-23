@@ -4,12 +4,12 @@ import { useFormContext } from "react-hook-form";
 import { motion } from "framer-motion";
 
 interface ParentsFormData {
-  father: {
+  father?: {
     name: string;
     phone: string;
     occupation: string;
   };
-  mother: {
+  mother?: {
     name: string;
     phone: string;
     occupation: string;

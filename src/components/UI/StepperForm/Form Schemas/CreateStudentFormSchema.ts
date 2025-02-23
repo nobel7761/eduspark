@@ -12,6 +12,11 @@ export const personalInfoSchema = yup.object({
     .required("Date of birth is required")
     .max(new Date(), "Date of birth cannot be in the future"),
 
+  admissionDate: yup
+    .date()
+    .required("Admission date is required")
+    .max(new Date(), "Admission date cannot be in the future"),
+
   gender: yup
     .string()
     .required("Gender is required")
@@ -25,7 +30,7 @@ export const personalInfoSchema = yup.object({
       "Please select a valid religion"
     ),
 
-  primaryPhone: yup.string().optional(),
+  phoneNumber: yup.string().optional(),
 });
 
 export const educationAndAddressInfoSchema = yup.object({
@@ -94,12 +99,12 @@ export const parentsInfoSchema = yup.object({
   father: yup.object({
     name: yup
       .string()
-      .required("Father's name is required")
+      .optional()
       .min(2, "Father's name must be at least 2 characters")
       .max(50, "Father's name must not exceed 50 characters"),
     phone: yup
       .string()
-      .required("Father's phone is required")
+      .optional()
       .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
       .min(10, "Phone number must be at least 10 digits")
       .max(15, "Phone number must not exceed 15 digits"),
@@ -108,12 +113,12 @@ export const parentsInfoSchema = yup.object({
   mother: yup.object({
     name: yup
       .string()
-      .required("Mother's name is required")
+      .optional()
       .min(2, "Mother's name must be at least 2 characters")
       .max(50, "Mother's name must not exceed 50 characters"),
     phone: yup
       .string()
-      .required("Mother's phone is required")
+      .optional()
       .matches(/^[0-9+\-\s()]*$/, "Please enter a valid phone number")
       .min(10, "Phone number must be at least 10 digits")
       .max(15, "Phone number must not exceed 15 digits"),
