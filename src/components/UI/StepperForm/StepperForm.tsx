@@ -58,9 +58,10 @@ const StepperForm: React.FC<StepperFormProps> = ({
       fieldsToValidate = [
         "name",
         "dateOfBirth",
+        "admissionDate",
         "gender",
         "religion",
-        "primaryPhone",
+        "phoneNumber",
       ];
     } else if (currentStep === 2) {
       fieldsToValidate = [
@@ -87,13 +88,6 @@ const StepperForm: React.FC<StepperFormProps> = ({
           return;
         }
       }
-    } else if (currentStep === 3) {
-      fieldsToValidate = [
-        "father.name",
-        "father.phone",
-        "mother.name",
-        "mother.phone",
-      ];
     } else if (currentStep === 4) {
       fieldsToValidate = [
         "payment.admissionFee",

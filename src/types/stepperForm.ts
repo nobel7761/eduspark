@@ -1,10 +1,10 @@
 export interface FormData {
   name: string;
   dateOfBirth: Date;
+  admissionDate: Date;
   gender: "Male" | "Female";
   religion: "Islam" | "Hinduism" | "Christianity" | "Buddhism";
-  primaryPhone: string;
-  secondaryPhone?: string;
+  phoneNumber?: string;
   instituteName: string;
   class: string;
   group?: string;

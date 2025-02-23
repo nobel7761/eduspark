@@ -319,7 +319,7 @@ const AllStudentsComponent = () => {
                 {info.row.original.name} ({info.row.original.studentId})
               </div>
               <div className="text-sm text-gray-400">
-                {info.row.original.primaryPhone}
+                {info.row.original.phoneNumber}
               </div>
               <div className="text-sm text-gray-400">
                 {info.row.original.instituteName}
@@ -401,7 +401,7 @@ const AllStudentsComponent = () => {
           );
         },
       }),
-      columnHelper.accessor("createdAt", {
+      columnHelper.accessor("admissionDate", {
         header: "Admission Date",
         cell: (info) => {
           if (!info.getValue()) return "-";

@@ -73,6 +73,11 @@ const EditStudentComponent = () => {
           .toISOString()
           .split("T")[0];
       }
+      if (data.admissionDate) {
+        data.admissionDate = new Date(data.admissionDate)
+          .toISOString()
+          .split("T")[0];
+      }
       reset(data);
 
       // Set default values for select fields
@@ -208,6 +213,22 @@ const EditStudentComponent = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1 text-white">
+                Admission Date
+              </label>
+              <input
+                type="date"
+                {...register("admissionDate")}
+                className="w-full p-2 rounded bg-gray-800 focus:outline-none text-white"
+              />
+              {errors.admissionDate && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.admissionDate.message as string}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-white">
                 Gender
               </label>
               <Listbox
@@ -332,29 +353,18 @@ const EditStudentComponent = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1 text-white">
-                Primary Phone
+                Phone Number
               </label>
               <input
                 type="tel"
-                {...register("primaryPhone")}
+                {...register("phoneNumber")}
                 className="w-full p-2 rounded bg-gray-800 focus:outline-none text-white"
               />
-              {errors.primaryPhone && (
+              {errors.phoneNumber && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.primaryPhone.message}
+                  {errors.phoneNumber.message}
                 </p>
               )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-white">
-                Secondary Phone
-              </label>
-              <input
-                type="tel"
-                {...register("secondaryPhone")}
-                className="w-full p-2 rounded bg-gray-800 focus:outline-none text-white"
-              />
             </div>
           </div>
         </motion.div>

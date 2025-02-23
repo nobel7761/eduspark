@@ -120,8 +120,8 @@ const StudentDetailsComponent = () => {
               <InfoRow
                 label="Admission Date"
                 value={
-                  student.createdAt
-                    ? new Date(student.createdAt)
+                  student.admissionDate
+                    ? new Date(student.admissionDate)
                         .toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "long",
@@ -146,12 +146,8 @@ const StudentDetailsComponent = () => {
             </h2>
             <div className="space-y-3">
               <InfoRow
-                label="Primary Phone"
-                value={student.primaryPhone || "N/A"}
-              />
-              <InfoRow
-                label="Secondary Phone"
-                value={student.secondaryPhone || "N/A"}
+                label="Phone Number"
+                value={student.phoneNumber || "N/A"}
               />
               <InfoRow
                 label="Present Address"
@@ -177,12 +173,12 @@ const StudentDetailsComponent = () => {
                   Father
                 </h3>
                 <div className="space-y-2">
-                  <InfoRow label="Name" value={student.father.name} />
+                  <InfoRow label="Name" value={student?.father?.name} />
                   <InfoRow
                     label="Occupation"
-                    value={student.father.occupation || "N/A"}
+                    value={student?.father?.occupation || "N/A"}
                   />
-                  <InfoRow label="Phone" value={student.father.phone} />
+                  <InfoRow label="Phone" value={student?.father?.phone} />
                 </div>
               </div>
               <div className="border-t pt-4">
@@ -190,12 +186,12 @@ const StudentDetailsComponent = () => {
                   Mother
                 </h3>
                 <div className="space-y-2">
-                  <InfoRow label="Name" value={student.mother.name} />
+                  <InfoRow label="Name" value={student?.mother?.name} />
                   <InfoRow
                     label="Occupation"
-                    value={student.mother.occupation || "N/A"}
+                    value={student?.mother?.occupation || "N/A"}
                   />
-                  <InfoRow label="Phone" value={student.mother.phone} />
+                  <InfoRow label="Phone" value={student?.mother?.phone} />
                 </div>
               </div>
             </div>
