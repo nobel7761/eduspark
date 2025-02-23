@@ -536,9 +536,10 @@ const AllEmployeesComponent = () => {
             <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-4">
                 {/* Payment Type Filter */}
+                {/* payment method */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Payment Type
+                    Payment Method
                   </label>
                   <select
                     className="w-full bg-gray-700 rounded p-1 text-sm"
@@ -556,6 +557,30 @@ const AllEmployeesComponent = () => {
                     <option value="">All</option>
                     <option value={PaymentMethod.PerClass}>Class</option>
                     <option value={PaymentMethod.Monthly}>Monthly</option>
+                  </select>
+                </div>
+
+                {/* employee type */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Employee Type
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table
+                        .getColumn("employeeType")
+                        ?.getFilterValue() as string) ?? ""
+                    }
+                    onChange={(e) =>
+                      table
+                        .getColumn("employeeType")
+                        ?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    <option value={EmployeeType.TEACHER}>Teacher</option>
+                    <option value={EmployeeType.CLEANER}>Cleaner</option>
                   </select>
                 </div>
               </div>

@@ -6,6 +6,7 @@ export interface IEmployee {
   firstName: string;
   lastName: string;
   gender: Gender;
+  dateOfBirth: Date;
   joiningDate: Date;
   primaryPhone: string;
   secondaryPhone?: string;
@@ -19,19 +20,19 @@ export interface IEmployee {
   permanentAddress?: string;
 
   // Parents Information
-  father: {
-    name: string;
-    phone: string;
+  father?: {
+    name?: string;
+    phone?: string;
   };
-  mother: {
+  mother?: {
     name: string;
     phone: string;
   };
 
-  isCurrentlyStudying: boolean;
+  isCurrentlyStudying?: boolean;
 
   // Educational Background
-  educationalBackground: {
+  educationalBackground?: {
     university: {
       institute: string;
       department: string;

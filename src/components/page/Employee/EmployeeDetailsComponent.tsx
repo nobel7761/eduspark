@@ -96,6 +96,14 @@ const EmployeeDetailsComponent = () => {
                 value={`${employee?.firstName} ${employee?.lastName}`}
               />
               <InfoItem label="Gender" value={employee?.gender} />
+              <InfoItem
+                label="Date of Birth"
+                value={
+                  employee?.dateOfBirth
+                    ? new Date(employee.dateOfBirth).toLocaleDateString()
+                    : "N/A"
+                }
+              />
               <InfoItem label="Employee ID" value={employee?.employeeId} />
               <InfoItem label="NID" value={employee?.nidNumber || "-"} />
               <InfoItem
@@ -344,30 +352,48 @@ const InfoItem = ({
 };
 
 const formatClassRange = (classes: string[]) => {
-  const sortedClasses = classes
+  // First, separate numeric and special classes
+  const numericClasses = classes
+    .filter((c) => !isNaN(Number(c)))
     .map(Number)
-    .filter((n) => !isNaN(n))
     .sort((a, b) => a - b);
 
-  if (sortedClasses.length === 0) return classes.join(", ");
-
-  const ranges = [];
-  let start = sortedClasses[0];
-  let prev = start;
-
-  for (let i = 1; i <= sortedClasses.length; i++) {
-    if (i === sortedClasses.length || sortedClasses[i] !== prev + 1) {
-      ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
-      if (i < sortedClasses.length) {
-        start = sortedClasses[i];
-        prev = start;
+  const specialClasses = classes
+    .filter((c) => isNaN(Number(c)))
+    .map((c) => {
+      switch (c) {
+        case "arabic":
+          return "Arabic";
+        case "spoken_english":
+          return "Spoken English";
+        case "drawing":
+          return "Drawing";
+        default:
+          return c;
       }
-    } else {
-      prev = sortedClasses[i];
+    });
+
+  // Handle numeric ranges
+  const ranges = [];
+  if (numericClasses.length > 0) {
+    let start = numericClasses[0];
+    let prev = start;
+
+    for (let i = 1; i <= numericClasses.length; i++) {
+      if (i === numericClasses.length || numericClasses[i] !== prev + 1) {
+        ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+        if (i < numericClasses.length) {
+          start = numericClasses[i];
+          prev = start;
+        }
+      } else {
+        prev = numericClasses[i];
+      }
     }
   }
 
-  return ranges.join(", ");
+  // Combine numeric ranges and special classes
+  return [...ranges, ...specialClasses].join(", ");
 };
 
 export default EmployeeDetailsComponent;
