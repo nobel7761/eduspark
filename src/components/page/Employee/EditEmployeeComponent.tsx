@@ -10,10 +10,13 @@ import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployee } from "@/types/employee";
 import { toast } from "react-toastify";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { schema } from "./CreateEmployeeComponent";
 import * as yup from "yup";
+import Select from "react-select";
+import { BsFillTrashFill } from "react-icons/bs";
+import { classOptions } from "./CreateEmployeeComponent";
 
 // Extend the schema to include employeeId
 const extendedSchema = schema.shape({
@@ -42,8 +45,20 @@ const EditEmployeeComponent = () => {
     watch,
     formState: { errors, isSubmitting },
     reset,
+    fields: paymentFields,
+    append: appendPayment,
+    remove: removePayment,
   } = useForm({
     resolver: yupResolver(extendedSchema),
+  });
+
+  const {
+    fields: paymentPerClassFields,
+    append: appendPaymentPerClass,
+    remove: removePaymentPerClass,
+  } = useFieldArray({
+    control,
+    name: "paymentPerClass",
   });
 
   const fetchEmployee = async () => {
@@ -87,6 +102,15 @@ const EditEmployeeComponent = () => {
       fetchEmployee();
     }
   }, [params.employeeId]);
+
+  useEffect(() => {
+    if (
+      selectedPaymentMethod === PaymentMethod.PerClass &&
+      paymentFields.length === 0
+    ) {
+      appendPayment({ classes: [], amount: 0 });
+    }
+  }, [selectedPaymentMethod, appendPayment, paymentFields.length]);
 
   const onSubmit = async (data: IEmployee) => {
     try {
@@ -423,20 +447,122 @@ const EditEmployeeComponent = () => {
 
             {/* Conditional Payment Fields */}
             {selectedPaymentMethod === PaymentMethod.PerClass && (
-              <div>
-                <label className="block text-sm font-medium mb-1 text-white">
-                  Payment Per Class
-                </label>
-                <input
-                  type="number"
-                  {...register("paymentPerClass")}
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
-                />
-                {errors.paymentPerClass && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.paymentPerClass.message}
-                  </p>
-                )}
+              <div className="bg-gray-800 p-6 rounded-lg border border-white relative my-4">
+                <div className="absolute -top-3 right-4">
+                  <button
+                    type="button"
+                    onClick={() => appendPayment({ classes: [], amount: 0 })}
+                    className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
+                  >
+                    Add More Class Payment Details
+                  </button>
+                </div>
+
+                {paymentFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="relative border border-gray-700 rounded-lg p-4 text-primary mt-4"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Class Selection */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Select Classes
+                        </label>
+                        <Select
+                          isMulti
+                          options={classOptions}
+                          onChange={(newValue) => {
+                            const selectedClasses = newValue.map(
+                              (option) => option.value
+                            );
+                            setValue(
+                              `paymentPerClass.${index}.classes`,
+                              selectedClasses,
+                              {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              }
+                            );
+                          }}
+                          value={classOptions.filter((option) =>
+                            watch(`paymentPerClass.${index}.classes`)?.includes(
+                              option.value
+                            )
+                          )}
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              background: "#374151",
+                              borderColor: "#4B5563",
+                              color: "white",
+                            }),
+                            menu: (base) => ({
+                              ...base,
+                              background: "#374151",
+                              color: "white",
+                            }),
+                            option: (base, state) => ({
+                              ...base,
+                              backgroundColor: state.isFocused
+                                ? "#4B5563"
+                                : "#374151",
+                              color: "white",
+                              "&:hover": {
+                                backgroundColor: "#4B5563",
+                              },
+                            }),
+                            multiValue: (base) => ({
+                              ...base,
+                              backgroundColor: "#4B5563",
+                            }),
+                            multiValueLabel: (base) => ({
+                              ...base,
+                              color: "white",
+                            }),
+                            multiValueRemove: (base) => ({
+                              ...base,
+                              color: "white",
+                              "&:hover": {
+                                backgroundColor: "#6B7280",
+                                color: "white",
+                              },
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              color: "white",
+                            }),
+                          }}
+                        />
+                      </div>
+
+                      {/* Payment Amount */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-white">
+                          Payment Per Class
+                        </label>
+                        <input
+                          type="number"
+                          {...register(`paymentPerClass.${index}.amount`)}
+                          className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Delete button */}
+                    {paymentFields.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePayment(index)}
+                        className="absolute -right-2 -top-2 bg-red-500 hover:bg-red-600 rounded-full p-1.5"
+                      >
+                        <BsFillTrashFill className="text-white text-xl" />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
