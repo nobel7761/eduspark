@@ -37,7 +37,7 @@ export const classOptions = [
 ];
 
 // Form schema matches IE interface but excludes auto-generated fields
-const schema = yup.object({
+export const schema = yup.object({
   firstName: yup
     .string()
     .required("First name is required")
@@ -108,7 +108,11 @@ const schema = yup.object({
         .array()
         .of(
           yup.object({
-            class: yup.string().required("Class is required"),
+            classes: yup
+              .array()
+              .of(yup.string())
+              .min(1, "At least one class must be selected")
+              .required("Classes are required"),
             amount: yup
               .number()
               .transform((value) => (isNaN(value) ? undefined : value))
@@ -286,9 +290,9 @@ const CreateEmployeeComponent = () => {
     handleSubmit,
     setValue,
     watch,
-    setError,
     control,
-    formState: { errors },
+    setError,
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -305,9 +309,6 @@ const CreateEmployeeComponent = () => {
     control,
     name: "paymentPerClass",
   });
-
-  const isCurrentlyStudyingValue = watch("isCurrentlyStudying");
-  console.log("isCurrentlyStudying (watched):", isCurrentlyStudyingValue); // Debugging
 
   const handleIsCurrentlyStudyingChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -335,26 +336,15 @@ const CreateEmployeeComponent = () => {
       selectedPaymentMethod === PaymentMethod.PerClass &&
       paymentFields.length === 0
     ) {
-      appendPayment({ class: "", amount: 0 });
+      appendPayment({ classes: [], amount: 0 });
     }
   }, [selectedPaymentMethod, appendPayment, paymentFields.length]);
-
-  // Update your watch to include payment fields
-  const watchPaymentMethod = watch("paymentMethod");
-  const watchPaymentDetails = watch("paymentPerClass");
-
-  // Add this useEffect to monitor payment changes
-  useEffect(() => {
-    if (watchPaymentMethod === PaymentMethod.PerClass) {
-      console.log("Payment details changed:", watchPaymentDetails);
-    }
-  }, [watchPaymentMethod, watchPaymentDetails]);
 
   const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
     if (data.paymentMethod === PaymentMethod.PerClass) {
       // Ensure amounts are numbers
       data.paymentPerClass = data.paymentPerClass?.map((detail) => ({
-        class: detail.class,
+        classes: detail.classes,
         amount: Number(detail.amount),
       }));
     } else if (data.paymentMethod === PaymentMethod.Monthly) {
@@ -363,13 +353,49 @@ const CreateEmployeeComponent = () => {
       delete data.paymentPerClass;
     }
 
-    console.log("Form data being submitted:", data);
-    console.log(
-      "Payment details:",
-      data.paymentPerClass || data.paymentPerMonth
-    );
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-    // Rest of your submission code...
+      if (!response.ok) {
+        // Try to parse error message from response
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      await response.json();
+
+      setSuccessPopup(true);
+      setTimeout(() => {
+        router.push("/employees");
+      }, 2000);
+    } catch (error) {
+      if (error instanceof yup.ValidationError) {
+        error.inner.forEach((err) => {
+          setError(err.path as keyof IEmployeeWithoutId, {
+            type: "manual",
+            message: err.message,
+          });
+        });
+      }
+      console.error("Error creating employee:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to create employee. Please try again."
+      );
+      setFailedPopup(true);
+    }
   };
 
   // Modify the display text helper function
@@ -379,17 +405,6 @@ const CreateEmployeeComponent = () => {
       ? `${prefix} ${capitalizeFirstLetter(value)}`
       : capitalizeFirstLetter(value);
   };
-
-  // Add this useEffect to watch form values for debugging
-  useEffect(() => {
-    const subscription = watch((value, { name, type }) => {
-      console.log("Form values changed:", value);
-      console.log("Changed field:", name);
-      console.log("Change type:", type);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch]);
 
   return (
     <div className="mx-auto p-4 rounded-md bg-primary">
@@ -800,7 +815,9 @@ const CreateEmployeeComponent = () => {
                     <div className="absolute -top-3 right-4">
                       <button
                         type="button"
-                        onClick={() => appendPayment({ class: "", amount: 0 })}
+                        onClick={() =>
+                          appendPayment({ classes: [], amount: 0 })
+                        }
                         className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
                       >
                         Add More Class Payment Details
@@ -816,24 +833,28 @@ const CreateEmployeeComponent = () => {
                           {/* Class Selection */}
                           <div>
                             <label className="block text-sm font-medium mb-1 text-white">
-                              Select Class
+                              Select Classes
                             </label>
                             <Select
+                              isMulti
                               options={classOptions}
                               onChange={(newValue) => {
+                                const selectedClasses = newValue.map(
+                                  (option) => option.value
+                                );
                                 setValue(
-                                  `paymentPerClass.${index}.class`,
-                                  newValue?.value || "",
+                                  `paymentPerClass.${index}.classes`,
+                                  selectedClasses,
                                   {
                                     shouldValidate: true,
                                     shouldDirty: true,
                                   }
                                 );
                               }}
-                              value={classOptions.find(
-                                (option) =>
-                                  option.value ===
-                                  watch(`paymentPerClass.${index}.class`)
+                              value={classOptions.filter((option) =>
+                                watch(
+                                  `paymentPerClass.${index}.classes`
+                                )?.includes(option.value)
                               )}
                               className="react-select-container"
                               classNamePrefix="react-select"
@@ -881,11 +902,15 @@ const CreateEmployeeComponent = () => {
                                 }),
                               }}
                             />
-                            {errors.paymentPerClass?.[index]?.class && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {errors.paymentPerClass[index]?.class?.message}
-                              </p>
-                            )}
+                            {errors.paymentPerClass &&
+                              errors.paymentPerClass[index]?.message && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    errors.paymentPerClass[index]
+                                      ?.message as string
+                                  }
+                                </p>
+                              )}
                           </div>
 
                           {/* Payment Amount */}
@@ -1488,9 +1513,36 @@ const CreateEmployeeComponent = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Create Employee
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Employee"
+                    )}
                   </button>
                 </div>
               </>

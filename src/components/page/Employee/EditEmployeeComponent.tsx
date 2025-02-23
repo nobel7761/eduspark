@@ -10,17 +10,41 @@ import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployee } from "@/types/employee";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { schema } from "./CreateEmployeeComponent";
+import * as yup from "yup";
+
+// Extend the schema to include employeeId
+const extendedSchema = schema.shape({
+  employeeId: yup
+    .string()
+    .required("Employee ID is required")
+    .min(2, "Employee ID must be at least 2 characters")
+    .max(50, "Employee ID must not exceed 50 characters"),
+});
 
 const EditEmployeeComponent = () => {
   const params = useParams();
   const router = useRouter();
-  const [employee, setEmployee] = useState<IEmployee | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
   const [selectedHscGroup, setSelectedHscGroup] = useState<Group | null>(null);
   const [selectedSscGroup, setSelectedSscGroup] = useState<Group | null>(null);
+  const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({
+    resolver: yupResolver(extendedSchema),
+  });
 
   const fetchEmployee = async () => {
     try {
@@ -32,7 +56,25 @@ const EditEmployeeComponent = () => {
         throw new Error("Failed to fetch employee");
       }
       const data = await response.json();
-      setEmployee(data);
+
+      // Format the joiningDate to YYYY-MM-DD before setting it
+      const formattedData = {
+        ...data,
+        joiningDate: data.joiningDate
+          ? new Date(data.joiningDate).toISOString().split("T")[0]
+          : "",
+      };
+
+      console.log("formattedData", formattedData);
+
+      // Reset form with formatted data
+      reset(formattedData);
+
+      // Set select fields
+      setSelectedPaymentMethod(data.paymentMethod);
+      setSelectedHscGroup(data.educationalBackground?.hsc?.group || null);
+      setSelectedSscGroup(data.educationalBackground?.ssc?.group || null);
+      setSelectedGender(data.gender);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -40,24 +82,13 @@ const EditEmployeeComponent = () => {
     }
   };
 
-  console.log(employee);
-
   useEffect(() => {
     if (params.employeeId) {
       fetchEmployee();
     }
   }, [params.employeeId]);
 
-  useEffect(() => {
-    if (employee) {
-      setSelectedPaymentMethod(employee.paymentMethod as PaymentMethod);
-      setSelectedHscGroup(employee.educationalBackground?.hsc?.group || null);
-      setSelectedSscGroup(employee.educationalBackground?.ssc?.group || null);
-    }
-  }, [employee]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: IEmployee) => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/employees/${params.employeeId}`,
@@ -66,14 +97,14 @@ const EditEmployeeComponent = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(employee),
+          body: JSON.stringify(data),
         }
       );
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update employee");
+        throw new Error(responseData.message || "Failed to update employee");
       }
 
       toast.success("Employee updated successfully!");
@@ -99,24 +130,12 @@ const EditEmployeeComponent = () => {
       : capitalizeFirstLetter(value);
   };
 
-  const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
-
-  useEffect(() => {
-    if (employee) {
-      setSelectedGender(employee.gender);
-    }
-  }, [employee]);
-
   if (loading) {
     return <PageLoader loading={true} />;
   }
 
   if (error) {
     return <div className="text-red-500">Error: {error.message}</div>;
-  }
-
-  if (!employee) {
-    return <div>Employee not found</div>;
   }
 
   return (
@@ -133,7 +152,7 @@ const EditEmployeeComponent = () => {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Personal Information */}
         <div className="bg-gray-800 p-6 rounded-lg">
           <h2 className="text-xl font-semibold mb-4 text-white">
@@ -147,12 +166,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.firstName}
-                onChange={(e) =>
-                  setEmployee({ ...employee, firstName: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("firstName")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.firstName.message}
+                </p>
+              )}
             </div>
 
             {/* Last Name */}
@@ -162,12 +183,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.lastName}
-                onChange={(e) =>
-                  setEmployee({ ...employee, lastName: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("lastName")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.lastName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.lastName.message}
+                </p>
+              )}
             </div>
 
             {/* Employee ID */}
@@ -177,12 +200,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.employeeId}
-                onChange={(e) =>
-                  setEmployee({ ...employee, employeeId: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("employeeId")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.employeeId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.employeeId.message}
+                </p>
+              )}
             </div>
 
             {/* Gender */}
@@ -194,11 +219,11 @@ const EditEmployeeComponent = () => {
                 value={selectedGender}
                 onChange={(value) => {
                   setSelectedGender(value);
-                  setEmployee({ ...employee, gender: value as Gender });
+                  setValue("gender", value as Gender);
                 }}
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
                     <span className="block truncate">
                       {getDisplayText(selectedGender)}
                     </span>
@@ -237,6 +262,11 @@ const EditEmployeeComponent = () => {
                   </Listbox.Options>
                 </div>
               </Listbox>
+              {errors.gender && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.gender.message}
+                </p>
+              )}
             </div>
 
             {/* Primary Phone */}
@@ -246,12 +276,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.primaryPhone}
-                onChange={(e) =>
-                  setEmployee({ ...employee, primaryPhone: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("primaryPhone")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.primaryPhone && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.primaryPhone.message}
+                </p>
+              )}
             </div>
 
             {/* Secondary Phone */}
@@ -261,12 +293,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.secondaryPhone}
-                onChange={(e) =>
-                  setEmployee({ ...employee, secondaryPhone: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("secondaryPhone")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.secondaryPhone && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.secondaryPhone.message}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -276,12 +310,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="email"
-                value={employee?.email || ""}
-                onChange={(e) =>
-                  setEmployee({ ...employee, email: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("email")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             {/* NID Number */}
@@ -291,12 +327,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="text"
-                value={employee?.nidNumber || ""}
-                onChange={(e) =>
-                  setEmployee({ ...employee, nidNumber: e.target.value })
-                }
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("nidNumber")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.nidNumber && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.nidNumber.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -314,19 +352,14 @@ const EditEmployeeComponent = () => {
               </label>
               <input
                 type="date"
-                value={
-                  employee?.joiningDate
-                    ? new Date(employee.joiningDate).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) => {
-                  const date = e.target.value
-                    ? new Date(e.target.value)
-                    : new Date();
-                  setEmployee({ ...employee, joiningDate: date });
-                }}
-                className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                {...register("joiningDate")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               />
+              {errors.joiningDate && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.joiningDate.message}
+                </p>
+              )}
             </div>
 
             {/* Payment Method */}
@@ -338,14 +371,11 @@ const EditEmployeeComponent = () => {
                 value={selectedPaymentMethod}
                 onChange={(value) => {
                   setSelectedPaymentMethod(value);
-                  setEmployee({
-                    ...employee,
-                    paymentMethod: value as PaymentMethod,
-                  });
+                  setValue("paymentMethod", value as PaymentMethod);
                 }}
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                  <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
                     <span className="block truncate">
                       {getDisplayText(selectedPaymentMethod, "Payment")}
                     </span>
@@ -384,6 +414,11 @@ const EditEmployeeComponent = () => {
                   </Listbox.Options>
                 </div>
               </Listbox>
+              {errors.paymentMethod && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.paymentMethod.message}
+                </p>
+              )}
             </div>
 
             {/* Conditional Payment Fields */}
@@ -394,15 +429,14 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="number"
-                  value={employee?.paymentPerClass || ""}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      paymentPerClass: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("paymentPerClass")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.paymentPerClass && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.paymentPerClass.message}
+                  </p>
+                )}
               </div>
             )}
 
@@ -413,15 +447,14 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="number"
-                  value={employee?.paymentPerMonth || ""}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      paymentPerMonth: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("paymentPerMonth")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.paymentPerMonth && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.paymentPerMonth.message}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -440,29 +473,30 @@ const EditEmployeeComponent = () => {
                   Present Address
                 </label>
                 <textarea
-                  value={employee?.presentAddress || ""}
-                  onChange={(e) =>
-                    setEmployee({ ...employee, presentAddress: e.target.value })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("presentAddress")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                   rows={3}
                 />
+                {errors.presentAddress && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.presentAddress.message}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
                   Permanent Address
                 </label>
                 <textarea
-                  value={employee?.permanentAddress || ""}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      permanentAddress: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("permanentAddress")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                   rows={3}
                 />
+                {errors.permanentAddress && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.permanentAddress.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -485,15 +519,14 @@ const EditEmployeeComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee?.father?.name || ""}
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          father: { ...employee?.father, name: e.target.value },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register("father.name")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.father && errors.father.name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.father.name.message}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-white">
@@ -501,18 +534,14 @@ const EditEmployeeComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee?.father?.phone || ""}
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          father: {
-                            ...employee?.father,
-                            phone: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register("father.phone")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.father && errors.father.phone && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.father.phone.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -529,15 +558,14 @@ const EditEmployeeComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee?.mother?.name || ""}
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          mother: { ...employee?.mother, name: e.target.value },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register("mother.name")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.mother && errors.mother.name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.mother.name.message}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-white">
@@ -545,18 +573,14 @@ const EditEmployeeComponent = () => {
                     </label>
                     <input
                       type="text"
-                      value={employee?.mother?.phone || ""}
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          mother: {
-                            ...employee?.mother,
-                            phone: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register("mother.phone")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.mother && errors.mother.phone && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.mother.phone.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -579,14 +603,7 @@ const EditEmployeeComponent = () => {
               <label className="flex items-center space-x-2 text-white">
                 <input
                   type="checkbox"
-                  checked={employee?.isCurrentlyStudying || false}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    setEmployee({
-                      ...employee,
-                      isCurrentlyStudying: isChecked,
-                    });
-                  }}
+                  {...register("isCurrentlyStudying")}
                   className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
                 />
                 <span>Currently Studying</span>
@@ -599,23 +616,19 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={
-                    employee?.educationalBackground?.university?.institute || ""
-                  }
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        university: {
-                          ...employee?.educationalBackground?.university,
-                          institute: e.target.value,
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.university.institute")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.university &&
+                  errors.educationalBackground.university.institute && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {
+                        errors.educationalBackground.university.institute
+                          .message
+                      }
+                    </p>
+                  )}
               </div>
 
               <div>
@@ -624,51 +637,43 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={
-                    employee?.educationalBackground?.university?.department ||
-                    ""
-                  }
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        university: {
-                          ...employee?.educationalBackground?.university,
-                          department: e.target.value,
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.university.department")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.university &&
+                  errors.educationalBackground.university.department && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {
+                        errors.educationalBackground.university.department
+                          .message
+                      }
+                    </p>
+                  )}
               </div>
 
-              {employee?.isCurrentlyStudying ? (
+              {watch("isCurrentlyStudying") ? (
                 <div>
                   <label className="block text-sm font-medium mb-1 text-white">
                     Admission Year
                   </label>
                   <input
                     type="number"
-                    value={
-                      employee?.educationalBackground?.university
-                        ?.admissionYear || ""
-                    }
-                    onChange={(e) =>
-                      setEmployee({
-                        ...employee,
-                        educationalBackground: {
-                          ...employee?.educationalBackground,
-                          university: {
-                            ...employee?.educationalBackground?.university,
-                            admissionYear: Number(e.target.value),
-                          },
-                        },
-                      })
-                    }
-                    className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                    {...register(
+                      "educationalBackground.university.admissionYear"
+                    )}
+                    className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                   />
+                  {errors.educationalBackground &&
+                    errors.educationalBackground.university &&
+                    errors.educationalBackground.university.admissionYear && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {
+                          errors.educationalBackground.university.admissionYear
+                            .message
+                        }
+                      </p>
+                    )}
                 </div>
               ) : (
                 <>
@@ -678,24 +683,21 @@ const EditEmployeeComponent = () => {
                     </label>
                     <input
                       type="number"
-                      value={
-                        employee?.educationalBackground?.university
-                          ?.passingYear || ""
-                      }
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          educationalBackground: {
-                            ...employee?.educationalBackground,
-                            university: {
-                              ...employee?.educationalBackground?.university,
-                              passingYear: Number(e.target.value),
-                            },
-                          },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register(
+                        "educationalBackground.university.passingYear"
+                      )}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.educationalBackground &&
+                      errors.educationalBackground.university &&
+                      errors.educationalBackground.university.passingYear && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {
+                            errors.educationalBackground.university.passingYear
+                              .message
+                          }
+                        </p>
+                      )}
                   </div>
 
                   <div>
@@ -705,23 +707,16 @@ const EditEmployeeComponent = () => {
                     <input
                       type="number"
                       step="0.01"
-                      value={
-                        employee?.educationalBackground?.university?.cgpa || ""
-                      }
-                      onChange={(e) =>
-                        setEmployee({
-                          ...employee,
-                          educationalBackground: {
-                            ...employee?.educationalBackground,
-                            university: {
-                              ...employee?.educationalBackground?.university,
-                              cgpa: Number(e.target.value),
-                            },
-                          },
-                        })
-                      }
-                      className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                      {...register("educationalBackground.university.cgpa")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                     />
+                    {errors.educationalBackground &&
+                      errors.educationalBackground.university &&
+                      errors.educationalBackground.university.cgpa && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.educationalBackground.university.cgpa.message}
+                        </p>
+                      )}
                   </div>
                 </>
               )}
@@ -740,21 +735,16 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={employee?.educationalBackground?.hsc.institute}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        hsc: {
-                          ...employee?.educationalBackground?.hsc,
-                          institute: e.target.value,
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.hsc.institute")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.hsc &&
+                  errors.educationalBackground.hsc.institute && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.hsc.institute.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -764,20 +754,11 @@ const EditEmployeeComponent = () => {
                   value={selectedHscGroup}
                   onChange={(value) => {
                     setSelectedHscGroup(value);
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        hsc: {
-                          ...employee?.educationalBackground?.hsc,
-                          group: value as Group,
-                        },
-                      },
-                    });
+                    setValue("educationalBackground.hsc.group", value as Group);
                   }}
                 >
                   <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
                       <span className="block truncate">
                         {getDisplayText(selectedHscGroup)}
                       </span>
@@ -816,6 +797,13 @@ const EditEmployeeComponent = () => {
                     </Listbox.Options>
                   </div>
                 </Listbox>
+                {errors.educationalBackground &&
+                  errors.educationalBackground.hsc &&
+                  errors.educationalBackground.hsc.group && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.hsc.group.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -823,21 +811,16 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={employee?.educationalBackground?.hsc.year}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        hsc: {
-                          ...employee?.educationalBackground?.hsc,
-                          year: Number(e.target.value),
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.hsc.year")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.hsc &&
+                  errors.educationalBackground.hsc.year && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.hsc.year.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -846,21 +829,16 @@ const EditEmployeeComponent = () => {
                 <input
                   type="number"
                   step="0.01"
-                  value={employee?.educationalBackground?.hsc?.result || ""}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        hsc: {
-                          ...employee?.educationalBackground?.hsc,
-                          result: Number(e.target.value),
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.hsc.result")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.hsc &&
+                  errors.educationalBackground.hsc.result && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.hsc.result.message}
+                    </p>
+                  )}
               </div>
             </div>
           </div>
@@ -877,21 +855,16 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={employee?.educationalBackground?.ssc.institute}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        ssc: {
-                          ...employee?.educationalBackground?.ssc,
-                          institute: e.target.value,
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.ssc.institute")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.ssc &&
+                  errors.educationalBackground.ssc.institute && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.ssc.institute.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -901,20 +874,11 @@ const EditEmployeeComponent = () => {
                   value={selectedSscGroup}
                   onChange={(value) => {
                     setSelectedSscGroup(value);
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        ssc: {
-                          ...employee?.educationalBackground?.ssc,
-                          group: value as Group,
-                        },
-                      },
-                    });
+                    setValue("educationalBackground.ssc.group", value as Group);
                   }}
                 >
                   <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none focus:outline-none text-white">
                       <span className="block truncate">
                         {getDisplayText(selectedSscGroup)}
                       </span>
@@ -953,6 +917,13 @@ const EditEmployeeComponent = () => {
                     </Listbox.Options>
                   </div>
                 </Listbox>
+                {errors.educationalBackground &&
+                  errors.educationalBackground.ssc &&
+                  errors.educationalBackground.ssc.group && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.ssc.group.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -960,21 +931,16 @@ const EditEmployeeComponent = () => {
                 </label>
                 <input
                   type="text"
-                  value={employee?.educationalBackground?.ssc.year}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        ssc: {
-                          ...employee?.educationalBackground?.ssc,
-                          year: Number(e.target.value),
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.ssc.year")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.ssc &&
+                  errors.educationalBackground.ssc.year && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.ssc.year.message}
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-white">
@@ -983,21 +949,16 @@ const EditEmployeeComponent = () => {
                 <input
                   type="number"
                   step="0.01"
-                  value={employee?.educationalBackground?.ssc?.result || ""}
-                  onChange={(e) =>
-                    setEmployee({
-                      ...employee,
-                      educationalBackground: {
-                        ...employee?.educationalBackground,
-                        ssc: {
-                          ...employee?.educationalBackground?.ssc,
-                          result: Number(e.target.value),
-                        },
-                      },
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+                  {...register("educationalBackground.ssc.result")}
+                  className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                 />
+                {errors.educationalBackground &&
+                  errors.educationalBackground.ssc &&
+                  errors.educationalBackground.ssc.result && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.educationalBackground.ssc.result.message}
+                    </p>
+                  )}
               </div>
             </div>
           </div>
@@ -1008,14 +969,16 @@ const EditEmployeeComponent = () => {
           <h2 className="text-xl font-semibold mb-4 text-white">Comments</h2>
           <div>
             <textarea
-              value={employee?.comments || ""}
-              onChange={(e) =>
-                setEmployee({ ...employee, comments: e.target.value })
-              }
-              className="w-full p-2 rounded bg-gray-700 text-white focus:ring-2 focus:ring-primary"
+              {...register("comments")}
+              className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
               rows={3}
               placeholder="Add any additional comments..."
             />
+            {errors.comments && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.comments.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -1028,9 +991,36 @@ const EditEmployeeComponent = () => {
           </Link>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Save Changes
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </button>
         </div>
       </form>
