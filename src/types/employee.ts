@@ -20,8 +20,8 @@ export interface IEmployee {
 
   // Parents Information
   father?: {
-    name: string;
-    phone: string;
+    name?: string;
+    phone?: string;
   };
   mother?: {
     name: string;

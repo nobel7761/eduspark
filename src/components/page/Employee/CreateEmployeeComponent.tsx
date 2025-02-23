@@ -19,6 +19,7 @@ import Select from "react-select";
 import { useFieldArray } from "react-hook-form";
 import { BsFillTrashFill } from "react-icons/bs";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
+import { Resolver } from "react-hook-form";
 
 export const classOptions = [
   { value: "3", label: "Class 3" },
@@ -119,7 +120,13 @@ export const schema = yup.object({
 
   father: yup.object().when("employeeType", {
     is: EmployeeType.CLEANER,
-    then: () => yup.object().optional(),
+    then: () =>
+      yup
+        .object({
+          name: yup.string().optional(),
+          phone: yup.string().optional(),
+        })
+        .optional(),
     otherwise: () =>
       yup.object({
         name: yup.string().required("Father's name is required"),
@@ -128,7 +135,13 @@ export const schema = yup.object({
   }),
   mother: yup.object().when("employeeType", {
     is: EmployeeType.CLEANER,
-    then: () => yup.object().optional(),
+    then: () =>
+      yup
+        .object({
+          name: yup.string().optional(),
+          phone: yup.string().optional(),
+        })
+        .optional(),
     otherwise: () =>
       yup.object({
         name: yup.string().required("Mother's name is required"),
@@ -279,6 +292,57 @@ export const schema = yup.object({
   comments: yup.string().optional(),
 });
 
+type EmployeeFormData = {
+  firstName: string;
+  lastName: string;
+  joiningDate: Date;
+  gender: Gender;
+  primaryPhone: string;
+  secondaryPhone?: string;
+  email?: string;
+  nidNumber?: string;
+  presentAddress: string;
+  permanentAddress?: string;
+  employeeType: EmployeeType;
+  paymentMethod: PaymentMethod;
+  paymentPerMonth?: number;
+  paymentPerClass?: Array<{
+    classes: string[];
+    amount: number;
+  }>;
+  isCurrentlyStudying: boolean;
+  educationalBackground?: {
+    university: {
+      institute: string;
+      department: string;
+      admissionYear?: number | null;
+      passingYear?: number | null;
+      cgpa?: number | null;
+    };
+    hsc: {
+      institute: string;
+      group: Group | null;
+      year: number;
+      result: number;
+    };
+    ssc: {
+      institute: string;
+      group: Group | null;
+      year: number;
+      result: number;
+    };
+  };
+  father?: {
+    name: string;
+    phone: string;
+  };
+  mother?: {
+    name: string;
+    phone: string;
+  };
+  comments?: string;
+};
+
 const CreateEmployeeComponent = () => {
   const router = useRouter();
   const [successPopup, setSuccessPopup] = useState(false);
@@ -304,11 +368,40 @@ const CreateEmployeeComponent = () => {
     control,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: yupResolver(schema),
+  } = useForm<EmployeeFormData>({
+    resolver: yupResolver(schema) as unknown as Resolver<EmployeeFormData>,
     defaultValues: {
       isCurrentlyStudying: false,
       paymentPerClass: [],
+      father: {
+        name: "",
+        phone: "",
+      },
+      mother: {
+        name: "",
+        phone: "",
+      },
+      educationalBackground: {
+        university: {
+          institute: "",
+          department: "",
+          admissionYear: null,
+          passingYear: null,
+          cgpa: null,
+        },
+        hsc: {
+          institute: "",
+          group: null,
+          year: 0,
+          result: 0,
+        },
+        ssc: {
+          institute: "",
+          group: null,
+          year: 0,
+          result: 0,
+        },
+      },
     },
   });
 
@@ -326,18 +419,20 @@ const CreateEmployeeComponent = () => {
   ) => {
     const isChecked = e.target.checked;
     setIsCurrentlyStudying(isChecked);
-    setValue("isCurrentlyStudying", isChecked, {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    });
+    setValue("isCurrentlyStudying", isChecked);
 
     // Reset fields based on the checkbox state
     if (isChecked) {
-      setValue("educationalBackground.university.passingYear", null);
-      setValue("educationalBackground.university.cgpa", null);
+      setValue("educationalBackground.university.passingYear", null, {
+        shouldValidate: true,
+      });
+      setValue("educationalBackground.university.cgpa", null, {
+        shouldValidate: true,
+      });
     } else {
-      setValue("educationalBackground.university.admissionYear", null);
+      setValue("educationalBackground.university.admissionYear", null, {
+        shouldValidate: true,
+      });
     }
   };
 
@@ -355,9 +450,29 @@ const CreateEmployeeComponent = () => {
     if (selectedEmployeeType === EmployeeType.CLEANER) {
       setValue("paymentMethod", PaymentMethod.Monthly);
       // Clear unnecessary fields
-      setValue("father", {});
-      setValue("mother", {});
-      setValue("educationalBackground", {});
+      setValue("father", { name: "", phone: "" });
+      setValue("mother", { name: "", phone: "" });
+      setValue("educationalBackground", {
+        university: {
+          institute: "",
+          department: "",
+          admissionYear: null,
+          passingYear: null,
+          cgpa: null,
+        },
+        hsc: {
+          institute: "",
+          group: null,
+          year: 0,
+          result: 0,
+        },
+        ssc: {
+          institute: "",
+          group: null,
+          year: 0,
+          result: 0,
+        },
+      });
       setValue("paymentPerClass", []);
     }
   }, [selectedEmployeeType, setValue]);
@@ -431,8 +546,6 @@ const CreateEmployeeComponent = () => {
       ? `${prefix} ${capitalizeFirstLetter(value)}`
       : capitalizeFirstLetter(value);
   };
-
-  console.log("selectedEmployeeType", selectedEmployeeType);
 
   return (
     <div className="mx-auto p-4 rounded-md bg-primary">
@@ -1041,7 +1154,7 @@ const CreateEmployeeComponent = () => {
                         </label>
                         <input
                           type="text"
-                          {...register("father.name")}
+                          {...register("father.name" as const)}
                           className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.father?.name && (
@@ -1057,7 +1170,7 @@ const CreateEmployeeComponent = () => {
                         </label>
                         <input
                           type="tel"
-                          {...register("father.phone")}
+                          {...register("father.phone" as const)}
                           className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.father?.phone && (
@@ -1073,7 +1186,7 @@ const CreateEmployeeComponent = () => {
                         </label>
                         <input
                           type="text"
-                          {...register("mother.name")}
+                          {...register("mother.name" as const)}
                           className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.mother?.name && (
@@ -1089,7 +1202,7 @@ const CreateEmployeeComponent = () => {
                         </label>
                         <input
                           type="tel"
-                          {...register("mother.phone")}
+                          {...register("mother.phone" as const)}
                           className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                         />
                         {errors.mother?.phone && (
