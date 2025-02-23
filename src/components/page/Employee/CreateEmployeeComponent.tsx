@@ -18,6 +18,7 @@ import { EmployeeType } from "@/enums/employees.enum";
 import Select from "react-select";
 import { useFieldArray } from "react-hook-form";
 import { BsFillTrashFill } from "react-icons/bs";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
 
 export const classOptions = [
   { value: "3", label: "Class 3" },
@@ -100,15 +101,24 @@ const schema = yup.object({
     .mixed<PaymentMethod>()
     .oneOf(Object.values(PaymentMethod))
     .required("Payment method is required"),
-  paymentPerClass: yup.number().when("paymentMethod", {
+  paymentPerClass: yup.array().when("paymentMethod", {
     is: PaymentMethod.PerClass,
     then: () =>
       yup
-        .number()
-        .transform((value) => (isNaN(value) ? undefined : value))
-        .typeError("Payment per class must be a number")
-        .required("Payment per class is required")
-        .min(0, "Payment cannot be negative"),
+        .array()
+        .of(
+          yup.object({
+            class: yup.string().required("Class is required"),
+            amount: yup
+              .number()
+              .transform((value) => (isNaN(value) ? undefined : value))
+              .typeError("Payment amount must be a number")
+              .required("Payment amount is required")
+              .min(0, "Payment cannot be negative"),
+          })
+        )
+        .required("At least one class payment detail is required"),
+    otherwise: () => yup.array().nullable(),
   }),
   paymentPerMonth: yup.number().when("paymentMethod", {
     is: PaymentMethod.Monthly,
@@ -252,28 +262,7 @@ const schema = yup.object({
     .mixed<EmployeeType>()
     .oneOf(Object.values(EmployeeType))
     .required("Employee type is required"),
-  paymentPerClassDetails: yup.array().when("paymentMethod", {
-    is: PaymentMethod.PerClass,
-    then: () =>
-      yup.array().of(
-        yup.object({
-          class: yup.string().required("Class is required"),
-          amount: yup
-            .number()
-            .transform((value) => (isNaN(value) ? undefined : value))
-            .typeError("Payment amount must be a number")
-            .required("Payment amount is required")
-            .min(0, "Payment cannot be negative"),
-        })
-      ),
-    otherwise: () => yup.array().nullable(),
-  }),
 });
-
-// Add this helper function near the top of the file, after the imports
-const capitalizeFirstLetter = (string: string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-};
 
 const CreateEmployeeComponent = () => {
   const router = useRouter();
@@ -304,7 +293,7 @@ const CreateEmployeeComponent = () => {
     resolver: yupResolver(schema),
     defaultValues: {
       isCurrentlyStudying: false,
-      paymentPerClassDetails: [],
+      paymentPerClass: [],
     },
   });
 
@@ -314,7 +303,7 @@ const CreateEmployeeComponent = () => {
     remove: removePayment,
   } = useFieldArray({
     control,
-    name: "paymentPerClassDetails",
+    name: "paymentPerClass",
   });
 
   const isCurrentlyStudyingValue = watch("isCurrentlyStudying");
@@ -350,52 +339,37 @@ const CreateEmployeeComponent = () => {
     }
   }, [selectedPaymentMethod, appendPayment, paymentFields.length]);
 
+  // Update your watch to include payment fields
+  const watchPaymentMethod = watch("paymentMethod");
+  const watchPaymentDetails = watch("paymentPerClass");
+
+  // Add this useEffect to monitor payment changes
+  useEffect(() => {
+    if (watchPaymentMethod === PaymentMethod.PerClass) {
+      console.log("Payment details changed:", watchPaymentDetails);
+    }
+  }, [watchPaymentMethod, watchPaymentDetails]);
+
   const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
+    if (data.paymentMethod === PaymentMethod.PerClass) {
+      // Ensure amounts are numbers
+      data.paymentPerClass = data.paymentPerClass?.map((detail) => ({
+        class: detail.class,
+        amount: Number(detail.amount),
+      }));
+    } else if (data.paymentMethod === PaymentMethod.Monthly) {
+      data.paymentPerMonth = Number(data.paymentPerMonth);
+      // Remove the per-class details as they're not needed
+      delete data.paymentPerClass;
+    }
+
     console.log("Form data being submitted:", data);
-    console.log("isCurrentlyStudying value:", data.isCurrentlyStudying);
-    // try {
-    //   const response = await fetch(
-    //     `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
-    //     {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(data),
-    //     }
-    //   );
+    console.log(
+      "Payment details:",
+      data.paymentPerClass || data.paymentPerMonth
+    );
 
-    //   if (!response.ok) {
-    //     // Try to parse error message from response
-    //     const errorData = await response.json();
-    //     throw new Error(
-    //       errorData.message || `HTTP error! status: ${response.status}`
-    //     );
-    //   }
-
-    //   const result = await response.json();
-    //   console.log("result", result);
-    //   setSuccessPopup(true);
-    //   setTimeout(() => {
-    //     router.push("/employees");
-    //   }, 2000);
-    // } catch (error) {
-    //   if (error instanceof yup.ValidationError) {
-    //     error.inner.forEach((err) => {
-    //       setError(err.path as keyof IEmployeeWithoutId, {
-    //         type: "manual",
-    //         message: err.message,
-    //       });
-    //     });
-    //   }
-    //   console.error("Error creating employee:", error);
-    //   setErrorMessage(
-    //     error instanceof Error
-    //       ? error.message
-    //       : "Failed to create employee. Please try again."
-    //   );
-    //   setFailedPopup(true);
-    // }
+    // Rest of your submission code...
   };
 
   // Modify the display text helper function
@@ -405,6 +379,17 @@ const CreateEmployeeComponent = () => {
       ? `${prefix} ${capitalizeFirstLetter(value)}`
       : capitalizeFirstLetter(value);
   };
+
+  // Add this useEffect to watch form values for debugging
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => {
+      console.log("Form values changed:", value);
+      console.log("Changed field:", name);
+      console.log("Change type:", type);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   return (
     <div className="mx-auto p-4 rounded-md bg-primary">
@@ -833,14 +818,12 @@ const CreateEmployeeComponent = () => {
                             <label className="block text-sm font-medium mb-1 text-white">
                               Select Class
                             </label>
-
                             <Select
-                              isMulti
                               options={classOptions}
                               onChange={(newValue) => {
                                 setValue(
-                                  `paymentPerClassDetails.${index}.class`,
-                                  newValue?.value,
+                                  `paymentPerClass.${index}.class`,
+                                  newValue?.value || "",
                                   {
                                     shouldValidate: true,
                                     shouldDirty: true,
@@ -850,7 +833,7 @@ const CreateEmployeeComponent = () => {
                               value={classOptions.find(
                                 (option) =>
                                   option.value ===
-                                  watch(`paymentPerClassDetails.${index}.class`)
+                                  watch(`paymentPerClass.${index}.class`)
                               )}
                               className="react-select-container"
                               classNamePrefix="react-select"
@@ -898,6 +881,11 @@ const CreateEmployeeComponent = () => {
                                 }),
                               }}
                             />
+                            {errors.paymentPerClass?.[index]?.class && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.paymentPerClass[index]?.class?.message}
+                              </p>
+                            )}
                           </div>
 
                           {/* Payment Amount */}
@@ -907,9 +895,7 @@ const CreateEmployeeComponent = () => {
                             </label>
                             <input
                               type="number"
-                              {...register(
-                                `paymentPerClassDetails.${index}.amount`
-                              )}
+                              {...register(`paymentPerClass.${index}.amount`)}
                               className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
                             />
                           </div>
