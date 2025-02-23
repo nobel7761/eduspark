@@ -19,19 +19,19 @@ export interface IEmployee {
   permanentAddress?: string;
 
   // Parents Information
-  father: {
+  father?: {
     name: string;
     phone: string;
   };
-  mother: {
+  mother?: {
     name: string;
     phone: string;
   };
 
-  isCurrentlyStudying: boolean;
+  isCurrentlyStudying?: boolean;
 
   // Educational Background
-  educationalBackground: {
+  educationalBackground?: {
     university: {
       institute: string;
       department: string;
