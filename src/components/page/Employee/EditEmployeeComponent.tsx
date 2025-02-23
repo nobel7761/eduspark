@@ -10,7 +10,7 @@ import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
 import { IEmployee } from "@/types/employee";
 import { toast } from "react-toastify";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { schema } from "./CreateEmployeeComponent";
 import * as yup from "yup";
@@ -46,8 +46,8 @@ const EditEmployeeComponent = () => {
     control,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm({
-    resolver: yupResolver(extendedSchema),
+  } = useForm<IEmployee>({
+    resolver: yupResolver(extendedSchema) as unknown as Resolver<IEmployee>,
   });
 
   const {
@@ -70,11 +70,14 @@ const EditEmployeeComponent = () => {
       }
       const data = await response.json();
 
-      // Format the joiningDate to YYYY-MM-DD before setting it
+      // Format dates with timezone adjustment
       const formattedData = {
         ...data,
         joiningDate: data.joiningDate
           ? new Date(data.joiningDate).toISOString().split("T")[0]
+          : "",
+        dateOfBirth: data.dateOfBirth
+          ? new Date(data.dateOfBirth).toISOString().split("T")[0]
           : "",
       };
 
@@ -298,6 +301,22 @@ const EditEmployeeComponent = () => {
               {errors.gender && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.gender.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-white">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                {...register("dateOfBirth")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+              />
+              {errors.dateOfBirth && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.dateOfBirth.message as string}
                 </p>
               )}
             </div>

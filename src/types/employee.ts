@@ -6,6 +6,7 @@ export interface IEmployee {
   firstName: string;
   lastName: string;
   gender: Gender;
+  dateOfBirth: Date;
   joiningDate: Date;
   primaryPhone: string;
   secondaryPhone?: string;

@@ -57,6 +57,15 @@ export const schema = yup.object({
     .mixed<Gender>()
     .oneOf(Object.values(Gender))
     .required("Gender is required"),
+  dateOfBirth: yup
+    .date()
+    .required("Date of birth is required")
+    .max(new Date(), "Date of birth cannot be in the future")
+    .test("age", "Employee must be at least 16 years old", (value) => {
+      if (!value) return false;
+      const age = new Date().getFullYear() - value.getFullYear();
+      return age >= 16;
+    }),
   primaryPhone: yup
     .string()
     .required("Primary phone is required")
@@ -292,11 +301,12 @@ export const schema = yup.object({
   comments: yup.string().optional(),
 });
 
-type EmployeeFormData = {
+export type EmployeeFormData = {
   firstName: string;
   lastName: string;
   joiningDate: Date;
   gender: Gender;
+  dateOfBirth: Date;
   primaryPhone: string;
   secondaryPhone?: string;
   email?: string;
@@ -353,6 +363,7 @@ const CreateEmployeeComponent = () => {
   const [selectedHscGroup, setSelectedHscGroup] = useState<Group | null>(null);
   const [selectedSscGroup, setSelectedSscGroup] = useState<Group | null>(null);
   const [joiningDate, setJoiningDate] = useState<Date | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [isCurrentlyStudying, setIsCurrentlyStudying] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>(
     "Failed to create employee. Please try again."
@@ -697,6 +708,34 @@ const CreateEmployeeComponent = () => {
                     {errors.lastName && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.lastName.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      onChange={(e) => {
+                        const selectedDate = e.target.value
+                          ? new Date(e.target.value)
+                          : null;
+                        setDateOfBirth(selectedDate);
+                        if (selectedDate) setValue("dateOfBirth", selectedDate);
+                      }}
+                      value={
+                        dateOfBirth
+                          ? dateOfBirth.toISOString().split("T")[0]
+                          : ""
+                      }
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+                      required
+                    />
+                    {errors.dateOfBirth && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.dateOfBirth.message as string}
                       </p>
                     )}
                   </div>
