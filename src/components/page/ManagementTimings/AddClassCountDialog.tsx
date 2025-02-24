@@ -5,34 +5,35 @@ import { IoClose } from "react-icons/io5";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { IDirector } from "@/types/directors";
 import { toast } from "react-toastify";
 import { FaCheckCircle } from "react-icons/fa";
 import { BsFillTrashFill } from "react-icons/bs";
+import { IEmployee } from "@/types/employee";
 
 type ProxyClass = {
-  teacher: string;
-  class: string;
+  employeeId: string;
+  classId: string;
   comments?: string;
 };
 
 type ClassEntry = {
-  selectedClass: string;
+  classId: string;
   count: number;
   comments: string;
 };
 
 type ClassCountFormData = {
-  director: string;
+  employeeId: string;
   date: string;
   classes: ClassEntry[];
-  hasProxyClass: "yes" | "no";
+  hasProxyClass: boolean;
   proxyClasses: ProxyClass[];
 };
 
 interface AddClassCountDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  classBasedTeachers: IEmployee[];
 }
 
 interface Class {
@@ -44,31 +45,10 @@ interface Class {
 const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
   isOpen,
   onClose,
+  classBasedTeachers,
 }) => {
   const [showProxyFields, setShowProxyFields] = useState(false);
-  const [allDirectors, setAllDirectors] = useState<IDirector[]>([]);
   const [allClasses, setAllClasses] = useState<Class[]>([]);
-
-  // Add useEffect to fetch directors
-  useEffect(() => {
-    const fetchDirectors = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/directors`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch directors");
-        }
-        const data = await response.json();
-        setAllDirectors(data);
-      } catch (error) {
-        console.error("Error fetching directors:", error);
-        toast.error("Failed to load directors");
-      }
-    };
-
-    fetchDirectors();
-  }, []);
 
   // Add useEffect to fetch classes
   useEffect(() => {
@@ -100,12 +80,12 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
     watch,
     reset,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ClassCountFormData>({
     defaultValues: {
-      classes: [{ selectedClass: "", count: 0, comments: "" }],
-      proxyClasses: [{ teacher: "", class: "" }],
-      hasProxyClass: "no",
+      classes: [{ classId: "", count: 0, comments: "" }],
+      proxyClasses: [{ employeeId: "", classId: "" }],
+      hasProxyClass: false,
     },
   });
 
@@ -125,14 +105,57 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
 
   const handleFormSubmit = async (data: ClassCountFormData) => {
     try {
-      if (data.hasProxyClass === "no") {
+      if (!data.hasProxyClass) {
         data.proxyClasses = [];
       }
-      console.log("data", data);
-      reset();
+
+      if (data.date) {
+        data.date = new Date(data.date).toISOString();
+      }
+
+      if (data.classes.length > 0) {
+        data.classes = data.classes.map((classItem) => ({
+          ...classItem,
+          count: Number(classItem.count),
+        }));
+      }
+
+      // Make API call to create class count
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/monthly-class-count`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create class count");
+      }
+
+      // Show success message
+      toast.success("Class count added successfully");
+
+      // Reset form to initial values
+      reset({
+        employeeId: "",
+        date: "",
+        classes: [{ classId: "", count: 0, comments: "" }],
+        proxyClasses: [{ employeeId: "", classId: "" }],
+        hasProxyClass: false,
+      });
+
       setShowProxyFields(false);
+      onClose();
     } catch (error) {
       console.error("Error adding class count:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create class count"
+      );
     }
   };
 
@@ -165,22 +188,33 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                   Select Director
                 </label>
                 <Listbox
-                  value={watch("director")}
-                  onChange={(value) => setValue("director", value)}
+                  value={watch("employeeId")}
+                  onChange={(value) => setValue("employeeId", value)}
                 >
                   <div className="relative">
                     <Listbox.Button className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary text-left flex justify-between items-center">
                       <span>
-                        {allDirectors.find((d) => d._id === watch("director"))
-                          ?.name || "Select director..."}
+                        {classBasedTeachers.find(
+                          (t) => t._id === watch("employeeId")
+                        )
+                          ? `${
+                              classBasedTeachers.find(
+                                (t) => t._id === watch("employeeId")
+                              )?.firstName
+                            } ${
+                              classBasedTeachers.find(
+                                (t) => t._id === watch("employeeId")
+                              )?.lastName
+                            }`
+                          : "Select teacher..."}
                       </span>
                       <HiChevronUpDown className="h-5 w-5" />
                     </Listbox.Button>
                     <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg py-1 shadow-lg max-h-60 overflow-auto">
-                      {allDirectors.map((director) => (
+                      {classBasedTeachers.map((teacher) => (
                         <Listbox.Option
-                          key={director._id}
-                          value={director._id}
+                          key={teacher._id}
+                          value={teacher._id}
                           className={({ active }) =>
                             `cursor-pointer select-none relative py-2 px-4 ${
                               active
@@ -199,7 +233,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                                   selected ? "font-medium" : "font-normal"
                                 }`}
                               >
-                                {director.name}
+                                {teacher.firstName + " " + teacher.lastName}
                               </span>
                             </div>
                           )}
@@ -208,9 +242,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                     </Listbox.Options>
                   </div>
                 </Listbox>
-                {errors.director && (
+                {errors.employeeId && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errors.director.message}
+                    {errors.employeeId.message}
                   </p>
                 )}
               </div>
@@ -240,7 +274,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                   <button
                     type="button"
                     onClick={() =>
-                      appendClass({ selectedClass: "", count: 0, comments: "" })
+                      appendClass({ classId: "", count: 0, comments: "" })
                     }
                     className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
                   >
@@ -259,9 +293,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                             Select Class
                           </label>
                           <Listbox
-                            value={watch(`classes.${index}.selectedClass`)}
+                            value={watch(`classes.${index}.classId`)}
                             onChange={(value) =>
-                              setValue(`classes.${index}.selectedClass`, value)
+                              setValue(`classes.${index}.classId`, value)
                             }
                           >
                             <div className="relative">
@@ -270,7 +304,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                                   {allClasses.find(
                                     (c) =>
                                       c._id ===
-                                      watch(`classes.${index}.selectedClass`)
+                                      watch(`classes.${index}.classId`)
                                   )?.name || "Select class..."}
                                 </span>
                                 <HiChevronUpDown className="h-5 w-5" />
@@ -309,9 +343,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                               </Listbox.Options>
                             </div>
                           </Listbox>
-                          {errors.classes?.[index]?.selectedClass && (
+                          {errors.classes?.[index]?.classId && (
                             <p className="mt-1 text-sm text-red-500">
-                              {errors.classes[index].selectedClass?.message}
+                              {errors.classes[index].classId?.message}
                             </p>
                           )}
                         </div>
@@ -376,11 +410,11 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                   value={watch("hasProxyClass")}
                   onChange={(value) => {
                     setValue("hasProxyClass", value);
-                    setShowProxyFields(value === "yes");
+                    setShowProxyFields(value);
                   }}
                   className="flex gap-4"
                 >
-                  <RadioGroup.Option value="yes">
+                  <RadioGroup.Option value={true}>
                     {({ checked }) => (
                       <div className="flex items-center">
                         <div
@@ -402,7 +436,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                       </div>
                     )}
                   </RadioGroup.Option>
-                  <RadioGroup.Option value="no">
+                  <RadioGroup.Option value={false}>
                     {({ checked }) => (
                       <div className="flex items-center">
                         <div
@@ -433,7 +467,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                   <div className="absolute -top-3 right-4">
                     <button
                       type="button"
-                      onClick={() => append({ teacher: "", class: "" })}
+                      onClick={() => append({ employeeId: "", classId: "" })}
                       className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md text-sm"
                     >
                       Add another proxy
@@ -443,33 +477,43 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                   {fields.map((field, index) => (
                     <div key={field.id} className="relative">
                       <div className="space-y-4 bg-white rounded-lg p-4 text-primary my-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div>
                             <label className="block text-sm font-medium mb-2">
                               Who&apos;s Class?
                             </label>
                             <Listbox
-                              value={watch(`proxyClasses.${index}.teacher`)}
+                              value={watch(`proxyClasses.${index}.employeeId`)}
                               onChange={(value) =>
-                                setValue(`proxyClasses.${index}.teacher`, value)
+                                setValue(
+                                  `proxyClasses.${index}.employeeId`,
+                                  value
+                                )
                               }
                             >
                               <div className="relative">
                                 <Listbox.Button className="w-full bg-transparent border border-primary rounded-lg px-4 py-2.5 text-primary focus:ring-0 focus:ring-none text-left flex justify-between items-center">
                                   <span>
-                                    {allDirectors.find(
-                                      (d) =>
-                                        d._id ===
-                                        watch(`proxyClasses.${index}.teacher`)
-                                    )?.name || "Select teacher..."}
+                                    {(() => {
+                                      const teacher = classBasedTeachers.find(
+                                        (t) =>
+                                          t._id ===
+                                          watch(
+                                            `proxyClasses.${index}.employeeId`
+                                          )
+                                      );
+                                      return teacher
+                                        ? `${teacher.firstName} ${teacher.lastName}`
+                                        : "Select teacher...";
+                                    })()}
                                   </span>
                                   <HiChevronUpDown className="h-5 w-5" />
                                 </Listbox.Button>
                                 <Listbox.Options className="absolute z-10 mt-1 w-full bg-white border border-primary rounded-lg py-1 shadow-lg max-h-60 overflow-auto">
-                                  {allDirectors.map((director) => (
+                                  {classBasedTeachers.map((teacher) => (
                                     <Listbox.Option
-                                      key={director._id}
-                                      value={director._id}
+                                      key={teacher._id}
+                                      value={teacher._id}
                                       className={({ active }) =>
                                         `cursor-pointer select-none relative py-2 px-4 ${
                                           active
@@ -490,7 +534,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                                                 : "font-normal"
                                             }`}
                                           >
-                                            {director.name}
+                                            {teacher.firstName +
+                                              " " +
+                                              teacher.lastName}
                                           </span>
                                         </div>
                                       )}
@@ -505,9 +551,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                               Which Class?
                             </label>
                             <Listbox
-                              value={watch(`proxyClasses.${index}.class`)}
+                              value={watch(`proxyClasses.${index}.classId`)}
                               onChange={(value) =>
-                                setValue(`proxyClasses.${index}.class`, value)
+                                setValue(`proxyClasses.${index}.classId`, value)
                               }
                             >
                               <div className="relative">
@@ -516,7 +562,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                                     {allClasses.find(
                                       (c) =>
                                         c._id ===
-                                        watch(`proxyClasses.${index}.class`)
+                                        watch(`proxyClasses.${index}.classId`)
                                     )?.name || "Select class..."}
                                   </span>
                                   <HiChevronUpDown className="h-5 w-5" />
@@ -597,9 +643,36 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Submit
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
               </div>
             </form>

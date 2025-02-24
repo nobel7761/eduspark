@@ -2,6 +2,7 @@ import { Gender, Group, PaymentMethod } from "@/enums/common.enum";
 import { EmployeeType } from "@/enums/employees.enum";
 
 export interface IEmployee {
+  _id?: string;
   // Personal Information
   firstName: string;
   lastName: string;

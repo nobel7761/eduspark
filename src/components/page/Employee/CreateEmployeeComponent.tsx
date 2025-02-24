@@ -534,10 +534,13 @@ const CreateEmployeeComponent = () => {
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         error.inner.forEach((err) => {
-          setError(err.path as keyof IEmployeeWithoutId, {
-            type: "manual",
-            message: err.message,
-          });
+          if (err.path) {
+            // Only set error if the path exists in the form schema
+            setError(err.path as keyof EmployeeFormData, {
+              type: "manual",
+              message: err.message,
+            });
+          }
         });
       }
       console.error("Error creating employee:", error);

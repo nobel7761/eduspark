@@ -2,20 +2,14 @@
 
 import { useState, useEffect } from "react";
 import SuccessPopup from "@/components/UI/SuccessPopup";
-import AddRegularTimingDialog from "./AddRegularTimingDialog";
 import AddClassCountDialog from "./AddClassCountDialog";
-import { IDirector } from "@/types/directors";
 import { toast } from "react-toastify";
 import PageLoader from "@/components/shared/PageLoader";
-
-interface DirectorTiming {
-  directorName: string;
-  classCount: number;
-  totalHours: number;
-}
+import { IEmployee } from "@/types/employee";
+import RunningMonthClassCount from "./RunningMonthClassCount.component";
 
 const ManagementTimingsComponent = () => {
-  const [isRegularTimingOpen, setIsRegularTimingOpen] = useState(false);
+  // const [isRegularTimingOpen, setIsRegularTimingOpen] = useState(false);
   const [isClassCountOpen, setIsClassCountOpen] = useState(false);
   const [successPopup, setSuccessPopup] = useState({
     isOpen: false,
@@ -25,55 +19,30 @@ const ManagementTimingsComponent = () => {
   // Add loading and error states
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [classBasedTeachers, setClassBasedTeachers] = useState<IEmployee[]>([]);
 
-  // Update directors fetch with loading and error states
-  const [allDirectors, setAllDirectors] = useState<IDirector[]>([]);
+  // Fetch class-based teachers
   useEffect(() => {
-    const fetchDirectors = async () => {
-      setIsLoading(true);
-      setError(null);
+    const fetchClassBasedTeachers = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/directors`
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees/class-based-teachers`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch directors");
+          throw new Error("Failed to fetch class-based teachers");
         }
         const data = await response.json();
-        setAllDirectors(data);
+        setClassBasedTeachers(data);
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching directors:", error);
-        setError("Failed to load directors");
-        toast.error("Failed to load directors");
-      } finally {
+        console.error("Failed to fetch class-based teachers:", error);
+        setError("Failed to load teachers");
+        toast.error("Failed to load teachers");
         setIsLoading(false);
       }
     };
 
-    fetchDirectors();
-  }, []);
-
-  const [directorTimings, setDirectorTimings] = useState<DirectorTiming[]>([]);
-
-  const fetchTimings = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/management-regular-timing/current-month`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch timings");
-      }
-      const data = await response.json();
-      setDirectorTimings(data);
-    } catch (error) {
-      console.error("Failed to fetch director timings:", error);
-      setError("Failed to load timings");
-      toast.error("Failed to load timings");
-    }
-  };
-
-  useEffect(() => {
-    fetchTimings();
+    fetchClassBasedTeachers();
   }, []);
 
   // Add this to get current month name
@@ -83,15 +52,15 @@ const ManagementTimingsComponent = () => {
     <>
       <div className="p-4 rounded-md bg-primary text-white">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Management Timings</h2>
+          <h2 className="text-lg font-semibold">Teachers Class Count</h2>
 
           <div className="flex items-center gap-x-4">
-            <button
+            {/* <button
               onClick={() => setIsRegularTimingOpen(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Add Regular Timing
-            </button>
+            </button> */}
             <button
               onClick={() => setIsClassCountOpen(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -101,15 +70,16 @@ const ManagementTimingsComponent = () => {
           </div>
         </div>
 
-        <AddRegularTimingDialog
+        {/* <AddRegularTimingDialog
           isOpen={isRegularTimingOpen}
           onClose={() => setIsRegularTimingOpen(false)}
           onSuccess={fetchTimings}
-        />
+        /> */}
 
         <AddClassCountDialog
           isOpen={isClassCountOpen}
           onClose={() => setIsClassCountOpen(false)}
+          classBasedTeachers={classBasedTeachers}
         />
 
         <SuccessPopup
@@ -127,7 +97,7 @@ const ManagementTimingsComponent = () => {
         ) : (
           <>
             {/* hours count */}
-            <div className="p-4 rounded-md bg-primary my-4">
+            {/* <div className="p-4 rounded-md bg-primary my-4">
               <h3 className="text-lg font-semibold mb-4 text-white">
                 Hours Count of {currentMonth}
               </h3>
@@ -154,6 +124,18 @@ const ManagementTimingsComponent = () => {
                   );
                 })}
               </div>
+            </div> */}
+
+            {/* class count */}
+            <div className="p-4 rounded-t-md bg-primary mt-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-white text-center uppercase">
+                Class Count of {currentMonth}
+              </h3>
+            </div>
+
+            {/* show all the class count records for this month */}
+            <div>
+              <RunningMonthClassCount />
             </div>
           </>
         )}
