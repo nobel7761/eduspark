@@ -4,6 +4,7 @@ interface ClassCount {
   "3-8": number;
   "9-10": number;
   "11-12": number;
+  total?: number;
 }
 
 interface ClassCountDetail {
@@ -17,6 +18,7 @@ interface EmployeeClassCount {
   shortName: string;
   classCountDetails: ClassCountDetail[];
   totalClassTakenThisMonthSoFar: ClassCount;
+  totalIncomeThisMonthSoFar: ClassCount;
 }
 
 const RunningMonthClassCount = () => {
@@ -195,9 +197,12 @@ const RunningMonthClassCount = () => {
             </tr>
           ))}
 
-          {/* Add new totals row */}
+          {/* Add totals rows */}
+          {/* Classes Total Row */}
           <tr className="bg-primary-dark border-t-2 border-white">
-            <td className="p-4 border-r border-gray-200 font-medium">Total</td>
+            <td className="p-4 border-r border-gray-200 font-medium">
+              Total Classes
+            </td>
             {data.map((employee, teacherIndex) => (
               <React.Fragment key={`total-${employee.employeeId}`}>
                 <td className="p-4 border-gray-200 text-center">
@@ -217,6 +222,57 @@ const RunningMonthClassCount = () => {
                 >
                   <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
                     {employee.totalClassTakenThisMonthSoFar["11-12"]}
+                  </span>
+                </td>
+              </React.Fragment>
+            ))}
+          </tr>
+
+          {/* Income Total Row */}
+          <tr className="bg-primary-dark">
+            <td className="p-4 border-r border-gray-200 font-medium">
+              Income by Range
+            </td>
+            {data.map((employee, teacherIndex) => (
+              <React.Fragment key={`income-${employee.employeeId}`}>
+                <td className="p-4 border-gray-200 text-center">
+                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
+                    ৳{employee.totalIncomeThisMonthSoFar["3-8"]}
+                  </span>
+                </td>
+                <td className="p-4 border-gray-200 text-center">
+                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
+                    ৳{employee.totalIncomeThisMonthSoFar["9-10"]}
+                  </span>
+                </td>
+                <td
+                  className={`p-4 border-gray-200 text-center ${
+                    teacherIndex < data.length - 1 ? "border-r" : ""
+                  }`}
+                >
+                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
+                    ৳{employee.totalIncomeThisMonthSoFar["11-12"]}
+                  </span>
+                </td>
+              </React.Fragment>
+            ))}
+          </tr>
+
+          {/* Final Income Row */}
+          <tr className="bg-primary-dark border-t-2 border-white">
+            <td className="p-4 border-r border-gray-200 font-medium">
+              Final Income
+            </td>
+            {data.map((employee, teacherIndex) => (
+              <React.Fragment key={`final-income-${employee.employeeId}`}>
+                <td
+                  colSpan={3}
+                  className={`p-4 border-gray-200 text-center ${
+                    teacherIndex < data.length - 1 ? "border-r" : ""
+                  }`}
+                >
+                  <span className="inline-block px-3 py-1 rounded-full bg-yellow-600 text-white">
+                    ৳{employee.totalIncomeThisMonthSoFar.total}
                   </span>
                 </td>
               </React.Fragment>
