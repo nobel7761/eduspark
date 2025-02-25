@@ -14,6 +14,7 @@ interface ClassCountDetail {
 interface EmployeeClassCount {
   employeeId: string;
   employeeName: string;
+  shortName: string;
   classCountDetails: ClassCountDetail[];
   totalClassTakenThisMonthSoFar: ClassCount;
 }
@@ -103,7 +104,7 @@ const RunningMonthClassCount = () => {
                 }`}
                 colSpan={3}
               >
-                {employee.employeeName}
+                {employee.shortName}
               </th>
             ))}
           </tr>
