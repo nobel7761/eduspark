@@ -61,6 +61,33 @@ const EmployeeDetailsComponent = () => {
     return <div>Employee not found</div>;
   }
 
+  const formatClassDisplay = (classes: string[]) => {
+    if (!classes || classes.length === 0) return "-";
+
+    // Sort classes numerically
+    const sortedClasses = [...classes].sort((a, b) => Number(a) - Number(b));
+
+    // Check if classes form a continuous range
+    const ranges = [];
+    let start = sortedClasses[0];
+    let prev = Number(sortedClasses[0]);
+
+    for (let i = 1; i <= sortedClasses.length; i++) {
+      if (i === sortedClasses.length || Number(sortedClasses[i]) !== prev + 1) {
+        const end = sortedClasses[i - 1];
+        ranges.push(start === end ? start : `${start}-${end}`);
+        if (i < sortedClasses.length) {
+          start = sortedClasses[i];
+          prev = Number(sortedClasses[i]);
+        }
+      } else {
+        prev = Number(sortedClasses[i]);
+      }
+    }
+
+    return `Class ${ranges.join(", ")}`;
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto bg-primary text-white rounded-md">
       <div className="flex justify-between items-center mb-6">
@@ -95,6 +122,7 @@ const EmployeeDetailsComponent = () => {
                 label="Name"
                 value={`${employee?.firstName} ${employee?.lastName}`}
               />
+              <InfoItem label="Short Name" value={employee?.shortName || "-"} />
               <InfoItem label="Gender" value={employee?.gender} />
               <InfoItem
                 label="Date of Birth"
@@ -168,7 +196,12 @@ const EmployeeDetailsComponent = () => {
                     {employee?.paymentPerClass?.map((payment, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <span className="text-gray-700">
-                          Class {formatClassRange(payment.classes)}:
+                          {payment.classes && payment.classes.length > 0
+                            ? formatClassDisplay(
+                                payment.classes.map((cls) => cls.name)
+                              )
+                            : "No classes assigned"}
+                          :
                         </span>
                         <span className="font-light text-primary">
                           {payment.amount} BDT
@@ -349,51 +382,6 @@ const InfoItem = ({
       <p className="text-gray-700 font-light">{displayValue}</p>
     </div>
   );
-};
-
-const formatClassRange = (classes: string[]) => {
-  // First, separate numeric and special classes
-  const numericClasses = classes
-    .filter((c) => !isNaN(Number(c)))
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  const specialClasses = classes
-    .filter((c) => isNaN(Number(c)))
-    .map((c) => {
-      switch (c) {
-        case "arabic":
-          return "Arabic";
-        case "spoken_english":
-          return "Spoken English";
-        case "drawing":
-          return "Drawing";
-        default:
-          return c;
-      }
-    });
-
-  // Handle numeric ranges
-  const ranges = [];
-  if (numericClasses.length > 0) {
-    let start = numericClasses[0];
-    let prev = start;
-
-    for (let i = 1; i <= numericClasses.length; i++) {
-      if (i === numericClasses.length || numericClasses[i] !== prev + 1) {
-        ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
-        if (i < numericClasses.length) {
-          start = numericClasses[i];
-          prev = start;
-        }
-      } else {
-        prev = numericClasses[i];
-      }
-    }
-  }
-
-  // Combine numeric ranges and special classes
-  return [...ranges, ...specialClasses].join(", ");
 };
 
 export default EmployeeDetailsComponent;

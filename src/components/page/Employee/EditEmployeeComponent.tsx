@@ -1,14 +1,14 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Gender, Group, PaymentMethod } from "@/enums/common.enum";
 import PageLoader from "@/components/shared/PageLoader";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
 import { FaCheckCircle } from "react-icons/fa";
-import { IEmployee } from "@/types/employee";
+import { IClass, IEmployee, IPaymentPerClass } from "@/types/employee";
 import { toast } from "react-toastify";
 import { useForm, useFieldArray, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,7 +16,6 @@ import { schema } from "./CreateEmployeeComponent";
 import * as yup from "yup";
 import Select from "react-select";
 import { BsFillTrashFill } from "react-icons/bs";
-import { classOptions } from "./CreateEmployeeComponent";
 
 // Extend the schema to include employeeId
 const extendedSchema = schema.shape({
@@ -37,6 +36,7 @@ const EditEmployeeComponent = () => {
   const [selectedHscGroup, setSelectedHscGroup] = useState<Group | null>(null);
   const [selectedSscGroup, setSelectedSscGroup] = useState<Group | null>(null);
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
+  const [classes, setClasses] = useState<IClass[]>([]);
 
   const {
     register,
@@ -79,6 +79,17 @@ const EditEmployeeComponent = () => {
         dateOfBirth: data.dateOfBirth
           ? new Date(data.dateOfBirth).toISOString().split("T")[0]
           : "",
+        // Transform paymentPerClass data to match form structure
+        paymentPerClass: data.paymentPerClass?.map(
+          (payment: IPaymentPerClass) => ({
+            classes: Array.isArray(payment.classes)
+              ? payment.classes.map((cls) =>
+                  typeof cls === "string" ? cls : cls._id
+                )
+              : [],
+            amount: payment.amount,
+          })
+        ),
       };
 
       // Reset form with formatted data
@@ -115,15 +126,49 @@ const EditEmployeeComponent = () => {
     paymentPerClassFields.length,
   ]);
 
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/classes`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch classes");
+        }
+        const data = await response.json();
+        setClasses(data);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
   const onSubmit = async (data: IEmployee) => {
     try {
-      // Ensure paymentPerClass is an empty array when payment method is Monthly
+      // Transform the data before sending
       const formattedData = {
         ...data,
         paymentPerClass:
           data.paymentMethod === PaymentMethod.Monthly
             ? []
-            : data.paymentPerClass,
+            : data.paymentPerClass?.map((payment) => ({
+                amount: payment.amount,
+                classes: payment.classes.map((classId) => {
+                  const classData = classes.find(
+                    (c) => c._id === (classId as unknown as string)
+                  );
+                  return {
+                    _id: classId,
+                    name: classData?.name || "",
+                    subjects: classData?.subjects || [],
+                    createdAt: classData?.createdAt || "",
+                    updatedAt: classData?.updatedAt || "",
+                    __v: classData?.__v || 0,
+                  };
+                }),
+              })),
       };
 
       const response = await fetch(
@@ -165,6 +210,13 @@ const EditEmployeeComponent = () => {
       ? `${prefix} ${capitalizeFirstLetter(value)}`
       : capitalizeFirstLetter(value);
   };
+
+  const classOptions = useMemo(() => {
+    return classes.map((classItem) => ({
+      value: classItem._id,
+      label: classItem.name,
+    }));
+  }, [classes]);
 
   if (loading) {
     return <PageLoader loading={true} />;
@@ -225,6 +277,23 @@ const EditEmployeeComponent = () => {
               {errors.lastName && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.lastName.message}
+                </p>
+              )}
+            </div>
+
+            {/* Short Name */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-white">
+                Short Name
+              </label>
+              <input
+                type="text"
+                {...register("shortName")}
+                className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+              />
+              {errors.shortName && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.shortName.message}
                 </p>
               )}
             </div>
@@ -516,7 +585,7 @@ const EditEmployeeComponent = () => {
                           onChange={(newValue) => {
                             const selectedClasses = newValue.map(
                               (option) => option.value
-                            );
+                            ) as unknown as IClass[];
                             setValue(
                               `paymentPerClass.${index}.classes`,
                               selectedClasses,
@@ -527,9 +596,11 @@ const EditEmployeeComponent = () => {
                             );
                           }}
                           value={classOptions.filter((option) =>
-                            watch(`paymentPerClass.${index}.classes`)?.includes(
-                              option.value
-                            )
+                            watch(`paymentPerClass.${index}.classes`)
+                              ?.map((cls) =>
+                                typeof cls === "string" ? cls : cls._id
+                              )
+                              .includes(option.value)
                           )}
                           className="react-select-container"
                           classNamePrefix="react-select"

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Gender, PaymentMethod } from "@/enums/common.enum";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import SuccessPopup from "@/components/UI/SuccessPopup";
@@ -21,22 +21,6 @@ import { BsFillTrashFill } from "react-icons/bs";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstCharacter";
 import { Resolver } from "react-hook-form";
 
-export const classOptions = [
-  { value: "3", label: "Class 3" },
-  { value: "4", label: "Class 4" },
-  { value: "5", label: "Class 5" },
-  { value: "6", label: "Class 6" },
-  { value: "7", label: "Class 7" },
-  { value: "8", label: "Class 8" },
-  { value: "9", label: "Class 9" },
-  { value: "10", label: "Class 10" },
-  { value: "11", label: "Class 11" },
-  { value: "12", label: "Class 12" },
-  { value: "arabic", label: "Arabic" },
-  { value: "spoken_english", label: "Spoken English" },
-  { value: "drawing", label: "Drawing" },
-];
-
 // Form schema matches IE interface but excludes auto-generated fields
 export const schema = yup.object({
   firstName: yup
@@ -49,6 +33,11 @@ export const schema = yup.object({
     .required("Last name is required")
     .min(2, "Last name must be at least 2 characters")
     .max(50, "Last name must not exceed 50 characters"),
+  shortName: yup
+    .string()
+    .optional()
+    .min(2, "Short name must be at least 2 characters")
+    .max(20, "Short name must not exceed 20 characters"),
   joiningDate: yup
     .date()
     .required("Joining date is required")
@@ -304,6 +293,7 @@ export const schema = yup.object({
 export type EmployeeFormData = {
   firstName: string;
   lastName: string;
+  shortName?: string;
   joiningDate: Date;
   gender: Gender;
   dateOfBirth: Date;
@@ -370,6 +360,7 @@ const CreateEmployeeComponent = () => {
   );
   const [selectedEmployeeType, setSelectedEmployeeType] =
     useState<EmployeeType | null>(null);
+  const [classes, setClasses] = useState<{ _id: string; name: string }[]>([]);
 
   const {
     register,
@@ -488,24 +479,57 @@ const CreateEmployeeComponent = () => {
     }
   }, [selectedEmployeeType, setValue]);
 
-  const onSubmit = async (data: Partial<IEmployeeWithoutId>) => {
-    if (data.paymentMethod === PaymentMethod.PerClass) {
-      // Ensure amounts are numbers
-      data.paymentPerClass = data.paymentPerClass?.map((detail) => ({
-        classes: detail.classes,
-        amount: Number(detail.amount),
-      }));
-    } else if (data.paymentMethod === PaymentMethod.Monthly) {
-      data.paymentPerMonth = Number(data.paymentPerMonth);
-      // Remove the per-class details as they're not needed
-      delete data.paymentPerClass;
-    }
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/classes`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch classes");
+        }
+        const data = await response.json();
+        setClasses(data);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+      }
+    };
 
-    if (selectedEmployeeType === EmployeeType.CLEANER) {
-      data.paymentMethod = PaymentMethod.Monthly;
-    }
+    fetchClasses();
+  }, []);
 
+  const onSubmit = async (data: EmployeeFormData) => {
     try {
+      const formattedData: Partial<IEmployeeWithoutId> = {
+        ...data,
+        paymentPerClass: undefined, // Initialize as undefined
+      };
+
+      if (
+        data.paymentMethod === PaymentMethod.PerClass &&
+        data.paymentPerClass
+      ) {
+        // Transform the paymentPerClass data to match the API structure
+        formattedData.paymentPerClass = data.paymentPerClass.map((payment) => ({
+          classes: payment.classes.map((classId) => ({
+            _id: classId,
+            name: classes.find((c) => c._id === classId)?.name || "",
+            subjects: [], // Add empty subjects array as it's required by IClass
+            createdAt: "", // Add empty string as it's required by IClass
+            updatedAt: "", // Add empty string as it's required by IClass
+            __v: 0, // Add version number as it's required by IClass
+          })),
+          amount: Number(payment.amount),
+        }));
+      } else if (data.paymentMethod === PaymentMethod.Monthly) {
+        formattedData.paymentPerMonth = Number(data.paymentPerMonth);
+        formattedData.paymentPerClass = undefined;
+      }
+
+      if (data.employeeType === EmployeeType.CLEANER) {
+        formattedData.paymentMethod = PaymentMethod.Monthly;
+      }
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/employees`,
         {
@@ -513,12 +537,11 @@ const CreateEmployeeComponent = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(formattedData),
         }
       );
 
       if (!response.ok) {
-        // Try to parse error message from response
         const errorData = await response.json();
         throw new Error(
           errorData.message || `HTTP error! status: ${response.status}`
@@ -535,7 +558,6 @@ const CreateEmployeeComponent = () => {
       if (error instanceof yup.ValidationError) {
         error.inner.forEach((err) => {
           if (err.path) {
-            // Only set error if the path exists in the form schema
             setError(err.path as keyof EmployeeFormData, {
               type: "manual",
               message: err.message,
@@ -560,6 +582,13 @@ const CreateEmployeeComponent = () => {
       ? `${prefix} ${capitalizeFirstLetter(value)}`
       : capitalizeFirstLetter(value);
   };
+
+  const classOptions = useMemo(() => {
+    return classes.map((classItem) => ({
+      value: classItem._id,
+      label: classItem.name,
+    }));
+  }, [classes]);
 
   return (
     <div className="mx-auto p-4 rounded-md bg-primary">
@@ -711,6 +740,23 @@ const CreateEmployeeComponent = () => {
                     {errors.lastName && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.lastName.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Short Name */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-white">
+                      Short Name
+                    </label>
+                    <input
+                      type="text"
+                      {...register("shortName")}
+                      className="w-full p-2 rounded bg-gray-700 text-white focus:outline-none"
+                    />
+                    {errors.shortName && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.shortName.message as string}
                       </p>
                     )}
                   </div>

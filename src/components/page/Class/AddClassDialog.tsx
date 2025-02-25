@@ -78,10 +78,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     label: subject.name,
   }));
 
-  console.log("subjectOptions", subjectOptions);
-
   const handleFormSubmit = async (data: ClassFormData) => {
-    console.log("data", data);
     try {
       // Transform the subjects data to match the required format
       const transformedSubjects = data.subjects.map((subject) => ({
@@ -110,7 +107,6 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       }
 
       const result = await response.json();
-      console.log("Class created:", result);
       toast.success("Class created successfully");
 
       // Call the callback with the new class data

@@ -15,6 +15,7 @@ interface EmployeeClassCount {
   employeeId: string;
   employeeName: string;
   classCountDetails: ClassCountDetail[];
+  totalClassTakenThisMonthSoFar: ClassCount;
 }
 
 const RunningMonthClassCount = () => {
@@ -96,7 +97,7 @@ const RunningMonthClassCount = () => {
             <th className="p-4 border-b border-r border-gray-200">Date</th>
             {data.map((employee, index) => (
               <th
-                key={employee.employeeId}
+                key={index}
                 className={`p-4 border-b border-gray-200 text-center ${
                   index < data.length - 1 ? "border-r" : ""
                 }`}
@@ -109,7 +110,7 @@ const RunningMonthClassCount = () => {
           <tr className="bg-primary/90 text-white">
             <th className="p-3 border-b border-r border-gray-200"></th>
             {data.map((employee, index) => (
-              <React.Fragment key={`${employee.employeeId}-ranges`}>
+              <React.Fragment key={`${index}-ranges`}>
                 <th className="p-3 border-b border-gray-200 text-sm font-medium">
                   3-8
                 </th>
@@ -128,15 +129,15 @@ const RunningMonthClassCount = () => {
           </tr>
         </thead>
         <tbody className="bg-primary text-white">
-          {allDates.map((date) => (
-            <tr key={date}>
+          {allDates.map((date, index) => (
+            <tr key={index}>
               <td className="p-4 border-b border-r border-gray-200 font-medium">
                 {new Date(date).toLocaleDateString("en-US", {
                   day: "numeric",
                   month: "short",
                 })}
               </td>
-              {data.map((employee, teacherIndex) => {
+              {data.map((employee, teacherIndex, index) => {
                 const dayData = employee.classCountDetails.find(
                   (detail) => detail.date.split("T")[0] === date
                 );
@@ -147,7 +148,9 @@ const RunningMonthClassCount = () => {
                 };
 
                 return (
-                  <React.Fragment key={`${employee.employeeId}-${date}`}>
+                  <React.Fragment
+                    key={`${index}-${employee.employeeId}-${date}`}
+                  >
                     <td className="p-4 border-b border-gray-200 text-center">
                       <span
                         className={`inline-block px-3 py-1 rounded-full ${
@@ -190,6 +193,34 @@ const RunningMonthClassCount = () => {
               })}
             </tr>
           ))}
+
+          {/* Add new totals row */}
+          <tr className="bg-primary-dark border-t-2 border-white">
+            <td className="p-4 border-r border-gray-200 font-medium">Total</td>
+            {data.map((employee, teacherIndex) => (
+              <React.Fragment key={`total-${employee.employeeId}`}>
+                <td className="p-4 border-gray-200 text-center">
+                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                    {employee.totalClassTakenThisMonthSoFar["3-8"]}
+                  </span>
+                </td>
+                <td className="p-4 border-gray-200 text-center">
+                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                    {employee.totalClassTakenThisMonthSoFar["9-10"]}
+                  </span>
+                </td>
+                <td
+                  className={`p-4 border-gray-200 text-center ${
+                    teacherIndex < data.length - 1 ? "border-r" : ""
+                  }`}
+                >
+                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                    {employee.totalClassTakenThisMonthSoFar["11-12"]}
+                  </span>
+                </td>
+              </React.Fragment>
+            ))}
+          </tr>
         </tbody>
       </table>
     </div>
