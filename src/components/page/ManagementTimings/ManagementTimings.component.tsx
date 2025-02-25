@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SuccessPopup from "@/components/UI/SuccessPopup";
 import AddClassCountDialog from "./AddClassCountDialog";
 import { toast } from "react-toastify";
@@ -20,33 +20,42 @@ const ManagementTimingsComponent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classBasedTeachers, setClassBasedTeachers] = useState<IEmployee[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch class-based teachers
-  useEffect(() => {
-    const fetchClassBasedTeachers = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/employees/class-based-teachers`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch class-based teachers");
-        }
-        const data = await response.json();
-        setClassBasedTeachers(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch class-based teachers:", error);
-        setError("Failed to load teachers");
-        toast.error("Failed to load teachers");
-        setIsLoading(false);
+  const fetchClassBasedTeachers = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees/class-based-teachers`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch class-based teachers");
       }
-    };
+      const data = await response.json();
+      setClassBasedTeachers(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch class-based teachers:", error);
+      setError("Failed to load teachers");
+      toast.error("Failed to load teachers");
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchClassBasedTeachers();
   }, []);
 
   // Add this to get current month name
   const currentMonth = new Date().toLocaleString("default", { month: "long" });
+
+  const refreshData = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
 
   return (
     <>
@@ -80,6 +89,7 @@ const ManagementTimingsComponent = () => {
           isOpen={isClassCountOpen}
           onClose={() => setIsClassCountOpen(false)}
           classBasedTeachers={classBasedTeachers}
+          onSubmitSuccess={refreshData}
         />
 
         <SuccessPopup
@@ -135,7 +145,7 @@ const ManagementTimingsComponent = () => {
 
             {/* show all the class count records for this month */}
             <div>
-              <RunningMonthClassCount />
+              <RunningMonthClassCount key={refreshTrigger} />
             </div>
           </>
         )}

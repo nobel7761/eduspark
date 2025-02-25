@@ -34,6 +34,7 @@ interface AddClassCountDialogProps {
   isOpen: boolean;
   onClose: () => void;
   classBasedTeachers: IEmployee[];
+  onSubmitSuccess: () => void;
 }
 
 interface Class {
@@ -46,6 +47,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
   isOpen,
   onClose,
   classBasedTeachers,
+  onSubmitSuccess,
 }) => {
   const [showProxyFields, setShowProxyFields] = useState(false);
   const [allClasses, setAllClasses] = useState<Class[]>([]);
@@ -83,7 +85,11 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
     formState: { errors, isSubmitting },
   } = useForm<ClassCountFormData>({
     defaultValues: {
-      classes: [{ classId: "", count: 0, comments: "" }],
+      classes: [
+        { classId: "3-8", count: 0, comments: "" },
+        { classId: "9-10", count: 0, comments: "" },
+        { classId: "11-12", count: 0, comments: "" },
+      ],
       proxyClasses: [{ employeeId: "", classId: "" }],
       hasProxyClass: false,
     },
@@ -94,17 +100,27 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
     name: "proxyClasses",
   });
 
-  const {
-    fields: classFields,
-    append: appendClass,
-    remove: removeClass,
-  } = useFieldArray({
-    control,
-    name: "classes",
-  });
+  // const {
+  //   fields: classFields,
+  //   append: appendClass,
+  //   remove: removeClass,
+  // } = useFieldArray({
+  //   control,
+  //   name: "classes",
+  // });
 
   const handleFormSubmit = async (data: ClassCountFormData) => {
     try {
+      // Add validation to check if all class counts are zero
+      const allClassesZero = data.classes.every(
+        (classItem) => Number(classItem.count) === 0
+      );
+
+      if (allClassesZero) {
+        toast.error("At least one class range must have a non-zero value");
+        return;
+      }
+
       if (!data.hasProxyClass) {
         data.proxyClasses = [];
       }
@@ -119,6 +135,32 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
           count: Number(classItem.count),
         }));
       }
+      // Group classes by range and get their IDs
+      const classRanges = {
+        "3-8": allClasses.filter((c) =>
+          ["3", "4", "5", "6", "7", "8"].includes(c.name)
+        ),
+        "9-10": allClasses.filter((c) => ["9", "10"].includes(c.name)),
+        "11-12": allClasses.filter((c) => ["11", "12"].includes(c.name)),
+      };
+
+      // Transform the classes data
+      const transformedClasses = data.classes.map((classItem) => ({
+        classIds: classRanges[
+          classItem.classId as keyof typeof classRanges
+        ].map((c) => c._id),
+        count: Number(classItem.count),
+        comments: classItem.comments || "",
+      }));
+
+      // Prepare the final data structure
+      const formattedData = {
+        employeeId: data.employeeId,
+        date: data.date ? new Date(data.date).toISOString() : null,
+        classes: transformedClasses,
+        hasProxyClass: data.hasProxyClass,
+        proxyClasses: data.hasProxyClass ? data.proxyClasses : [],
+      };
 
       // Make API call to create class count
       const response = await fetch(
@@ -128,7 +170,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(formattedData),
         }
       );
 
@@ -140,11 +182,18 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
       // Show success message
       toast.success("Class count added successfully");
 
-      // Reset form to initial values
+      // Call the success callback to refresh parent data
+      onSubmitSuccess();
+
+      // Reset form and close dialog
       reset({
         employeeId: "",
         date: "",
-        classes: [{ classId: "", count: 0, comments: "" }],
+        classes: [
+          { classId: "3-8", count: 0, comments: "" },
+          { classId: "9-10", count: 0, comments: "" },
+          { classId: "11-12", count: 0, comments: "" },
+        ],
         proxyClasses: [{ employeeId: "", classId: "" }],
         hasProxyClass: false,
       });
@@ -185,7 +234,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
               {/* Director Selection with Headless UI Listbox */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Select Director
+                  Select Teacher
                 </label>
                 <Listbox
                   value={watch("employeeId")}
@@ -269,7 +318,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
               </div>
 
               {/* Wrap Class Selection, Count, and Comments in a border */}
-              <div className="border border-white rounded-lg p-4 space-y-2 relative">
+              {/* <div className="border border-white rounded-lg p-4 space-y-2">
                 <div className="absolute -top-3 right-4">
                   <button
                     type="button"
@@ -285,9 +334,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                 {classFields.map((field, index) => (
                   <div key={field.id} className="relative">
                     <div className="space-y-4 bg-white rounded-lg p-4 text-primary my-4">
-                      {/* Class Selection and Count in same line */}
                       <div className="flex gap-4">
-                        {/* Class Selection with Headless UI Listbox */}
                         <div className="relative flex-grow">
                           <label className="block text-sm font-medium mb-2">
                             Select Class
@@ -350,7 +397,6 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                           )}
                         </div>
 
-                        {/* Count Input */}
                         <div className="w-32">
                           <label className="block text-sm font-medium mb-2">
                             Count
@@ -374,7 +420,6 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                         </div>
                       </div>
 
-                      {/* Comments on new line */}
                       <div className="w-full">
                         <label className="block text-sm font-medium mb-2">
                           Comments
@@ -399,6 +444,90 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                     )}
                   </div>
                 ))}
+              </div> */}
+
+              {/* Replace the existing class fields section with this */}
+              <div className="border border-white rounded-lg p-4 space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Class 3-8 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-2">
+                      Class 3-8
+                    </label>
+                    <input
+                      type="number"
+                      {...register("classes.0.count", {
+                        min: {
+                          value: 0,
+                          message: "Count must be 0 or greater",
+                        },
+                      })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.classes?.[0]?.count && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.classes[0].count?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Class 9-10 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-2">
+                      Class 9-10
+                    </label>
+                    <input
+                      type="number"
+                      {...register("classes.1.count", {
+                        min: {
+                          value: 0,
+                          message: "Count must be 0 or greater",
+                        },
+                      })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.classes?.[1]?.count && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.classes[1].count?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Class 11-12 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-200 mb-2">
+                      Class 11-12
+                    </label>
+                    <input
+                      type="number"
+                      {...register("classes.2.count", {
+                        min: {
+                          value: 0,
+                          message: "Count must be 0 or greater",
+                        },
+                      })}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.classes?.[2]?.count && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.classes[2].count?.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Comments field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Comments
+                  </label>
+                  <input
+                    type="text"
+                    {...register("classes.0.comments")}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                    placeholder="Add any comments..."
+                  />
+                </div>
               </div>
 
               {/* Proxy Class Radio */}
