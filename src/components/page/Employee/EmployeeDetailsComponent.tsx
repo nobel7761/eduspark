@@ -138,6 +138,10 @@ const EmployeeDetailsComponent = () => {
                 label="Employee Type"
                 value={capitalizeFirstLetter(employee?.employeeType)}
               />
+              <InfoItem
+                label="Director Status"
+                value={employee?.isDirector ? "Yes" : "No"}
+              />
             </div>
           </div>
 

@@ -39,10 +39,11 @@ const DEFAULT_VISIBLE_COLUMNS = {
   name: true,
   employeeType: true,
   primaryPhone: true,
-  nidNumber: true,
+  nidNumber: false,
   presentAddress: true,
   permanentAddress: false,
   paymentMethod: false,
+  isDirector: false,
 };
 
 const AllEmployeesComponent = () => {
@@ -352,6 +353,18 @@ const AllEmployeesComponent = () => {
             >
               {capitalizeFirstLetter(info.row.original.employeeType)}
             </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("isDirector", {
+        header: "Director Status",
+        cell: (info) => (
+          <div>
+            {info.row.original.isDirector ? (
+              <span className="text-green-600">Director</span>
+            ) : (
+              <span className="text-gray-400">-</span>
+            )}
           </div>
         ),
       }),

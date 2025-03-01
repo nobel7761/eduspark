@@ -75,6 +75,8 @@ export interface IEmployee {
   paymentMethod: PaymentMethod;
   paymentPerClass?: IPaymentPerClass[];
   paymentPerMonth?: number;
+
+  isDirector?: boolean;
 }
 
 export type IEmployeeWithoutId = Omit<IEmployee, "employeeId">;

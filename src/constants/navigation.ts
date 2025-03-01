@@ -50,6 +50,11 @@ export const adminNavigation = [
         icon: "📝",
         href: "/teacher-class-count",
       },
+      {
+        name: "Attendance",
+        icon: "📝",
+        href: "/attendance",
+      },
     ],
   },
   // {
@@ -60,11 +65,7 @@ export const adminNavigation = [
   //       icon: "⏰",
   //       href: "/management-timings",
   //     },
-  //     {
-  //       name: "Attendance",
-  //       icon: "📝",
-  //       href: "/attendance",
-  //     },
+
   //   ],
   // },
   // {

@@ -10,6 +10,7 @@ export const employeeSearchableFields: (keyof IEmployee | string)[] = [
   "nidNumber",
   "educationalBackground.degree",
   "educationalBackground.institution",
+  "isDirector",
 ];
 
 export const searchEmployee = (

@@ -288,6 +288,7 @@ export const schema = yup.object({
         .required("Educational background is required"),
   }),
   comments: yup.string().optional(),
+  isDirector: yup.boolean().default(false),
 });
 
 export type EmployeeFormData = {
@@ -341,6 +342,7 @@ export type EmployeeFormData = {
     phone: string;
   };
   comments?: string;
+  isDirector?: boolean;
 };
 
 const CreateEmployeeComponent = () => {

@@ -1,45 +1,71 @@
 import { Dialog, Listbox } from "@headlessui/react";
 import { IoClose } from "react-icons/io5";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { HiChevronUpDown, HiCheck } from "react-icons/hi2";
+import { useState, useEffect } from "react";
+import { HiChevronUpDown } from "react-icons/hi2";
+import { toast } from "react-toastify";
+import { IEmployee } from "@/types/employee";
+import { FaCheckCircle } from "react-icons/fa";
 
 type AttendanceFormData = {
-  staffId: string;
-  staffName: string;
+  employeeId: string;
   date: string;
-  inTime: string;
-  outTime: string;
+  isPresentOnTime: boolean;
   comments?: string;
 };
 
 interface AddAttendanceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: AttendanceFormData) => Promise<void>;
-  uniqueNames: string[];
+  onSuccess: () => void;
 }
 
 const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
   isOpen,
   onClose,
-  onSubmit,
-  uniqueNames,
+  onSuccess,
 }) => {
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
-  } = useForm<AttendanceFormData>();
+    formState: { errors, isSubmitting },
+  } = useForm<AttendanceFormData>({
+    defaultValues: {
+      isPresentOnTime: true,
+    },
+  });
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [selectedPerson, setSelectedPerson] = useState("");
+  const [employees, setEmployees] = useState<IEmployee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoadingEmployees(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees/employees-without-director`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch employees");
+        }
+        const data = await response.json();
+        setEmployees(data);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        toast.error("Failed to load employees");
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   const callApi = async (data: AttendanceFormData) => {
     try {
-      setLoading(true);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/attendance`,
         {
@@ -60,27 +86,56 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     } catch (err) {
       setError(err as Error);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleFormSubmit = async (data: AttendanceFormData) => {
     try {
+      if (!selectedPerson) {
+        toast.error("Please select an employee");
+        return;
+      }
+
+      const selectedEmployee = employees.find(
+        (emp) => emp._id === selectedPerson
+      );
+      if (!selectedEmployee) {
+        toast.error("Selected employee not found");
+        return;
+      }
+
+      if (!selectedEmployee?._id) {
+        toast.error("Invalid employee ID");
+        return;
+      }
+
       const formattedData = {
         ...data,
-        staffId: selectedPerson,
-        staffName: selectedPerson,
+        employeeId: selectedEmployee._id,
+        date: new Date(data.date).toISOString(),
       };
-      console.log(formattedData);
+
       await callApi(formattedData);
-      await onSubmit(formattedData);
       reset();
+      setSelectedPerson("");
       onClose();
+      onSuccess();
+      toast.success("Attendance recorded successfully");
     } catch (error) {
       console.error("Error adding attendance:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add attendance";
+      toast.error(errorMessage);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      reset();
+      setSelectedPerson("");
+      setError(null);
+    }
+  }, [isOpen, reset]);
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -108,54 +163,60 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
               {error && (
                 <div className="text-red-500 text-sm">{error.message}</div>
               )}
-              {/* Staff Selection */}
+
+              {/* Employee Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Select Person
+                  Select Employee
                 </label>
                 <Listbox value={selectedPerson} onChange={setSelectedPerson}>
                   <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-left text-white focus:ring-2 focus:ring-primary">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
                       <span className="block truncate">
-                        {selectedPerson || "Select staff..."}
+                        {loadingEmployees
+                          ? "Loading employees..."
+                          : selectedPerson
+                          ? employees.find((emp) => emp._id === selectedPerson)
+                            ? `${
+                                employees.find(
+                                  (emp) => emp._id === selectedPerson
+                                )?.firstName
+                              } ${
+                                employees.find(
+                                  (emp) => emp._id === selectedPerson
+                                )?.lastName
+                              }`
+                            : "Select employee..."
+                          : "Select employee..."}
                       </span>
-                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                        <HiChevronUpDown
-                          className="h-5 w-5 text-gray-400"
-                          aria-hidden="true"
-                        />
+                      <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <HiChevronUpDown className="h-5 w-5 text-gray-400" />
                       </span>
                     </Listbox.Button>
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                      {uniqueNames.map((name) => (
+                    <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+                      {employees.map((employee) => (
                         <Listbox.Option
-                          key={name}
-                          value={name}
+                          key={employee._id}
+                          value={employee._id}
                           className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active
-                                ? "bg-primary/20 text-white"
-                                : "text-gray-200"
-                            }`
+                            `${active ? "bg-primary text-white" : "text-white"}
+                            cursor-pointer select-none relative py-2 pl-10 pr-4`
                           }
                         >
                           {({ selected }) => (
                             <>
                               <span
-                                className={`block truncate ${
+                                className={`${
                                   selected ? "font-medium" : "font-normal"
-                                }`}
+                                } block truncate`}
                               >
-                                {name}
+                                {`${employee.firstName} ${employee.lastName}`}
                               </span>
-                              {selected ? (
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
-                                  <HiCheck
-                                    className="h-5 w-5"
-                                    aria-hidden="true"
-                                  />
+                              {selected && (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                  <FaCheckCircle className="h-5 w-5" />
                                 </span>
-                              ) : null}
+                              )}
                             </>
                           )}
                         </Listbox.Option>
@@ -163,11 +224,6 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                     </Listbox.Options>
                   </div>
                 </Listbox>
-                {!selectedPerson && (
-                  <p className="mt-1 text-sm text-red-500">
-                    Please select a staff member
-                  </p>
-                )}
               </div>
 
               {/* Date Selection */}
@@ -187,42 +243,16 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 )}
               </div>
 
-              {/* Time Range */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    In Time
-                  </label>
-                  <input
-                    type="time"
-                    {...register("inTime", {
-                      required: "In time is required",
-                    })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.inTime && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.inTime.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-200 mb-2">
-                    Out Time
-                  </label>
-                  <input
-                    type="time"
-                    {...register("outTime", {
-                      required: "Out time is required",
-                    })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.outTime && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.outTime.message}
-                    </p>
-                  )}
-                </div>
+              {/* Present on Time Checkbox */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  {...register("isPresentOnTime")}
+                  className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+                />
+                <label className="ml-2 text-sm font-medium text-gray-200">
+                  Present on time
+                </label>
               </div>
 
               {/* Comments */}
@@ -248,10 +278,36 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 text-sm bg-primary hover:bg-primary/80 text-white rounded-md disabled:opacity-50"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {loading ? "Adding..." : "Add Attendance"}
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Attendance"
+                  )}
                 </button>
               </div>
             </form>

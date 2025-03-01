@@ -1,234 +1,193 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
-  getFilteredRowModel,
   createColumnHelper,
   flexRender,
   SortingState,
+  getFilteredRowModel,
   ColumnFiltersState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { Menu } from "@headlessui/react";
-import { IoMdOptions, IoMdArrowDropdown } from "react-icons/io";
-import { IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
-import { useForm } from "react-hook-form";
-import SuccessPopup from "@/components/UI/SuccessPopup";
-import FailedPopup from "@/components/UI/FailedPopup";
+import { Menu } from "@headlessui/react";
+import { IoCloseCircle } from "react-icons/io5";
+import { MdViewColumn } from "react-icons/md";
+import { IoMdOptions } from "react-icons/io";
+import { toast } from "react-toastify";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
-import { Listbox } from "@headlessui/react";
+import { EmployeeType } from "@/enums/employees.enum";
+
+interface AttendanceRecord {
+  _id: string;
+  employeeId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    employeeType: EmployeeType;
+  };
+  date: string;
+  isPresentOnTime: boolean;
+  comments?: string;
+}
+
+const DEFAULT_VISIBLE_COLUMNS = {
+  employeeName: true,
+  date: true,
+  isPresentOnTime: true,
+  employeeType: true,
+  comments: true,
+  month: false,
+  year: false,
+};
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
-export type AttendanceRecord = {
-  id: string;
-  name: string;
-  designation: "Teacher" | "Homemaid";
-  date: string;
-  status: "Present" | "Absent";
-  comments?: string;
-};
-
-const mockAttendanceData: AttendanceRecord[] = [
-  {
-    id: "1",
-    name: "Nusrat 1",
-    designation: "Teacher",
-    date: "2022-01-01",
-    status: "Present",
-    comments: "Arrived on time",
-  },
-  {
-    id: "2",
-    name: "Nusrat 2",
-    designation: "Teacher",
-    date: "2023-02-02",
-    status: "Absent",
-    comments: "Sick leave",
-  },
-  {
-    id: "3",
-    name: "Lolita",
-    designation: "Homemaid",
-    date: "2024-03-03",
-    status: "Present",
-  },
-  {
-    id: "4",
-    name: "Nusrat 2",
-    designation: "Teacher",
-    date: "2025-11-30",
-    status: "Present",
-  },
-  {
-    id: "5",
-    name: "Lolita",
-    designation: "Homemaid",
-    date: "2021-12-31",
-    status: "Absent",
-    comments: "Personal emergency",
-  },
-  {
-    id: "5",
-    name: "Lolita",
-    designation: "Homemaid",
-    date: "2021-06-30",
-    status: "Absent",
-    comments: "Personal emergency",
-  },
-];
-
-type AttendanceFormData = {
-  staffId: string;
-  date: string;
-  inTime: string;
-  outTime: string;
-  comments?: string;
-};
-
 const AttendanceComponent = () => {
+  const { searchQuery } = useSearch();
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    year: false,
-    month: false,
-  });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    DEFAULT_VISIBLE_COLUMNS
+  );
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const { searchQuery } = useSearch();
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/attendance`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch attendance records");
+        }
+        const data = await response.json();
+        setRecords(data);
+      } catch (error) {
+        console.error("Error fetching records:", error);
+        setError("Failed to load attendance records");
+        toast.error("Failed to load attendance records");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredAttendanceData = React.useMemo(() => {
-    return mockAttendanceData.filter((record) => {
+    fetchRecords();
+  }, [refreshTrigger]);
+
+  const filteredRecords = React.useMemo(() => {
+    if (!records) return [];
+    return records.filter((record) => {
       if (!searchQuery?.trim()) return true;
-
-      const searchTerm = searchQuery.toLowerCase();
+      const employeeName = `${record.employeeId.firstName} ${record.employeeId.lastName}`;
       return (
-        record.name.toLowerCase().includes(searchTerm) ||
-        record.designation.toLowerCase().includes(searchTerm) ||
-        record.date.toLowerCase().includes(searchTerm) ||
-        record.status.toLowerCase().includes(searchTerm) ||
-        record.comments?.toLowerCase().includes(searchTerm) ||
-        false
+        employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        new Date(record.date)
+          .toLocaleDateString()
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
       );
     });
-  }, [searchQuery]);
-
-  // Get unique months and years from the data
-  const uniqueValues = {
-    years: Array.from(
-      new Set(
-        mockAttendanceData.map((record) => new Date(record.date).getFullYear())
-      )
-    ).sort((a, b) => b - a),
-    months: Array.from(
-      new Set(
-        mockAttendanceData.map((record) => new Date(record.date).getMonth())
-      )
-    ).sort((a, b) => a - b),
-    designations: Array.from(
-      new Set(mockAttendanceData.map((record) => record.designation))
-    ),
-    names: Array.from(
-      new Set(mockAttendanceData.map((record) => record.name))
-    ).sort(),
-  };
+  }, [searchQuery, records]);
 
   const columnHelper = createColumnHelper<AttendanceRecord>();
 
-  const columns = [
-    columnHelper.accessor("name", {
-      header: "Name",
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-      enableColumnFilter: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true;
-        return row.getValue(columnId) === filterValue;
-      },
-    }),
-    columnHelper.accessor("designation", {
-      header: "Designation",
-      cell: (info) => info.getValue(),
-      enableSorting: true,
-      enableColumnFilter: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true;
-        return row.getValue(columnId) === filterValue;
-      },
-    }),
-    columnHelper.accessor("date", {
-      header: "Date",
-      cell: (info) => {
-        const date = new Date(info.getValue());
-        const day = date.getDate();
-        const suffix = (day: number) => {
-          if (day > 3 && day < 21) return "th";
-          switch (day % 10) {
-            case 1:
-              return "st";
-            case 2:
-              return "nd";
-            case 3:
-              return "rd";
-            default:
-              return "th";
-          }
-        };
-        return `${day}${suffix(day)} ${date.toLocaleString("default", {
-          month: "long",
-        })}, ${date.getFullYear()}`;
-      },
-      enableSorting: true,
-    }),
-    columnHelper.accessor("status", {
-      header: "Status",
-      cell: (info) => (
-        <span
-          className={`px-2 py-1 rounded-full text-sm ${
-            info.getValue() === "Present"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {info.getValue()}
-        </span>
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor(
+        (row) => `${row.employeeId.firstName} ${row.employeeId.lastName}`,
+        {
+          id: "employeeName",
+          header: "Employee Name",
+          cell: (info) => info.getValue(),
+          enableColumnFilter: true,
+          filterFn: (row, columnId, filterValue) => {
+            if (!filterValue) return true;
+            return row.getValue(columnId) === filterValue;
+          },
+        }
       ),
-      enableSorting: true,
-    }),
-    columnHelper.accessor("comments", {
-      header: "Comments",
-      cell: (info) => info.getValue() || "-",
-      enableSorting: true,
-    }),
-    columnHelper.accessor((row) => new Date(row.date).getFullYear(), {
-      id: "year",
-      enableColumnFilter: true,
-      enableHiding: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true;
-        const year = new Date(row.getValue("date")).getFullYear();
-        return year === parseInt(filterValue);
-      },
-    }),
-    columnHelper.accessor((row) => new Date(row.date).getMonth(), {
-      id: "month",
-      enableColumnFilter: true,
-      enableHiding: true,
-      filterFn: (row, columnId, filterValue) => {
-        if (!filterValue) return true;
-        const month = new Date(row.getValue("date")).getMonth();
-        return month === parseInt(filterValue);
-      },
-    }),
-  ];
+      columnHelper.accessor("date", {
+        header: "Date",
+        cell: (info) => {
+          const date = new Date(info.getValue());
+          return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+        },
+      }),
+      columnHelper.accessor("isPresentOnTime", {
+        header: "Late Join",
+        cell: (info) => (
+          <div className="text-center">
+            <span
+              className={`px-2 py-1 rounded-full text-xs ${
+                !info.getValue()
+                  ? "bg-red-600 text-white"
+                  : "bg-green-600 text-white"
+              }`}
+            >
+              {info.getValue() ? "No" : "Yes"}
+            </span>
+          </div>
+        ),
+        enableColumnFilter: true,
+        filterFn: (row, columnId, filterValue) => {
+          if (filterValue === "") return true;
+          const isPresentOnTime = row.getValue(columnId);
+          return isPresentOnTime === (filterValue === "true");
+        },
+      }),
+      columnHelper.accessor((row) => row.employeeId.employeeType, {
+        id: "employeeType",
+        header: "Employee Type",
+        cell: (info) => (
+          <div className="text-center">
+            <span className="px-2 py-1 bg-blue-600 text-white rounded-full text-xs">
+              {info.getValue()}
+            </span>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("comments", {
+        header: "Comments",
+        cell: (info) => info.getValue() || "-",
+      }),
+      columnHelper.accessor((row) => new Date(row.date).getMonth(), {
+        id: "month",
+        enableColumnFilter: true,
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          const month = new Date(row.getValue("date")).getMonth();
+          return month === parseInt(filterValue as string);
+        },
+      }),
+      columnHelper.accessor((row) => new Date(row.date).getFullYear(), {
+        id: "year",
+        enableColumnFilter: true,
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          const year = new Date(row.getValue("date")).getFullYear();
+          return year === parseInt(filterValue as string);
+        },
+      }),
+    ],
+    [columnHelper]
+  );
 
   const table = useReactTable({
-    data: filteredAttendanceData,
+    data: filteredRecords,
     columns,
     state: {
       sorting,
@@ -246,73 +205,56 @@ const AttendanceComponent = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [popup, setPopup] = useState<{
-    isOpen: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ isOpen: false, message: "", type: "success" });
+  // Get unique values for filters
+  const uniqueValues = React.useMemo(() => {
+    if (!records) return { employees: [], months: [], years: [] };
+    return {
+      employees: Array.from(
+        new Set(
+          records.map(
+            (record) =>
+              `${record.employeeId.firstName} ${record.employeeId.lastName}`
+          )
+        )
+      ).sort(),
+      months: Array.from(
+        new Set(records.map((record) => new Date(record.date).getMonth()))
+      ).sort((a, b) => a - b),
+      years: Array.from(
+        new Set(records.map((record) => new Date(record.date).getFullYear()))
+      ).sort((a, b) => b - a),
+    };
+  }, [records]);
 
-  const { reset } = useForm<AttendanceFormData>();
-
-  const onSubmit = async (data: AttendanceFormData) => {
-    try {
-      // TODO: Implement your API call here
-      console.log("Form data:", data);
-
-      setIsAddModalOpen(false);
-      reset();
-      setPopup({
-        isOpen: true,
-        message: "Attendance added successfully!",
-        type: "success",
-      });
-
-      setTimeout(() => {
-        setPopup((prev) => ({ ...prev, isOpen: false }));
-      }, 3000);
-    } catch (error) {
-      console.log(error);
-      setPopup({
-        isOpen: true,
-        message: "Failed to add attendance. Please try again.",
-        type: "error",
-      });
-
-      setTimeout(() => {
-        setPopup((prev) => ({ ...prev, isOpen: false }));
-      }, 3000);
-    }
+  const refreshData = () => {
+    setLoading(true);
+    setRefreshTrigger((prev) => prev + 1);
   };
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
+    );
+  }
 
   return (
     <div className="p-4 rounded-md bg-gray-900 text-white">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Attendance Report</h2>
+        <div className="space-y-2">
+          <h1 className="text-lg font-semibold">Attendance Records</h1>
 
-        <div className="flex items-center gap-x-4">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <span>Add Attendance</span>
-          </button>
-          {/* Active Filters Display */}
+          {/* Active Filters */}
           <div className="flex flex-wrap items-center gap-2">
             {table.getState().columnFilters.map((filter) => {
               let displayValue = String(filter.value);
 
-              if (filter.id === "designation") {
-                displayValue = String(filter.value);
-              } else if (filter.id === "month") {
-                // Convert month number to capitalized month name
+              if (filter.id === "month") {
                 displayValue = new Date(
                   2024,
                   parseInt(filter.value as string)
                 ).toLocaleString("default", { month: "long" });
-              } else if (filter.id === "year" && filter.value === "0") {
-                // Skip rendering if value is "0"
-                return null;
+              } else if (filter.id === "isPresentOnTime") {
+                displayValue = filter.value === "true" ? "No" : "Yes";
               }
 
               return (
@@ -341,8 +283,54 @@ const AttendanceComponent = () => {
               </button>
             )}
           </div>
+        </div>
 
-          {/* Filter Menu */}
+        <div className="flex items-center gap-x-4">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <span>Add Attendance</span>
+          </button>
+
+          {/* Column Visibility */}
+          <Menu as="div" className="relative">
+            <Menu.Button className="text-3xl text-gray-400 hover:text-white">
+              <MdViewColumn />
+            </Menu.Button>
+
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
+              <div className="space-y-2">
+                {table.getAllLeafColumns().map((column) => {
+                  if (column.id === "month" || column.id === "year")
+                    return null;
+
+                  return (
+                    <div key={column.id} className="flex items-center gap-x-2">
+                      <input
+                        type="checkbox"
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                        className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+                      />
+                      <label className="text-sm">
+                        {column.id === "employeeName"
+                          ? "Employee Name"
+                          : column.id === "isPresentOnTime"
+                          ? "Late Join"
+                          : column.id === "employeeType"
+                          ? "Employee Type"
+                          : column.id.charAt(0).toUpperCase() +
+                            column.id.slice(1)}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </Menu.Items>
+          </Menu>
+
+          {/* Filters */}
           <Menu as="div" className="relative">
             <Menu.Button className="text-2xl text-gray-400 hover:text-white">
               <IoMdOptions />
@@ -350,209 +338,31 @@ const AttendanceComponent = () => {
 
             <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-4">
-                {/* Name Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <Listbox
-                    value={
-                      (table.getColumn("name")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(value) =>
-                      table.getColumn("name")?.setFilterValue(value)
-                    }
-                  >
-                    <div className="relative">
-                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
-                        <span>
-                          {(table
-                            .getColumn("name")
-                            ?.getFilterValue() as string) || "All"}
-                        </span>
-                        <IoMdArrowDropdown className="h-5 w-5" />
-                      </Listbox.Button>
-                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                        <Listbox.Option
-                          value=""
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active ? "bg-gray-600" : ""
-                            }`
-                          }
-                        >
-                          All
-                        </Listbox.Option>
-                        {uniqueValues.names.map((name) => (
-                          <Listbox.Option
-                            key={name}
-                            value={name}
-                            className={({ active }) =>
-                              `cursor-pointer select-none relative py-2 px-4 ${
-                                active ? "bg-gray-600" : ""
-                              }`
-                            }
-                          >
-                            {name}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
-                </div>
-
-                {/* Designation Filter */}
+                {/* Employee Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Designation
+                    Employee
                   </label>
-                  <Listbox
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
                     value={
                       (table
-                        .getColumn("designation")
+                        .getColumn("employeeName")
                         ?.getFilterValue() as string) ?? ""
                     }
-                    onChange={(value) =>
-                      table.getColumn("designation")?.setFilterValue(value)
+                    onChange={(e) =>
+                      table
+                        .getColumn("employeeName")
+                        ?.setFilterValue(e.target.value)
                     }
                   >
-                    <div className="relative">
-                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
-                        <span>
-                          {(table
-                            .getColumn("designation")
-                            ?.getFilterValue() as string) || "All"}
-                        </span>
-                        <IoMdArrowDropdown className="h-5 w-5" />
-                      </Listbox.Button>
-                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                        <Listbox.Option
-                          value=""
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active ? "bg-gray-600" : ""
-                            }`
-                          }
-                        >
-                          All
-                        </Listbox.Option>
-                        {uniqueValues.designations.map((designation) => (
-                          <Listbox.Option
-                            key={designation}
-                            value={designation}
-                            className={({ active }) =>
-                              `cursor-pointer select-none relative py-2 px-4 ${
-                                active ? "bg-gray-600" : ""
-                              }`
-                            }
-                          >
-                            {designation}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
-                </div>
-
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Status
-                  </label>
-                  <Listbox
-                    value={
-                      (table.getColumn("status")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(value) =>
-                      table.getColumn("status")?.setFilterValue(value)
-                    }
-                  >
-                    <div className="relative">
-                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
-                        <span>
-                          {(table
-                            .getColumn("status")
-                            ?.getFilterValue() as string) || "All"}
-                        </span>
-                        <IoMdArrowDropdown className="h-5 w-5" />
-                      </Listbox.Button>
-                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                        <Listbox.Option
-                          value=""
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active ? "bg-gray-600" : ""
-                            }`
-                          }
-                        >
-                          All
-                        </Listbox.Option>
-                        {["Present", "Absent"].map((status) => (
-                          <Listbox.Option
-                            key={status}
-                            value={status}
-                            className={({ active }) =>
-                              `cursor-pointer select-none relative py-2 px-4 ${
-                                active ? "bg-gray-600" : ""
-                              }`
-                            }
-                          >
-                            {status}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
-                </div>
-
-                {/* Year Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Year</label>
-                  <Listbox
-                    value={
-                      (table.getColumn("year")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(value) =>
-                      table.getColumn("year")?.setFilterValue(value)
-                    }
-                  >
-                    <div className="relative">
-                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
-                        <span>
-                          {(table
-                            .getColumn("year")
-                            ?.getFilterValue() as string) || "All"}
-                        </span>
-                        <IoMdArrowDropdown className="h-5 w-5" />
-                      </Listbox.Button>
-                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                        <Listbox.Option
-                          value=""
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active ? "bg-gray-600" : ""
-                            }`
-                          }
-                        >
-                          All
-                        </Listbox.Option>
-                        {uniqueValues.years.map((year) => (
-                          <Listbox.Option
-                            key={year}
-                            value={year}
-                            className={({ active }) =>
-                              `cursor-pointer select-none relative py-2 px-4 ${
-                                active ? "bg-gray-600" : ""
-                              }`
-                            }
-                          >
-                            {year}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
+                    <option value="">All</option>
+                    {uniqueValues.employees.map((employee) => (
+                      <option key={employee} value={employee}>
+                        {employee}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Month Filter */}
@@ -560,61 +370,71 @@ const AttendanceComponent = () => {
                   <label className="block text-sm font-medium mb-1">
                     Month
                   </label>
-                  <Listbox
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
                     value={
                       (table.getColumn("month")?.getFilterValue() as string) ??
                       ""
                     }
-                    onChange={(value) =>
-                      table.getColumn("month")?.setFilterValue(value)
+                    onChange={(e) =>
+                      table.getColumn("month")?.setFilterValue(e.target.value)
                     }
                   >
-                    <div className="relative">
-                      <Listbox.Button className="w-full bg-gray-700 rounded p-1 text-sm text-left flex justify-between items-center">
-                        <span>
-                          {table.getColumn("month")?.getFilterValue() !==
-                          undefined
-                            ? new Date(
-                                2024,
-                                parseInt(
-                                  table
-                                    .getColumn("month")
-                                    ?.getFilterValue() as string
-                                )
-                              ).toLocaleString("default", { month: "long" })
-                            : "All"}
-                        </span>
-                        <IoMdArrowDropdown className="h-5 w-5" />
-                      </Listbox.Button>
-                      <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                        <Listbox.Option
-                          value=""
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active ? "bg-gray-600" : ""
-                            }`
-                          }
-                        >
-                          All
-                        </Listbox.Option>
-                        {uniqueValues.months.map((month) => (
-                          <Listbox.Option
-                            key={month}
-                            value={month}
-                            className={({ active }) =>
-                              `cursor-pointer select-none relative py-2 px-4 ${
-                                active ? "bg-gray-600" : ""
-                              }`
-                            }
-                          >
-                            {new Date(2024, month).toLocaleString("default", {
-                              month: "long",
-                            })}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
+                    <option value="">All</option>
+                    {uniqueValues.months.map((month) => (
+                      <option key={month} value={month}>
+                        {new Date(2024, month).toLocaleString("default", {
+                          month: "long",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Year Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Year</label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table.getColumn("year")?.getFilterValue() as string) ??
+                      ""
+                    }
+                    onChange={(e) =>
+                      table.getColumn("year")?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    {uniqueValues.years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Late Join Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Late Join
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table
+                        .getColumn("isPresentOnTime")
+                        ?.getFilterValue() as string) ?? ""
+                    }
+                    onChange={(e) =>
+                      table
+                        .getColumn("isPresentOnTime")
+                        ?.setFilterValue(e.target.value)
+                    }
+                  >
+                    <option value="">All</option>
+                    <option value="true">No</option>
+                    <option value="false">Yes</option>
+                  </select>
                 </div>
               </div>
             </Menu.Items>
@@ -622,16 +442,20 @@ const AttendanceComponent = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border border-gray-700 text-sm">
+      {/* Table */}
+      <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
+        <table className="w-full border-collapse text-sm">
           <thead className="bg-gray-800 text-gray-400">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="py-2 px-4 text-left"
-                    colSpan={header.colSpan}
+                    className={`py-2 px-4 font-medium ${
+                      header.column.id === "employeeName"
+                        ? "text-left"
+                        : "text-center"
+                    }`}
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -661,13 +485,24 @@ const AttendanceComponent = () => {
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={table.getAllColumns().length} className="py-20">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    <div className="text-sm text-gray-400">
+                      Loading records...
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            ) : table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={table.getAllColumns().length}
-                  className="py-4 text-center text-gray-400"
+                  className="text-center py-4"
                 >
-                  No data found
+                  No records found
                 </td>
               </tr>
             ) : (
@@ -677,7 +512,14 @@ const AttendanceComponent = () => {
                   className="border-t border-gray-700 hover:bg-gray-800"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="py-2 px-4">
+                    <td
+                      key={cell.id}
+                      className={`py-2 px-4 ${
+                        cell.column.id === "employeeName"
+                          ? "text-left"
+                          : "text-center"
+                      }`}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -692,8 +534,8 @@ const AttendanceComponent = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-x-4">
+      <div className="mt-4 flex justify-between items-center">
+        <div className="flex items-center gap-x-2">
           <span className="text-sm">
             Showing{" "}
             {table.getState().pagination.pageIndex *
@@ -708,34 +550,19 @@ const AttendanceComponent = () => {
             of {table.getFilteredRowModel().rows.length} entries
           </span>
 
-          <Listbox
+          <select
             value={table.getState().pagination.pageSize}
-            onChange={(value) => {
-              table.setPageSize(Number(value));
+            onChange={(e) => {
+              table.setPageSize(Number(e.target.value));
             }}
+            className="bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <div className="relative">
-              <Listbox.Button className="bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-between min-w-[100px]">
-                <span>Show {table.getState().pagination.pageSize}</span>
-                <IoMdArrowDropdown className="h-5 w-5" />
-              </Listbox.Button>
-              <Listbox.Options className="absolute mt-1 w-full bg-gray-700 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-                {PAGE_SIZES.map((pageSize) => (
-                  <Listbox.Option
-                    key={pageSize}
-                    value={pageSize}
-                    className={({ active }) =>
-                      `cursor-pointer select-none relative py-2 px-4 ${
-                        active ? "bg-gray-600" : ""
-                      }`
-                    }
-                  >
-                    Show {pageSize}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </div>
-          </Listbox>
+            {PAGE_SIZES.map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex items-center gap-x-4">
@@ -766,22 +593,7 @@ const AttendanceComponent = () => {
       <AddAttendanceDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={onSubmit}
-        uniqueNames={uniqueValues.names}
-      />
-
-      {/* Success/Error Popup */}
-      <SuccessPopup
-        isOpen={popup.isOpen && popup.type === "success"}
-        onClose={() =>
-          setPopup({ isOpen: false, message: "", type: "success" })
-        }
-        message={popup.message}
-      />
-      <FailedPopup
-        isOpen={popup.isOpen && popup.type === "error"}
-        onClose={() => setPopup({ isOpen: false, message: "", type: "error" })}
-        message={popup.message}
+        onSuccess={refreshData}
       />
     </div>
   );
