@@ -200,27 +200,27 @@ const RunningMonthClassCount = () => {
           {/* Add totals rows */}
           {/* Classes Total Row */}
           <tr className="bg-primary-dark border-t-2 border-white">
-            <td className="p-4 border-r border-gray-200 font-medium">
-              Total Classes
+            <td className="pl-3 border-r border-gray-200 font-medium text-xs">
+              Class Count
             </td>
             {data.map((employee, teacherIndex) => (
               <React.Fragment key={`total-${employee.employeeId}`}>
-                <td className="p-4 border-gray-200 text-center">
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                <td className="p-2 border-gray-200 text-center">
+                  <span className="text-xs">
                     {employee.totalClassTakenThisMonthSoFar["3-8"]}
                   </span>
                 </td>
-                <td className="p-4 border-gray-200 text-center">
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                <td className="p-2 border-gray-200 text-center">
+                  <span className="text-xs">
                     {employee.totalClassTakenThisMonthSoFar["9-10"]}
                   </span>
                 </td>
                 <td
-                  className={`p-4 border-gray-200 text-center ${
+                  className={`p-2 border-gray-200 text-center ${
                     teacherIndex < data.length - 1 ? "border-r" : ""
                   }`}
                 >
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-600 text-white">
+                  <span className="text-xs">
                     {employee.totalClassTakenThisMonthSoFar["11-12"]}
                   </span>
                 </td>
@@ -229,29 +229,29 @@ const RunningMonthClassCount = () => {
           </tr>
 
           {/* Income Total Row */}
-          <tr className="bg-primary-dark">
-            <td className="p-4 border-r border-gray-200 font-medium">
-              Income by Range
+          <tr className="bg-primary-dark border-t-2 border-white">
+            <td className="pl-3 border-r border-gray-200 font-medium text-xs">
+              Income
             </td>
             {data.map((employee, teacherIndex) => (
               <React.Fragment key={`income-${employee.employeeId}`}>
-                <td className="p-4 border-gray-200 text-center">
-                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
-                    ৳{employee.totalIncomeThisMonthSoFar["3-8"]}
+                <td className="p-2 border-gray-200 text-center">
+                  <span className="text-xs">
+                    ৳ {employee.totalIncomeThisMonthSoFar["3-8"]}
                   </span>
                 </td>
-                <td className="p-4 border-gray-200 text-center">
-                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
-                    ৳{employee.totalIncomeThisMonthSoFar["9-10"]}
+                <td className="p-2 border-gray-200 text-center">
+                  <span className="text-xs">
+                    ৳ {employee.totalIncomeThisMonthSoFar["9-10"]}
                   </span>
                 </td>
                 <td
-                  className={`p-4 border-gray-200 text-center ${
+                  className={`p-2 border-gray-200 text-center ${
                     teacherIndex < data.length - 1 ? "border-r" : ""
                   }`}
                 >
-                  <span className="inline-block px-3 py-1 rounded-full bg-green-600 text-white">
-                    ৳{employee.totalIncomeThisMonthSoFar["11-12"]}
+                  <span className="text-xs">
+                    ৳ {employee.totalIncomeThisMonthSoFar["11-12"]}
                   </span>
                 </td>
               </React.Fragment>
@@ -260,19 +260,19 @@ const RunningMonthClassCount = () => {
 
           {/* Final Income Row */}
           <tr className="bg-primary-dark border-t-2 border-white">
-            <td className="p-4 border-r border-gray-200 font-medium">
+            <td className="pl-3 border-r border-gray-200 font-medium text-xs">
               Final Income
             </td>
             {data.map((employee, teacherIndex) => (
               <React.Fragment key={`final-income-${employee.employeeId}`}>
                 <td
                   colSpan={3}
-                  className={`p-4 border-gray-200 text-center ${
+                  className={`p-2 border-gray-200 text-center ${
                     teacherIndex < data.length - 1 ? "border-r" : ""
                   }`}
                 >
-                  <span className="inline-block px-3 py-1 rounded-full bg-yellow-600 text-white">
-                    ৳{employee.totalIncomeThisMonthSoFar.total}
+                  <span className="text-xs">
+                    ৳ {employee.totalIncomeThisMonthSoFar.total}
                   </span>
                 </td>
               </React.Fragment>

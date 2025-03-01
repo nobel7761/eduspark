@@ -45,23 +45,28 @@ export const adminNavigation = [
         icon: "👨‍🏫",
         href: "/employees",
       },
-    ],
-  },
-  {
-    category: "DIRECTOR MANAGEMENT",
-    items: [
       {
-        name: "Management Timings",
-        icon: "⏰",
-        href: "/management-timings",
+        name: "Teacher Class Count",
+        icon: "📝",
+        href: "/teacher-class-count",
       },
-      // {
-      //   name: "Attendance",
-      //   icon: "📝",
-      //   href: "/attendance",
-      // },
     ],
   },
+  // {
+  //   category: "DIRECTOR MANAGEMENT",
+  //   items: [
+  //     {
+  //       name: "Management Timings",
+  //       icon: "⏰",
+  //       href: "/management-timings",
+  //     },
+  //     {
+  //       name: "Attendance",
+  //       icon: "📝",
+  //       href: "/attendance",
+  //     },
+  //   ],
+  // },
   // {
   //   category: "FINANCE",
   //   items: [

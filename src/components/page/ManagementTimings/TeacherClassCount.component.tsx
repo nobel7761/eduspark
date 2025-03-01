@@ -7,8 +7,9 @@ import { toast } from "react-toastify";
 import PageLoader from "@/components/shared/PageLoader";
 import { IEmployee } from "@/types/employee";
 import RunningMonthClassCount from "./RunningMonthClassCount.component";
+import { useRouter } from "next/navigation";
 
-const ManagementTimingsComponent = () => {
+const TeacherClassCountComponent = () => {
   // const [isRegularTimingOpen, setIsRegularTimingOpen] = useState(false);
   const [isClassCountOpen, setIsClassCountOpen] = useState(false);
   const [successPopup, setSuccessPopup] = useState({
@@ -21,6 +22,8 @@ const ManagementTimingsComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [classBasedTeachers, setClassBasedTeachers] = useState<IEmployee[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const { push } = useRouter();
 
   // Fetch class-based teachers
   const fetchClassBasedTeachers = async () => {
@@ -64,12 +67,12 @@ const ManagementTimingsComponent = () => {
           <h2 className="text-lg font-semibold">Teachers Class Count</h2>
 
           <div className="flex items-center gap-x-4">
-            {/* <button
-              onClick={() => setIsRegularTimingOpen(true)}
+            <button
+              onClick={() => push("/teacher-class-count/records")}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Add Regular Timing
-            </button> */}
+              View All Records
+            </button>
             <button
               onClick={() => setIsClassCountOpen(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -154,4 +157,4 @@ const ManagementTimingsComponent = () => {
   );
 };
 
-export default ManagementTimingsComponent;
+export default TeacherClassCountComponent;
