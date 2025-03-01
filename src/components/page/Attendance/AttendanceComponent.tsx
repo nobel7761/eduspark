@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
 import { EmployeeType } from "@/enums/employees.enum";
 
-interface AttendanceRecord {
+export interface AttendanceRecord {
   _id: string;
   employeeId: {
     _id: string;
