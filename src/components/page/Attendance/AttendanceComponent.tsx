@@ -39,6 +39,7 @@ const DEFAULT_VISIBLE_COLUMNS = {
   employeeName: true,
   date: true,
   isPresentOnTime: true,
+  absent: true,
   employeeType: true,
   comments: true,
   month: false,
@@ -131,30 +132,56 @@ const AttendanceComponent = () => {
         header: "Late Join",
         cell: (info) => (
           <div className="text-center">
-            <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                !info.getValue()
-                  ? "bg-red-600 text-white"
-                  : "bg-green-600 text-white"
-              }`}
-            >
-              {info.getValue() ? "No" : "Yes"}
-            </span>
+            {info.getValue() === null ? (
+              <span className="text-white">-</span>
+            ) : (
+              <span
+                className={`px-2 py-1 rounded-full text-xs ${
+                  info.getValue()
+                    ? "bg-green-600 text-white"
+                    : "bg-red-600 text-white"
+                }`}
+              >
+                {info.getValue() ? "No" : "Yes"}
+              </span>
+            )}
           </div>
         ),
         enableColumnFilter: true,
         filterFn: (row, columnId, filterValue) => {
           if (filterValue === "") return true;
           const isPresentOnTime = row.getValue(columnId);
+          if (filterValue === "null") return isPresentOnTime === null;
           return isPresentOnTime === (filterValue === "true");
         },
+      }),
+      columnHelper.accessor((row) => row.isPresentOnTime === null, {
+        id: "absent",
+        header: "Absent",
+        cell: (info) => (
+          <div className="text-center">
+            <span
+              className={`px-2 py-1 rounded-full text-xs ${
+                info.getValue()
+                  ? "bg-red-600 text-white"
+                  : "bg-green-600 text-white"
+              }`}
+            >
+              {info.getValue() ? "Yes" : "No"}
+            </span>
+          </div>
+        ),
       }),
       columnHelper.accessor((row) => row.employeeId.employeeType, {
         id: "employeeType",
         header: "Employee Type",
         cell: (info) => (
           <div className="text-center">
-            <span className="px-2 py-1 bg-blue-600 text-white rounded-full text-xs">
+            <span
+              className={`px-2 py-1 text-white rounded-full text-xs ${
+                info.getValue() === "Teacher" ? "bg-blue-600" : "bg-purple-600"
+              }`}
+            >
               {info.getValue()}
             </span>
           </div>
@@ -254,7 +281,10 @@ const AttendanceComponent = () => {
                   parseInt(filter.value as string)
                 ).toLocaleString("default", { month: "long" });
               } else if (filter.id === "isPresentOnTime") {
-                displayValue = filter.value === "true" ? "No" : "Yes";
+                if (filter.value === "true") displayValue = "Late Join: No";
+                else if (filter.value === "false")
+                  displayValue = "Late Join: Yes";
+                else if (filter.value === "null") displayValue = "Absent: Yes";
               }
 
               return (
@@ -434,6 +464,30 @@ const AttendanceComponent = () => {
                     <option value="">All</option>
                     <option value="true">No</option>
                     <option value="false">Yes</option>
+                  </select>
+                </div>
+
+                {/* Absent Filter */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Absent
+                  </label>
+                  <select
+                    className="w-full bg-gray-700 rounded p-1 text-sm"
+                    value={
+                      (table
+                        .getColumn("isPresentOnTime")
+                        ?.getFilterValue() as string) ?? ""
+                    }
+                    onChange={(e) =>
+                      table
+                        .getColumn("isPresentOnTime")
+                        ?.setFilterValue(e.target.value === "yes" ? "null" : "")
+                    }
+                  >
+                    <option value="">All</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
                   </select>
                 </div>
               </div>

@@ -10,8 +10,9 @@ import { FaCheckCircle } from "react-icons/fa";
 type AttendanceFormData = {
   employeeId: string;
   date: string;
-  isPresentOnTime: boolean;
+  isPresentOnTime: boolean | null;
   comments?: string;
+  absent: boolean;
 };
 
 interface AddAttendanceDialogProps {
@@ -29,10 +30,12 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<AttendanceFormData>({
     defaultValues: {
       isPresentOnTime: true,
+      absent: false,
     },
   });
 
@@ -113,6 +116,7 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
         ...data,
         employeeId: selectedEmployee._id,
         date: new Date(data.date).toISOString(),
+        isPresentOnTime: data.absent ? null : data.isPresentOnTime,
       };
 
       await callApi(formattedData);
@@ -226,33 +230,56 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 </Listbox>
               </div>
 
-              {/* Date Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  {...register("date", { required: "Date is required" })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
-                />
-                {errors.date && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.date.message}
-                  </p>
-                )}
+              {/* Date Selection and Absent Checkbox */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    {...register("date", { required: "Date is required" })}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                  />
+                  {errors.date && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.date.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Present on Time Checkbox */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  {...register("isPresentOnTime")}
-                  className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-200">
-                  Present on time
-                </label>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center">
+                  <label className="relative flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      {...register("absent")}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <span className="ms-3 text-sm font-medium text-gray-200">
+                      Absent
+                    </span>
+                  </label>
+                </div>
+
+                {/* Present on Time Checkbox */}
+                {!watch("absent") && (
+                  <div className="flex items-center">
+                    <label className="relative flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register("isPresentOnTime")}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <span className="ms-3 text-sm font-medium text-gray-200">
+                        Present on time
+                      </span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Comments */}
