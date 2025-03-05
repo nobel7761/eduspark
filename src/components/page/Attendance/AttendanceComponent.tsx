@@ -21,7 +21,7 @@ import { IoMdOptions } from "react-icons/io";
 import { toast } from "react-toastify";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
 import { EmployeeType } from "@/enums/employees.enum";
-
+import { AttendanceStatus } from "@/enums/attendance.enum";
 export interface AttendanceRecord {
   _id: string;
   employeeId: {
@@ -31,17 +31,16 @@ export interface AttendanceRecord {
     employeeType: EmployeeType;
   };
   date: string;
-  isPresentOnTime: boolean;
+  status: AttendanceStatus;
   comments?: string;
 }
 
 const DEFAULT_VISIBLE_COLUMNS = {
   employeeName: true,
   date: true,
-  isPresentOnTime: true,
-  absent: true,
+  status: true,
   employeeType: true,
-  comments: true,
+  comments: false,
   month: false,
   year: false,
 };
@@ -128,50 +127,38 @@ const AttendanceComponent = () => {
           });
         },
       }),
-      columnHelper.accessor("isPresentOnTime", {
-        header: "Late Join",
+      columnHelper.accessor("status", {
+        header: "Status",
         cell: (info) => (
-          <div className="text-center">
+          <div className="text-center font-bold">
             {info.getValue() === null ? (
               <span className="text-white">-</span>
             ) : (
               <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  info.getValue()
-                    ? "bg-green-600 text-white"
-                    : "bg-red-600 text-white"
+                className={`px-2 py-1 rounded-full text-xs  inline-block w-20 ${
+                  {
+                    [AttendanceStatus.PRESENT]: "bg-[#28a745] text-white",
+                    [AttendanceStatus.ABSENT]: "bg-red-600 text-white",
+                    [AttendanceStatus.LATE]: "bg-yellow-300 text-black",
+                    [AttendanceStatus.OFF_DAY]: "bg-gray-600 text-white",
+                    [AttendanceStatus.DEMO]: "bg-purple-600 text-white",
+                    [AttendanceStatus.HALF_DAY]: "bg-blue-600 text-white",
+                    [AttendanceStatus.ON_LEAVE]: "bg-pink-600 text-white",
+                  }[info.getValue()]
                 }`}
               >
-                {info.getValue() ? "No" : "Yes"}
+                {info.getValue().replace("_", " ")}
               </span>
             )}
           </div>
         ),
         enableColumnFilter: true,
         filterFn: (row, columnId, filterValue) => {
-          if (filterValue === "") return true;
-          const isPresentOnTime = row.getValue(columnId);
-          if (filterValue === "null") return isPresentOnTime === null;
-          return isPresentOnTime === (filterValue === "true");
+          if (!filterValue) return true;
+          return row.getValue(columnId) === filterValue;
         },
       }),
-      columnHelper.accessor((row) => row.isPresentOnTime === null, {
-        id: "absent",
-        header: "Absent",
-        cell: (info) => (
-          <div className="text-center">
-            <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                info.getValue()
-                  ? "bg-red-600 text-white"
-                  : "bg-green-600 text-white"
-              }`}
-            >
-              {info.getValue() ? "Yes" : "No"}
-            </span>
-          </div>
-        ),
-      }),
+
       columnHelper.accessor((row) => row.employeeId.employeeType, {
         id: "employeeType",
         header: "Employee Type",
@@ -443,51 +430,27 @@ const AttendanceComponent = () => {
                   </select>
                 </div>
 
-                {/* Late Join Filter */}
+                {/* Status Filter */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Late Join
+                    Status
                   </label>
                   <select
                     className="w-full bg-gray-700 rounded p-1 text-sm"
                     value={
-                      (table
-                        .getColumn("isPresentOnTime")
-                        ?.getFilterValue() as string) ?? ""
+                      (table.getColumn("status")?.getFilterValue() as string) ??
+                      ""
                     }
                     onChange={(e) =>
-                      table
-                        .getColumn("isPresentOnTime")
-                        ?.setFilterValue(e.target.value)
+                      table.getColumn("status")?.setFilterValue(e.target.value)
                     }
                   >
                     <option value="">All</option>
-                    <option value="true">No</option>
-                    <option value="false">Yes</option>
-                  </select>
-                </div>
-
-                {/* Absent Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Absent
-                  </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
-                    value={
-                      (table
-                        .getColumn("isPresentOnTime")
-                        ?.getFilterValue() as string) ?? ""
-                    }
-                    onChange={(e) =>
-                      table
-                        .getColumn("isPresentOnTime")
-                        ?.setFilterValue(e.target.value === "yes" ? "null" : "")
-                    }
-                  >
-                    <option value="">All</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
+                    {Object.values(AttendanceStatus).map((status) => (
+                      <option key={status} value={status}>
+                        {status.replace("_", " ")}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

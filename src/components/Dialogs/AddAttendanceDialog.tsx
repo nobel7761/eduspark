@@ -6,13 +6,12 @@ import { HiChevronUpDown } from "react-icons/hi2";
 import { toast } from "react-toastify";
 import { IEmployee } from "@/types/employee";
 import { FaCheckCircle } from "react-icons/fa";
-
+import { AttendanceStatus } from "@/enums/attendance.enum";
 type AttendanceFormData = {
   employeeId: string;
   date: string;
-  isPresentOnTime: boolean | null;
+  status: AttendanceStatus;
   comments?: string;
-  absent: boolean;
 };
 
 interface AddAttendanceDialogProps {
@@ -30,14 +29,16 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
     register,
     handleSubmit,
     reset,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<AttendanceFormData>({
     defaultValues: {
-      isPresentOnTime: true,
-      absent: false,
+      status: AttendanceStatus.PRESENT,
     },
   });
+
+  const status = watch("status");
 
   const [error, setError] = useState<Error | null>(null);
   const [selectedPerson, setSelectedPerson] = useState("");
@@ -116,7 +117,6 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
         ...data,
         employeeId: selectedEmployee._id,
         date: new Date(data.date).toISOString(),
-        isPresentOnTime: data.absent ? null : data.isPresentOnTime,
       };
 
       await callApi(formattedData);
@@ -171,7 +171,7 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
               {/* Employee Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Select Employee
+                  Employee
                 </label>
                 <Listbox value={selectedPerson} onChange={setSelectedPerson}>
                   <div className="relative mt-1">
@@ -190,8 +190,8 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                                   (emp) => emp._id === selectedPerson
                                 )?.lastName
                               }`
-                            : "Select employee..."
-                          : "Select employee..."}
+                            : "Select Employee..."
+                          : "Select Employee..."}
                       </span>
                       <span className="absolute inset-y-0 right-0 flex items-center pr-2">
                         <HiChevronUpDown className="h-5 w-5 text-gray-400" />
@@ -249,37 +249,53 @@ const AddAttendanceDialog: React.FC<AddAttendanceDialogProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center">
-                  <label className="relative flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      {...register("absent")}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span className="ms-3 text-sm font-medium text-gray-200">
-                      Absent
-                    </span>
-                  </label>
-                </div>
-
-                {/* Present on Time Checkbox */}
-                {!watch("absent") && (
-                  <div className="flex items-center">
-                    <label className="relative flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        {...register("isPresentOnTime")}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      <span className="ms-3 text-sm font-medium text-gray-200">
-                        Present on time
+              {/* Status Switch */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Status
+                </label>
+                <Listbox
+                  value={status}
+                  onChange={(value) => setValue("status", value)}
+                >
+                  <div className="relative mt-1">
+                    <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                      <span className="block truncate">{status}</span>
+                      <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                        <HiChevronUpDown className="h-5 w-5 text-gray-400" />
                       </span>
-                    </label>
+                    </Listbox.Button>
+                    <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+                      {Object.values(AttendanceStatus).map((statusOption) => (
+                        <Listbox.Option
+                          key={statusOption}
+                          value={statusOption}
+                          className={({ active }) =>
+                            `${active ? "bg-primary text-white" : "text-white"}
+                            cursor-pointer select-none relative py-2 pl-10 pr-4`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`${
+                                  selected ? "font-medium" : "font-normal"
+                                } block truncate`}
+                              >
+                                {statusOption}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                  <FaCheckCircle className="h-5 w-5" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
                   </div>
-                )}
+                </Listbox>
               </div>
 
               {/* Comments */}
