@@ -68,20 +68,20 @@ export const adminNavigation = [
 
   //   ],
   // },
-  // {
-  //   category: "FINANCE",
-  //   items: [
-  //     {
-  //       name: "Accounts",
-  //       icon: "💰",
-  //       children: [
-  //         { name: "Earnings", href: "/accounts/earnings" },
-  //         { name: "Expenses", href: "/accounts/expenses" },
-  //         { name: "Investments", href: "/accounts/investments" },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    category: "FINANCE",
+    items: [
+      {
+        name: "Accounts",
+        icon: "💰",
+        children: [
+          { name: "Earnings", href: "/accounts/earnings" },
+          { name: "Expenses", href: "/accounts/expenses" },
+          { name: "Investments", href: "/accounts/investments" },
+        ],
+      },
+    ],
+  },
 ];
 
 export const userDropdownItems = [
