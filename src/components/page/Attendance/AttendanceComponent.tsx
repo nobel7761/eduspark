@@ -13,15 +13,16 @@ import {
   ColumnFiltersState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { useSearch } from "@/context/SearchContext";
 import { Menu } from "@headlessui/react";
-import { IoCloseCircle } from "react-icons/io5";
 import { MdViewColumn } from "react-icons/md";
-import { IoMdOptions } from "react-icons/io";
 import { toast } from "react-toastify";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
 import { EmployeeType } from "@/enums/employees.enum";
+import { Listbox } from "@headlessui/react";
+import { HiChevronUpDown } from "react-icons/hi2";
+import { FaCheckCircle } from "react-icons/fa";
 import { AttendanceStatus } from "@/enums/attendance.enum";
+
 export interface AttendanceRecord {
   _id: string;
   employeeId: {
@@ -35,91 +36,60 @@ export interface AttendanceRecord {
   comments?: string;
 }
 
+interface TableRecord {
+  date: string;
+  [key: string]: string | AttendanceStatus | null;
+}
+
 const DEFAULT_VISIBLE_COLUMNS = {
-  employeeName: true,
   date: true,
-  status: true,
-  employeeType: true,
-  comments: false,
   month: false,
   year: false,
+  status: false,
+  employeeId: false,
 };
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
 
 const AttendanceComponent = () => {
-  const { searchQuery } = useSearch();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    {
+      id: "month",
+      value: new Date().getMonth().toString(),
+    },
+    {
+      id: "year",
+      value: new Date().getFullYear().toString(),
+    },
+  ]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     DEFAULT_VISIBLE_COLUMNS
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/attendance`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch attendance records");
-        }
-        const data = await response.json();
-        setRecords(data);
-      } catch (error) {
-        console.error("Error fetching records:", error);
-        setError("Failed to load attendance records");
-        toast.error("Failed to load attendance records");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const columnHelper = createColumnHelper<TableRecord>();
 
-    fetchRecords();
-  }, [refreshTrigger]);
+  const columns = React.useMemo(() => {
+    const uniqueEmployees = Array.from(
+      new Set(
+        records.map(
+          (record) =>
+            `${record.employeeId.firstName} ${record.employeeId.lastName}`
+        )
+      )
+    ).sort();
 
-  const filteredRecords = React.useMemo(() => {
-    if (!records) return [];
-    return records.filter((record) => {
-      if (!searchQuery?.trim()) return true;
-      const employeeName = `${record.employeeId.firstName} ${record.employeeId.lastName}`;
-      return (
-        employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        new Date(record.date)
-          .toLocaleDateString()
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-      );
-    });
-  }, [searchQuery, records]);
-
-  const columnHelper = createColumnHelper<AttendanceRecord>();
-
-  const columns = React.useMemo(
-    () => [
-      columnHelper.accessor(
-        (row) => `${row.employeeId.firstName} ${row.employeeId.lastName}`,
-        {
-          id: "employeeName",
-          header: "Employee Name",
-          cell: (info) => info.getValue(),
-          enableColumnFilter: true,
-          filterFn: (row, columnId, filterValue) => {
-            if (!filterValue) return true;
-            return row.getValue(columnId) === filterValue;
-          },
-        }
-      ),
+    const baseColumns = [
       columnHelper.accessor("date", {
         header: "Date",
         cell: (info) => {
-          const date = new Date(info.getValue());
+          const date = new Date(info.getValue() as string);
           return date.toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
@@ -127,57 +97,42 @@ const AttendanceComponent = () => {
           });
         },
       }),
-      columnHelper.accessor("status", {
-        header: "Status",
-        cell: (info) => (
-          <div className="text-center font-bold">
-            {info.getValue() === null ? (
-              <span className="text-white">-</span>
-            ) : (
-              <span
-                className={`px-2 py-1 rounded-full text-xs  inline-block w-20 ${
-                  {
-                    [AttendanceStatus.PRESENT]: "bg-[#28a745] text-white",
-                    [AttendanceStatus.ABSENT]: "bg-red-600 text-white",
-                    [AttendanceStatus.LATE]: "bg-yellow-300 text-black",
-                    [AttendanceStatus.OFF_DAY]: "bg-gray-600 text-white",
-                    [AttendanceStatus.DEMO]: "bg-purple-600 text-white",
-                    [AttendanceStatus.HALF_DAY]: "bg-blue-600 text-white",
-                    [AttendanceStatus.ON_LEAVE]: "bg-pink-600 text-white",
-                  }[info.getValue()]
-                }`}
-              >
-                {info.getValue().replace("_", " ")}
-              </span>
-            )}
-          </div>
-        ),
-        enableColumnFilter: true,
-        filterFn: (row, columnId, filterValue) => {
-          if (!filterValue) return true;
-          return row.getValue(columnId) === filterValue;
-        },
-      }),
+    ];
 
-      columnHelper.accessor((row) => row.employeeId.employeeType, {
-        id: "employeeType",
-        header: "Employee Type",
-        cell: (info) => (
-          <div className="text-center">
-            <span
-              className={`px-2 py-1 text-white rounded-full text-xs ${
-                info.getValue() === "Teacher" ? "bg-blue-600" : "bg-purple-600"
-              }`}
-            >
-              {info.getValue()}
-            </span>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("comments", {
-        header: "Comments",
-        cell: (info) => info.getValue() || "-",
-      }),
+    uniqueEmployees.forEach((employeeName) => {
+      baseColumns.push(
+        columnHelper.accessor(employeeName, {
+          header: employeeName,
+          cell: (info) => {
+            const status = info.getValue();
+            if (!status) return <span className="text-gray-500">-</span>;
+
+            return (
+              <div className="text-center font-bold">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs inline-block w-20 ${
+                    {
+                      [AttendanceStatus.PRESENT]: "bg-[#28a745] text-white",
+                      [AttendanceStatus.ABSENT]: "bg-red-600 text-white",
+                      [AttendanceStatus.LATE]: "bg-yellow-300 text-black",
+                      [AttendanceStatus.OFF_DAY]: "bg-gray-600 text-white",
+                      [AttendanceStatus.DEMO]: "bg-purple-600 text-white",
+                      [AttendanceStatus.HALF_DAY]: "bg-blue-600 text-white",
+                      [AttendanceStatus.ON_LEAVE]: "bg-pink-600 text-white",
+                    }[status as AttendanceStatus]
+                  }`}
+                >
+                  {String(status).replace("_", " ")}
+                </span>
+              </div>
+            );
+          },
+        })
+      );
+    });
+
+    return [
+      ...baseColumns,
       columnHelper.accessor((row) => new Date(row.date).getMonth(), {
         id: "month",
         enableColumnFilter: true,
@@ -196,12 +151,43 @@ const AttendanceComponent = () => {
           return year === parseInt(filterValue as string);
         },
       }),
-    ],
-    [columnHelper]
-  );
+      columnHelper.accessor("status", {
+        id: "status",
+        enableColumnFilter: true,
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return row.getValue(columnId) === filterValue;
+        },
+      }),
+    ];
+  }, [columnHelper, records]);
 
-  const table = useReactTable({
-    data: filteredRecords,
+  // Transform the records into the format needed for the table
+  const tableData = React.useMemo(() => {
+    const data: TableRecord[] = [];
+
+    // Group records by date
+    const recordsByDate = records.reduce((acc, record) => {
+      const date = record.date;
+      if (!acc[date]) {
+        acc[date] = {} as TableRecord;
+      }
+      const employeeName = `${record.employeeId.firstName} ${record.employeeId.lastName}`;
+      acc[date][employeeName] = record.status;
+      acc[date].date = date;
+      return acc;
+    }, {} as Record<string, TableRecord>);
+
+    // Convert to array format
+    Object.values(recordsByDate).forEach((dateRecord) => {
+      data.push(dateRecord);
+    });
+
+    return data;
+  }, [records]);
+
+  const table = useReactTable<TableRecord>({
+    data: tableData,
     columns,
     state: {
       sorting,
@@ -219,9 +205,101 @@ const AttendanceComponent = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        // Get current month and year
+        const now = new Date();
+        const currentMonth = (now.getMonth() + 1).toString().padStart(2, "0"); // Convert to 01-12 format
+        const currentYear = now.getFullYear().toString();
+
+        // Get filter values from table state
+        const monthFilter = table.getColumn("month")?.getFilterValue();
+        const yearFilter = table.getColumn("year")?.getFilterValue();
+        const statusFilter = table.getColumn("status")?.getFilterValue();
+        const employeeFilter = table.getColumn("employeeId")?.getFilterValue();
+
+        // Build query parameters
+        const params = new URLSearchParams();
+
+        // Handle month filter - convert from index (0-11) to month number (1-12)
+        if (monthFilter !== undefined && monthFilter !== "") {
+          const monthNumber = (Number(monthFilter) + 1)
+            .toString()
+            .padStart(2, "0");
+          params.append("month", monthNumber);
+        } else {
+          params.append("month", currentMonth);
+        }
+
+        // Handle year filter
+        if (yearFilter) {
+          params.append("year", yearFilter.toString());
+        } else {
+          params.append("year", currentYear);
+        }
+
+        // Handle status filter - convert enum value to match API expected format
+        if (statusFilter) {
+          // Convert ABSENT to Absent, PRESENT to Present, etc.
+          const formattedStatus =
+            statusFilter.toString().charAt(0).toUpperCase() +
+            statusFilter.toString().slice(1).toLowerCase().replace("_", " ");
+          params.append("status", formattedStatus);
+        }
+
+        // Handle employee filter
+        if (employeeFilter) {
+          params.append("employeeId", employeeFilter.toString());
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/attendance/filter?${params}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch attendance records");
+        }
+        const data = await response.json();
+        setRecords(data);
+      } catch (error) {
+        console.error("Error fetching records:", error);
+        setError("Failed to load attendance records");
+        toast.error("Failed to load attendance records");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, [
+    refreshTrigger,
+    table.getColumn("month")?.getFilterValue(),
+    table.getColumn("year")?.getFilterValue(),
+    table.getColumn("status")?.getFilterValue(),
+    table.getColumn("employeeId")?.getFilterValue(),
+  ]);
+
   // Get unique values for filters
   const uniqueValues = React.useMemo(() => {
     if (!records) return { employees: [], months: [], years: [] };
+
+    // Get current year
+    const currentYear = new Date().getFullYear();
+
+    // Get years from records and add current year if not present
+    const yearsFromRecords = Array.from(
+      new Set(records.map((record) => new Date(record.date).getFullYear()))
+    );
+
+    // Ensure we include a range of years including current year and past years
+    const allYears = new Set([
+      ...yearsFromRecords,
+      currentYear,
+      currentYear - 1,
+      currentYear - 2,
+    ]);
+
     return {
       employees: Array.from(
         new Set(
@@ -234,9 +312,7 @@ const AttendanceComponent = () => {
       months: Array.from(
         new Set(records.map((record) => new Date(record.date).getMonth()))
       ).sort((a, b) => a - b),
-      years: Array.from(
-        new Set(records.map((record) => new Date(record.date).getFullYear()))
-      ).sort((a, b) => b - a),
+      years: Array.from(allYears).sort((a, b) => b - a), // Sort years in descending order
     };
   }, [records]);
 
@@ -258,7 +334,7 @@ const AttendanceComponent = () => {
           <h1 className="text-lg font-semibold">Attendance Records</h1>
 
           {/* Active Filters */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* <div className="flex flex-wrap items-center gap-2">
             {table.getState().columnFilters.map((filter) => {
               let displayValue = String(filter.value);
 
@@ -299,7 +375,7 @@ const AttendanceComponent = () => {
                 Reset All
               </button>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="flex items-center gap-x-4">
@@ -346,117 +422,294 @@ const AttendanceComponent = () => {
               </div>
             </Menu.Items>
           </Menu>
-
-          {/* Filters */}
-          <Menu as="div" className="relative">
-            <Menu.Button className="text-2xl text-gray-400 hover:text-white">
-              <IoMdOptions />
-            </Menu.Button>
-
-            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
-              <div className="space-y-4">
-                {/* Employee Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Employee
-                  </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
-                    value={
-                      (table
-                        .getColumn("employeeName")
-                        ?.getFilterValue() as string) ?? ""
-                    }
-                    onChange={(e) =>
-                      table
-                        .getColumn("employeeName")
-                        ?.setFilterValue(e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    {uniqueValues.employees.map((employee) => (
-                      <option key={employee} value={employee}>
-                        {employee}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Month Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Month
-                  </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
-                    value={
-                      (table.getColumn("month")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(e) =>
-                      table.getColumn("month")?.setFilterValue(e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    {uniqueValues.months.map((month) => (
-                      <option key={month} value={month}>
-                        {new Date(2024, month).toLocaleString("default", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Year Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Year</label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
-                    value={
-                      (table.getColumn("year")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(e) =>
-                      table.getColumn("year")?.setFilterValue(e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    {uniqueValues.years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Status
-                  </label>
-                  <select
-                    className="w-full bg-gray-700 rounded p-1 text-sm"
-                    value={
-                      (table.getColumn("status")?.getFilterValue() as string) ??
-                      ""
-                    }
-                    onChange={(e) =>
-                      table.getColumn("status")?.setFilterValue(e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    {Object.values(AttendanceStatus).map((status) => (
-                      <option key={status} value={status}>
-                        {status.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </Menu.Items>
-          </Menu>
         </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-x-4 mb-4">
+        {/* Employee Name Dropdown */}
+        {/* <div className="w-64">
+          <Listbox
+            value={
+              (table.getColumn("employeeId")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(value) =>
+              table.getColumn("employeeId")?.setFilterValue(value)
+            }
+          >
+            <div className="relative">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
+                <span className="block truncate">
+                  {table.getColumn("employeeId")?.getFilterValue()
+                    ? records.find(
+                        (record) =>
+                          record.employeeId._id ===
+                          table.getColumn("employeeId")?.getFilterValue()
+                      )?.employeeId.firstName +
+                      " " +
+                      records.find(
+                        (record) =>
+                          record.employeeId._id ===
+                          table.getColumn("employeeId")?.getFilterValue()
+                      )?.employeeId.lastName
+                    : "Select Employee"}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                <Listbox.Option
+                  value=""
+                  className={({ active }) =>
+                    `${active ? "bg-primary text-white" : "text-white"}
+                        cursor-pointer select-none relative py-2 pl-10 pr-4`
+                  }
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`${
+                          selected ? "font-medium" : "font-normal"
+                        } block truncate`}
+                      >
+                        All Employees
+                      </span>
+                      {selected && (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                          <FaCheckCircle className="w-5 h-5" />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Listbox.Option>
+                {Array.from(
+                  new Map(
+                    records.map((record) => [
+                      record.employeeId._id,
+                      record.employeeId,
+                    ])
+                  ).values()
+                ).map((employee) => (
+                  <Listbox.Option
+                    key={employee._id}
+                    value={employee._id}
+                    className={({ active }) =>
+                      `${active ? "bg-primary text-white" : "text-white"}
+                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {`${employee.firstName} ${employee.lastName}`}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div> */}
+
+        {/* Month Dropdown */}
+        <div className="w-40">
+          <Listbox
+            value={(table.getColumn("month")?.getFilterValue() as string) ?? ""}
+            onChange={(value) =>
+              table.getColumn("month")?.setFilterValue(value)
+            }
+          >
+            <div className="relative">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
+                <span className="block truncate">
+                  {table.getColumn("month")?.getFilterValue() !== undefined &&
+                  table.getColumn("month")?.getFilterValue() !== ""
+                    ? new Date(
+                        2024,
+                        parseInt(
+                          table.getColumn("month")?.getFilterValue() as string
+                        )
+                      ).toLocaleString("default", { month: "long" })
+                    : new Date().toLocaleString("default", { month: "long" })}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                {Array.from({ length: 12 }, (_, i) => i).map((month) => (
+                  <Listbox.Option
+                    key={month}
+                    value={month}
+                    className={({ active }) =>
+                      `${active ? "bg-primary text-white" : "text-white"}
+                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {new Date(2024, month).toLocaleString("default", {
+                            month: "long",
+                          })}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div>
+
+        {/* Year Dropdown */}
+        <div className="w-32">
+          <Listbox
+            value={(table.getColumn("year")?.getFilterValue() as string) ?? ""}
+            onChange={(value) => table.getColumn("year")?.setFilterValue(value)}
+          >
+            <div className="relative">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
+                <span className="block truncate">
+                  {(table.getColumn("year")?.getFilterValue() as string) ||
+                    new Date().getFullYear().toString()}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                {uniqueValues.years.map((year) => (
+                  <Listbox.Option
+                    key={year}
+                    value={year}
+                    className={({ active }) =>
+                      `${active ? "bg-primary text-white" : "text-white"}
+                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {year}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div>
+
+        {/* Status Dropdown */}
+        {/* <div className="w-40">
+          <Listbox
+            value={
+              (table.getColumn("status")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(value) =>
+              table.getColumn("status")?.setFilterValue(value)
+            }
+          >
+            <div className="relative">
+              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
+                <span className="block truncate">
+                  {table.getColumn("status")?.getFilterValue()
+                    ? (
+                        table.getColumn("status")?.getFilterValue() as string
+                      ).replace("_", " ")
+                    : "Select Status"}
+                </span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+                <Listbox.Option
+                  value=""
+                  className={({ active }) =>
+                    `${active ? "bg-primary text-white" : "text-white"}
+                        cursor-pointer select-none relative py-2 pl-10 pr-4`
+                  }
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`${
+                          selected ? "font-medium" : "font-normal"
+                        } block truncate`}
+                      >
+                        All Statuses
+                      </span>
+                      {selected && (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                          <FaCheckCircle className="w-5 h-5" />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Listbox.Option>
+                {Object.values(AttendanceStatus).map((status) => (
+                  <Listbox.Option
+                    key={status}
+                    value={status}
+                    className={({ active }) =>
+                      `${active ? "bg-primary text-white" : "text-white"}
+                          cursor-pointer select-none relative py-2 pl-10 pr-4`
+                    }
+                  >
+                    {({ selected }) => (
+                      <>
+                        <span
+                          className={`${
+                            selected ? "font-medium" : "font-normal"
+                          } block truncate`}
+                        >
+                          {status.replace("_", " ")}
+                        </span>
+                        {selected && (
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div> */}
       </div>
 
       {/* Table */}
@@ -468,10 +721,8 @@ const AttendanceComponent = () => {
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className={`py-2 px-4 font-medium ${
-                      header.column.id === "employeeName"
-                        ? "text-left"
-                        : "text-center"
+                    className={`py-2 px-4 font-medium text-center ${
+                      header.column.id === "date" ? "text-left" : ""
                     }`}
                   >
                     {header.isPlaceholder ? null : (
