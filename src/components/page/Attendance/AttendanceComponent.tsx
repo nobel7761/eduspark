@@ -526,12 +526,20 @@ const AttendanceComponent = () => {
         <div className="w-40">
           <Listbox
             value={(table.getColumn("month")?.getFilterValue() as string) ?? ""}
-            onChange={(value) =>
-              table.getColumn("month")?.setFilterValue(value)
-            }
+            onChange={(value) => {
+              if (!loading) {
+                table.getColumn("month")?.setFilterValue(value);
+              }
+            }}
+            disabled={loading}
           >
             <div className="relative">
-              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
+              <Listbox.Button
+                className={`relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={loading}
+              >
                 <span className="block truncate">
                   {table.getColumn("month")?.getFilterValue() !== undefined &&
                   table.getColumn("month")?.getFilterValue() !== ""
