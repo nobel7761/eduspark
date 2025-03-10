@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import PageLoader from "@/components/shared/PageLoader";
 import { IEmployee } from "@/types/employee";
 import RunningMonthClassCount from "./RunningMonthClassCount.component";
-import { useRouter } from "next/navigation";
+import { ColumnFiltersState } from "@tanstack/react-table";
 
 const TeacherClassCountComponent = () => {
   // const [isRegularTimingOpen, setIsRegularTimingOpen] = useState(false);
@@ -22,8 +22,16 @@ const TeacherClassCountComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [classBasedTeachers, setClassBasedTeachers] = useState<IEmployee[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const { push } = useRouter();
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    {
+      id: "month",
+      value: new Date().getMonth().toString(),
+    },
+    {
+      id: "year",
+      value: new Date().getFullYear().toString(),
+    },
+  ]);
 
   // Fetch class-based teachers
   const fetchClassBasedTeachers = async () => {
@@ -49,9 +57,6 @@ const TeacherClassCountComponent = () => {
     fetchClassBasedTeachers();
   }, []);
 
-  // Add this to get current month name
-  const currentMonth = new Date().toLocaleString("default", { month: "long" });
-
   const refreshData = useCallback(() => {
     setRefreshTrigger((prev) => prev + 1);
   }, []);
@@ -62,24 +67,16 @@ const TeacherClassCountComponent = () => {
 
   return (
     <>
-      <div className="p-4 rounded-md bg-primary text-white">
+      <div className="p-4 rounded-t-md bg-primary text-white">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Teachers Class Count</h2>
 
-          <div className="flex items-center gap-x-4">
-            <button
-              onClick={() => push("/teacher-class-count/records")}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              View All Records
-            </button>
-            <button
-              onClick={() => setIsClassCountOpen(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Add Class Count
-            </button>
-          </div>
+          <button
+            onClick={() => setIsClassCountOpen(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Add Class Count
+          </button>
         </div>
 
         {/* <AddRegularTimingDialog
@@ -139,16 +136,25 @@ const TeacherClassCountComponent = () => {
               </div>
             </div> */}
 
-            {/* class count */}
-            <div className="p-4 rounded-t-md bg-primary mt-4 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-white text-center uppercase">
-                Class Count of {currentMonth}
-              </h3>
-            </div>
-
             {/* show all the class count records for this month */}
             <div>
-              <RunningMonthClassCount key={refreshTrigger} />
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-400">
+                  <div
+                    className="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent rounded-full"
+                    role="status"
+                  >
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                  <div className="mt-2">Loading class count data...</div>
+                </div>
+              ) : (
+                <RunningMonthClassCount
+                  key={refreshTrigger}
+                  columnFilters={columnFilters}
+                  setColumnFilters={setColumnFilters}
+                />
+              )}
             </div>
           </>
         )}
