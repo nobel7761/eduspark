@@ -84,7 +84,4 @@ export const adminNavigation = [
   // },
 ];
 
-export const userDropdownItems = [
-  { name: "My Profile", href: "/profile" },
-  { name: "Logout" },
-];
+export const userDropdownItems = [{ name: "My Profile", href: "/profile" }];
