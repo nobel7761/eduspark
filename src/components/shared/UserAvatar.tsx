@@ -3,6 +3,7 @@ import { IUser } from "@/types/user";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import LogoutButton from "./LogoutButton";
 
 interface UserAvatarProps {
   user: IUser | null;
@@ -45,7 +46,7 @@ export default function UserAvatar({
       onClick={() => setIsOpen(!isOpen)}
     >
       <Image
-        src={user.profilePhoto}
+        src="https://png.pngtree.com/png-clipart/20230927/original/pngtree-man-avatar-image-for-profile-png-image_13001877.png"
         alt={`${user.firstName} ${user.lastName}`}
         width={size}
         height={size}
@@ -81,6 +82,7 @@ export default function UserAvatar({
               </Link>
             ))}
           </div>
+          <LogoutButton />
         </div>
       )}
     </div>
