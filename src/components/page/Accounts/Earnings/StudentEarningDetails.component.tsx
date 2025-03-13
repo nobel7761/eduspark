@@ -110,11 +110,11 @@ const StudentEarningDetailsComponent = () => {
         );
       },
     }),
-    columnHelper.accessor("due", {
-      header: "Due",
-      cell: (info) =>
-        info.getValue() ? `৳ ${info.getValue().toLocaleString()}` : "-",
-    }),
+    // columnHelper.accessor("due", {
+    //   header: "Due",
+    //   cell: (info) =>
+    //     info.getValue() ? `৳ ${info.getValue().toLocaleString()}` : "-",
+    // }),
   ];
 
   const table = useReactTable({
