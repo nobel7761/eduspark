@@ -117,7 +117,7 @@ const AllInvestmentRecordsComponent = () => {
           header: "Amount",
           cell: (info) => {
             const value = info.getValue();
-            return value ? `৳ ${value.toLocaleString()}` : null;
+            return value ? `৳ ${(value || 0).toLocaleString()}` : null;
           },
           enableSorting: false,
         }),
@@ -252,7 +252,7 @@ const AllInvestmentRecordsComponent = () => {
                         colSpan={2}
                         className="py-3 px-4 text-center font-medium border-r border-gray-700 last:border-r-0"
                       >
-                        ৳ {group.totalInvestment.toLocaleString()}
+                        ৳ {group.totalInvestment}
                       </td>
                     ))}
                   </tr>

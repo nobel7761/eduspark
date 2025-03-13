@@ -161,7 +161,9 @@ const AllExpenseRecordsComponent = () => {
     columnHelper.accessor("amount", {
       header: () => <div className="text-center">Amount</div>,
       cell: (info) => (
-        <div className="text-center">৳ {info.getValue().toLocaleString()}</div>
+        <div className="text-center">
+          ৳ {(info.getValue() || 0).toLocaleString()}
+        </div>
       ),
     }),
     columnHelper.accessor("paidBy", {
@@ -368,7 +370,7 @@ const AllExpenseRecordsComponent = () => {
         <div className="bg-gray-800 p-4 rounded-lg">
           <h3 className="text-gray-400 text-sm mb-2">Total Expenses</h3>
           <p className="text-2xl font-semibold">
-            ৳ {expensesSummary.totalExpense.toLocaleString()}
+            ৳ {(expensesSummary.totalExpense || 0).toLocaleString()}
           </p>
         </div>
       </div>

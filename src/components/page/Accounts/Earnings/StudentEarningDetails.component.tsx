@@ -97,7 +97,7 @@ const StudentEarningDetailsComponent = () => {
     }),
     columnHelper.accessor("amount", {
       header: "Amount",
-      cell: (info) => `৳ ${info.getValue().toLocaleString()}`,
+      cell: (info) => `৳ ${(info.getValue() || 0).toLocaleString()}`,
     }),
     columnHelper.accessor("receivedBy", {
       header: "Received By",
@@ -206,15 +206,15 @@ const StudentEarningDetailsComponent = () => {
           <div className="space-y-2">
             <p>
               <span className="text-gray-400">Admission Fee:</span> ৳{" "}
-              {studentInfo.payment?.admissionFee?.toLocaleString() || "-"}
+              {(studentInfo.payment?.admissionFee || 0).toLocaleString() || "-"}
             </p>
             <p>
               <span className="text-gray-400">Form Fee:</span> ৳{" "}
-              {studentInfo.payment?.formFee?.toLocaleString() || "-"}
+              {(studentInfo.payment?.formFee || 0).toLocaleString() || "-"}
             </p>
             <p>
               <span className="text-gray-400">Monthly Fee:</span> ৳{" "}
-              {studentInfo.payment?.monthlyFee?.toLocaleString() || "-"}
+              {(studentInfo.payment?.monthlyFee || 0).toLocaleString() || "-"}
             </p>
           </div>
         </div>

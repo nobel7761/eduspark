@@ -152,7 +152,7 @@ const AllInvestmentDetailsComponent = () => {
         ),
         cell: (info) => (
           <div className="text-center">
-            ৳ {info.getValue().toLocaleString()}
+            ৳ {(info.getValue() || 0).toLocaleString()}
           </div>
         ),
       }),
@@ -162,7 +162,7 @@ const AllInvestmentDetailsComponent = () => {
         ),
         cell: (info) => (
           <div className="text-center">
-            ৳ {info.getValue().toLocaleString()}
+            ৳ {(info.getValue() || 0).toLocaleString()}
           </div>
         ),
       }),
@@ -170,13 +170,15 @@ const AllInvestmentDetailsComponent = () => {
         header: () => <div className="text-center">Due Investment</div>,
         cell: (info) => (
           <div className="text-center text-red-400">
-            ৳ {info.getValue().toLocaleString()}
+            ৳ {(info.getValue() || 0).toLocaleString()}
           </div>
         ),
       }),
       columnHelper.accessor("sharePercentage", {
         header: () => <div className="text-center">Share Holder</div>,
-        cell: (info) => <div className="text-center">{info.getValue()}%</div>,
+        cell: (info) => (
+          <div className="text-center">{info.getValue() || 0}%</div>
+        ),
       }),
     ],
     [columnHelper]

@@ -181,7 +181,7 @@ const AllEarningRecordsComponent = () => {
         header: () => <div className="text-center">Amount</div>,
         cell: (info) => (
           <div className="text-center">
-            ৳ {info.getValue().toLocaleString()}
+            ৳ {(info.getValue() || 0).toLocaleString()}
           </div>
         ),
       }),
@@ -397,7 +397,7 @@ const AllEarningRecordsComponent = () => {
           <div className="bg-gray-800 p-4 rounded-lg">
             <h3 className="text-gray-400 text-sm mb-2">Total Earnings</h3>
             <p className="text-2xl font-semibold">
-              ৳ {earningsSummary.totalEarning.toLocaleString()}
+              ৳ {(earningsSummary.totalEarning || 0).toLocaleString()}
             </p>
           </div>
           {Object.entries(earningsSummary.earningsByType).map(
@@ -405,7 +405,7 @@ const AllEarningRecordsComponent = () => {
               <div key={type} className="bg-gray-800 p-4 rounded-lg">
                 <h3 className="text-gray-400 text-sm mb-2">{type}</h3>
                 <p className="text-2xl font-semibold">
-                  ৳ {amount.toLocaleString()}
+                  ৳ {(amount || 0).toLocaleString()}
                 </p>
               </div>
             )
