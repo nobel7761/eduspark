@@ -49,7 +49,7 @@ const DEFAULT_VISIBLE_COLUMNS = {
   purpose: true,
   amount: true,
   paidBy: true,
-  comments: false,
+  comments: true,
 };
 
 const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
@@ -154,6 +154,10 @@ const AllExpenseRecordsComponent = () => {
         });
       },
     }),
+    columnHelper.accessor("comments", {
+      header: "Comments",
+      cell: (info) => info.getValue() || "-",
+    }),
     columnHelper.accessor("purpose", {
       header: "Purpose",
       cell: (info) => info.getValue().join(", "),
@@ -172,10 +176,6 @@ const AllExpenseRecordsComponent = () => {
         const paidBy = info.getValue();
         return paidBy ? `${paidBy.firstName} ${paidBy.lastName}` : "-";
       },
-    }),
-    columnHelper.accessor("comments", {
-      header: "Comments",
-      cell: (info) => info.getValue() || "-",
     }),
   ];
 
@@ -219,6 +219,47 @@ const AllExpenseRecordsComponent = () => {
 
     return (
       <div className="flex gap-x-4">
+        <Listbox value={selectedYear} onChange={setSelectedYear}>
+          <div className="relative">
+            <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              <span className="block truncate">{selectedYear}</span>
+              <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                <HiChevronUpDown className="h-5 w-5 text-gray-400" />
+              </span>
+            </Listbox.Button>
+            <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+              {years.map((year) => (
+                <Listbox.Option
+                  key={year}
+                  value={year}
+                  className={({ active }) =>
+                    `${
+                      active ? "bg-primary text-white" : "text-white"
+                    } cursor-pointer select-none relative py-2 pl-10 pr-4`
+                  }
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`${
+                          selected ? "font-medium" : "font-normal"
+                        } block truncate`}
+                      >
+                        {year}
+                      </span>
+                      {selected && (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                          <FaCheckCircle className="h-5 w-5" />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </div>
+        </Listbox>
+
         <Listbox value={selectedMonth} onChange={setSelectedMonth}>
           <div className="relative">
             <Listbox.Button className="relative w-40 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
@@ -248,47 +289,6 @@ const AllExpenseRecordsComponent = () => {
                         } block truncate`}
                       >
                         {month.label}
-                      </span>
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                          <FaCheckCircle className="h-5 w-5" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </div>
-        </Listbox>
-
-        <Listbox value={selectedYear} onChange={setSelectedYear}>
-          <div className="relative">
-            <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-              <span className="block truncate">{selectedYear}</span>
-              <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                <HiChevronUpDown className="h-5 w-5 text-gray-400" />
-              </span>
-            </Listbox.Button>
-            <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
-              {years.map((year) => (
-                <Listbox.Option
-                  key={year}
-                  value={year}
-                  className={({ active }) =>
-                    `${
-                      active ? "bg-primary text-white" : "text-white"
-                    } cursor-pointer select-none relative py-2 pl-10 pr-4`
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`${
-                          selected ? "font-medium" : "font-normal"
-                        } block truncate`}
-                      >
-                        {year}
                       </span>
                       {selected && (
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
@@ -335,7 +335,7 @@ const AllExpenseRecordsComponent = () => {
             onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
           >
-            Add New Expense Record
+            Add Expense
           </button>
 
           <Menu as="div" className="relative">
@@ -370,93 +370,98 @@ const AllExpenseRecordsComponent = () => {
         <div className="bg-gray-800 p-4 rounded-lg">
           <h3 className="text-gray-400 text-sm mb-2">Total Expenses</h3>
           <p className="text-2xl font-semibold">
-            ৳ {(expensesSummary.totalExpense || 0).toLocaleString()}
+            {tableLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                <span className="text-gray-400">Loading...</span>
+              </div>
+            ) : (
+              <>৳ {(expensesSummary.totalExpense || 0).toLocaleString()}</>
+            )}
           </p>
         </div>
       </div>
 
       {/* Table */}
-      {tableLoading ? (
-        <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
-          <div className="animate-pulse">
-            <div className="h-12 bg-gray-800"></div>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-12 border-t border-gray-700 bg-gray-900"
-              ></div>
+      <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-gray-800 text-gray-400">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="py-2 px-4 text-left font-medium"
+                  >
+                    {header.isPlaceholder ? null : (
+                      <div
+                        {...{
+                          className: header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : "",
+                          onClick: header.column.getToggleSortingHandler(),
+                        }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() && (
+                          <span>
+                            {header.column.getIsSorted() === "asc"
+                              ? " 🔼"
+                              : " 🔽"}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
             ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-gray-800 text-gray-400">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="py-2 px-4 text-left font-medium"
-                    >
-                      {header.isPlaceholder ? null : (
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "cursor-pointer select-none"
-                              : "",
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getIsSorted() && (
-                            <span>
-                              {header.column.getIsSorted() === "asc"
-                                ? " 🔼"
-                                : " 🔽"}
-                            </span>
-                          )}
-                        </div>
+          </thead>
+          <tbody>
+            {tableLoading ? (
+              <tr>
+                <td
+                  colSpan={table.getAllColumns().length}
+                  className="py-8 text-center text-gray-400"
+                >
+                  <div className="flex justify-center items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                    <span className="text-gray-400">Loading data...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={table.getAllColumns().length}
+                  className="py-8 text-center text-gray-400"
+                >
+                  No expense records found
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-t border-gray-700 hover:bg-gray-800 cursor-pointer"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="py-2 px-4">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
                       )}
-                    </th>
+                    </td>
                   ))}
                 </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={table.getAllColumns().length}
-                    className="py-8 text-center text-gray-400"
-                  >
-                    No expense records found
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-t border-gray-700 hover:bg-gray-800 cursor-pointer"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="py-2 px-4">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between">
@@ -480,7 +485,7 @@ const AllExpenseRecordsComponent = () => {
             onChange={(value) => table.setPageSize(Number(value))}
           >
             <div className="relative">
-              <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              <Listbox.Button className="relative min-w-[100px] w-fit py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
                 <span className="block truncate">
                   Show {table.getState().pagination.pageSize}
                 </span>
@@ -488,7 +493,7 @@ const AllExpenseRecordsComponent = () => {
                   <HiChevronUpDown className="h-5 w-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute bottom-full mb-1 z-10 w-fit min-w-full whitespace-nowrap py-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-[200px]">
                 {PAGE_SIZES.map((pageSize) => (
                   <Listbox.Option
                     key={pageSize}
@@ -504,7 +509,7 @@ const AllExpenseRecordsComponent = () => {
                         <span
                           className={`${
                             selected ? "font-medium" : "font-normal"
-                          } block truncate`}
+                          } block`}
                         >
                           Show {pageSize}
                         </span>
