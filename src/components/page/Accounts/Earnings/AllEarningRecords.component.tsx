@@ -33,6 +33,7 @@ interface EarningRecord {
   paymentType: string[];
   amount: number;
   date: string;
+  month?: string;
   comments?: string;
 }
 
@@ -177,6 +178,13 @@ const AllEarningRecordsComponent = () => {
         header: "Purpose",
         cell: (info) => info.getValue().join(", "),
       }),
+      columnHelper.accessor("month", {
+        header: "Month",
+        cell: (info) => {
+          const month = info.getValue();
+          return <div>{month || "-"}</div>;
+        },
+      }),
       columnHelper.accessor("amount", {
         header: () => <div className="text-center">Amount</div>,
         cell: (info) => (
@@ -234,6 +242,47 @@ const AllEarningRecordsComponent = () => {
 
     return (
       <div className="flex gap-x-4">
+        <Listbox value={selectedYear} onChange={setSelectedYear}>
+          <div className="relative">
+            <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              <span className="block truncate">{selectedYear}</span>
+              <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+                <HiChevronUpDown className="h-5 w-5 text-gray-400" />
+              </span>
+            </Listbox.Button>
+            <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+              {years.map((year) => (
+                <Listbox.Option
+                  key={year}
+                  value={year}
+                  className={({ active }) =>
+                    `${
+                      active ? "bg-primary text-white" : "text-white"
+                    } cursor-pointer select-none relative py-2 pl-10 pr-4`
+                  }
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`${
+                          selected ? "font-medium" : "font-normal"
+                        } block truncate`}
+                      >
+                        {year}
+                      </span>
+                      {selected && (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                          <FaCheckCircle className="h-5 w-5" />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </div>
+        </Listbox>
+
         <Listbox value={selectedMonth} onChange={setSelectedMonth}>
           <div className="relative">
             <Listbox.Button className="relative w-40 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
@@ -263,47 +312,6 @@ const AllEarningRecordsComponent = () => {
                         } block truncate`}
                       >
                         {month.label}
-                      </span>
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                          <FaCheckCircle className="h-5 w-5" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </div>
-        </Listbox>
-
-        <Listbox value={selectedYear} onChange={setSelectedYear}>
-          <div className="relative">
-            <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
-              <span className="block truncate">{selectedYear}</span>
-              <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                <HiChevronUpDown className="h-5 w-5 text-gray-400" />
-              </span>
-            </Listbox.Button>
-            <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
-              {years.map((year) => (
-                <Listbox.Option
-                  key={year}
-                  value={year}
-                  className={({ active }) =>
-                    `${
-                      active ? "bg-primary text-white" : "text-white"
-                    } cursor-pointer select-none relative py-2 pl-10 pr-4`
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`${
-                          selected ? "font-medium" : "font-normal"
-                        } block truncate`}
-                      >
-                        {year}
                       </span>
                       {selected && (
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
@@ -383,121 +391,115 @@ const AllEarningRecordsComponent = () => {
       <MonthYearSelector />
 
       {/* Earnings Summary */}
-      {tableLoading ? (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-gray-800 p-4 rounded-lg animate-pulse">
-              <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
-              <div className="h-8 bg-gray-700 rounded w-32"></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-gray-400 text-sm mb-2">Total Earnings</h3>
-            <p className="text-2xl font-semibold">
-              ৳ {(earningsSummary.totalEarning || 0).toLocaleString()}
-            </p>
-          </div>
-          {Object.entries(earningsSummary.earningsByType).map(
-            ([type, amount]) => (
-              <div key={type} className="bg-gray-800 p-4 rounded-lg">
-                <h3 className="text-gray-400 text-sm mb-2">{type}</h3>
-                <p className="text-2xl font-semibold">
-                  ৳ {(amount || 0).toLocaleString()}
-                </p>
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-gray-400 text-sm mb-2">Total Earnings</h3>
+          <p className="text-2xl font-semibold">
+            {tableLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                <span className="text-gray-400">Loading...</span>
               </div>
-            )
-          )}
+            ) : (
+              <>৳ {(earningsSummary.totalEarning || 0).toLocaleString()}</>
+            )}
+          </p>
         </div>
-      )}
+        {Object.entries(earningsSummary.earningsByType).map(
+          ([type, amount]) => (
+            <div key={type} className="bg-gray-800 p-4 rounded-lg">
+              <h3 className="text-gray-400 text-sm mb-2">{type}</h3>
+              <p className="text-2xl font-semibold">
+                ৳ {(amount || 0).toLocaleString()}
+              </p>
+            </div>
+          )
+        )}
+      </div>
 
       {/* Table */}
-      {tableLoading ? (
-        <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
-          <div className="animate-pulse">
-            <div className="h-12 bg-gray-800"></div>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-12 border-t border-gray-700 bg-gray-900"
-              ></div>
+      <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
+        <table className="w-full border-collapse text-sm">
+          <thead className="bg-gray-800 text-gray-400">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="py-2 px-4 text-left font-medium"
+                  >
+                    {header.isPlaceholder ? null : (
+                      <div
+                        {...{
+                          className: header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : "",
+                          onClick: header.column.getToggleSortingHandler(),
+                        }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() && (
+                          <span>
+                            {header.column.getIsSorted() === "asc"
+                              ? " 🔼"
+                              : " 🔽"}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
             ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-gray-800 text-gray-400">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="py-2 px-4 text-left font-medium"
-                    >
-                      {header.isPlaceholder ? null : (
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "cursor-pointer select-none"
-                              : "",
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getIsSorted() && (
-                            <span>
-                              {header.column.getIsSorted() === "asc"
-                                ? " 🔼"
-                                : " 🔽"}
-                            </span>
-                          )}
-                        </div>
+          </thead>
+          <tbody>
+            {tableLoading ? (
+              <tr>
+                <td
+                  colSpan={table.getAllColumns().length}
+                  className="py-8 text-center text-gray-400"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div>
+                    <span className="text-gray-400">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={table.getAllColumns().length}
+                  className="py-8 text-center text-gray-400"
+                >
+                  No earning records found
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-t border-gray-700 hover:bg-gray-800 cursor-pointer"
+                  onClick={() =>
+                    push(`/accounts/earnings/${row.original.studentId._id}`)
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="py-2 px-4">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
                       )}
-                    </th>
+                    </td>
                   ))}
                 </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={table.getAllColumns().length}
-                    className="py-8 text-center text-gray-400"
-                  >
-                    No earning records found
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-t border-gray-700 hover:bg-gray-800 cursor-pointer"
-                    onClick={() =>
-                      push(`/accounts/earnings/${row.original.studentId._id}`)
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="py-2 px-4">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between">
@@ -521,7 +523,7 @@ const AllEarningRecordsComponent = () => {
             onChange={(value) => table.setPageSize(Number(value))}
           >
             <div className="relative">
-              <Listbox.Button className="relative w-32 py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              <Listbox.Button className="relative min-w-[100px] w-fit py-2 pl-3 pr-10 text-left bg-gray-800 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary text-white">
                 <span className="block truncate">
                   Show {table.getState().pagination.pageSize}
                 </span>
@@ -529,7 +531,7 @@ const AllEarningRecordsComponent = () => {
                   <HiChevronUpDown className="h-5 w-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute bottom-full mb-1 z-10 w-fit min-w-full whitespace-nowrap py-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-[200px]">
                 {PAGE_SIZES.map((pageSize) => (
                   <Listbox.Option
                     key={pageSize}
@@ -545,7 +547,7 @@ const AllEarningRecordsComponent = () => {
                         <span
                           className={`${
                             selected ? "font-medium" : "font-normal"
-                          } block truncate`}
+                          } block`}
                         >
                           Show {pageSize}
                         </span>

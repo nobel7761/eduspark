@@ -47,10 +47,14 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
   onSuccess,
 }) => {
   const [classes, setClasses] = useState<string[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [directors, setDirectors] = useState<IEmployee[]>([]);
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
 
   const {
     register,
@@ -62,6 +66,7 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
   } = useForm<EarningFormData>({
     defaultValues: {
       amount: 0,
+      date: today, // Set today's date as default
     },
     mode: "onBlur",
   });
@@ -89,7 +94,8 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
           directorsResponse.json(),
         ]);
 
-        setStudents(studentsData);
+        setAllStudents(studentsData);
+        setFilteredStudents([]);
         setDirectors(directorsData);
 
         const uniqueClasses = Array.from(
@@ -112,13 +118,15 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
 
   useEffect(() => {
     if (!selectedClass) {
+      setFilteredStudents([]);
       return;
     }
-    const filteredStudents = students.filter(
+    const studentsInClass = allStudents.filter(
       (student) => student.class === selectedClass
     );
-    setStudents(filteredStudents);
-  }, [selectedClass]);
+    setFilteredStudents(studentsInClass);
+    setValue("studentId", "");
+  }, [selectedClass, allStudents]);
 
   const handleFormSubmit = async (data: EarningFormData) => {
     if (!selectedClass) {
@@ -174,7 +182,9 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
     }
   };
 
-  const selectedStudent = students.find((s) => s._id === selectedStudentId);
+  const selectedStudent = filteredStudents.find(
+    (s) => s._id === selectedStudentId
+  );
 
   useEffect(() => {
     if (selectedStudent && selectedPaymentType) {
@@ -318,8 +328,7 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
                           {loading
                             ? "Loading students..."
                             : selectedStudentId
-                            ? students.find((s) => s._id === selectedStudentId)
-                                ?.name
+                            ? selectedStudent?.name
                             : "Select Student..."}
                         </span>
                         <span className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -327,7 +336,7 @@ const AddEarningDialog: React.FC<AddEarningDialogProps> = ({
                         </span>
                       </Listbox.Button>
                       <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-800 rounded-md shadow-lg max-h-60">
-                        {students.map((student) => (
+                        {filteredStudents.map((student) => (
                           <Listbox.Option
                             key={student._id}
                             value={student._id}

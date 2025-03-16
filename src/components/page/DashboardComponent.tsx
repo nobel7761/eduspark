@@ -41,6 +41,7 @@ const DashboardComponent: React.FC = () => {
     monthlyExpenses: 0,
     totalExpenses: 0,
     totalInvestments: 0,
+    totalProfit: 0,
   });
   const [genderData, setGenderData] = useState<GenderCount>({
     male: 0,
@@ -68,6 +69,7 @@ const DashboardComponent: React.FC = () => {
           totalInvestments,
           genderStats,
           classStats,
+          totalProfit,
         ] = await Promise.all([
           fetch(
             `${process.env.NEXT_PUBLIC_API_BASE}/students/student-count/total`
@@ -96,6 +98,9 @@ const DashboardComponent: React.FC = () => {
           fetch(
             `${process.env.NEXT_PUBLIC_API_BASE}/students/student-count/by-class`
           ).then((res) => res.json()),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE}/earnings/total-profit`
+          ).then((res) => res.json()),
         ]);
 
         setStats({
@@ -106,6 +111,7 @@ const DashboardComponent: React.FC = () => {
           monthlyExpenses: monthlyExpenses.count,
           totalExpenses: totalExpenses.count,
           totalInvestments: totalInvestments.count,
+          totalProfit: totalProfit.count,
         });
         setGenderData(genderStats);
         setClassData(classStats);
@@ -147,7 +153,7 @@ const DashboardComponent: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -177,6 +183,23 @@ const DashboardComponent: React.FC = () => {
         >
           <h3 className="text-lg font-semibold">Total Investments</h3>
           <p className="text-3xl font-bold">৳ {stats.totalInvestments}</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className={`bg-gradient-to-r rounded-lg p-6 text-white ${
+            stats.totalProfit >= 0
+              ? "from-emerald-500 to-emerald-600"
+              : "from-red-500 to-red-600"
+          }`}
+        >
+          <h3 className="text-lg font-semibold -mb-2">Total Profit</h3>
+          <span className="text-xs italic">
+            Earnings - (Investment + Expense)
+          </span>
+          <p className="text-3xl font-bold">৳ {stats.totalProfit}</p>
         </motion.div>
       </motion.div>
 

@@ -41,6 +41,7 @@ interface StudentEarning {
   paymentType: string[];
   amount: number;
   date: string;
+  month?: string;
   receivedBy?: {
     _id: string;
     firstName: string;
@@ -89,11 +90,25 @@ const StudentEarningDetailsComponent = () => {
   const columns = [
     columnHelper.accessor("date", {
       header: "Date",
-      cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+      cell: (info) => {
+        const date = new Date(info.getValue());
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      },
     }),
     columnHelper.accessor("paymentType", {
       header: "Purpose",
       cell: (info) => info.getValue().join(", "),
+    }),
+    columnHelper.accessor("month", {
+      header: "Month",
+      cell: (info) => {
+        const month = info.getValue();
+        return <div>{month || "-"}</div>;
+      },
     }),
     columnHelper.accessor("amount", {
       header: "Amount",
