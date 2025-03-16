@@ -196,9 +196,7 @@ const DashboardComponent: React.FC = () => {
           }`}
         >
           <h3 className="text-lg font-semibold -mb-2">Total Profit</h3>
-          <span className="text-xs italic">
-            Earnings - (Investment + Expense)
-          </span>
+          <span className="text-xs italic">Earnings - Expenses</span>
           <p className="text-3xl font-bold">৳ {stats.totalProfit}</p>
         </motion.div>
       </motion.div>
