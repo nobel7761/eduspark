@@ -329,69 +329,58 @@ const AttendanceComponent = () => {
 
   return (
     <div className="p-4 rounded-md bg-gray-900 text-white">
-      <div className="flex justify-between items-center mb-4">
-        <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div className="flex justify-between items-center w-full sm:w-auto">
           <h1 className="text-lg font-semibold">Attendance Records</h1>
+          <Menu as="div" className="relative sm:hidden">
+            <Menu.Button className="text-3xl text-gray-400 hover:text-white">
+              <MdViewColumn />
+            </Menu.Button>
+            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
+              <div className="space-y-2">
+                {table.getAllLeafColumns().map((column) => {
+                  if (column.id === "month" || column.id === "year")
+                    return null;
 
-          {/* Active Filters */}
-          {/* <div className="flex flex-wrap items-center gap-2">
-            {table.getState().columnFilters.map((filter) => {
-              let displayValue = String(filter.value);
-
-              if (filter.id === "month") {
-                displayValue = new Date(
-                  2024,
-                  parseInt(filter.value as string)
-                ).toLocaleString("default", { month: "long" });
-              } else if (filter.id === "isPresentOnTime") {
-                if (filter.value === "true") displayValue = "Late Join: No";
-                else if (filter.value === "false")
-                  displayValue = "Late Join: Yes";
-                else if (filter.value === "null") displayValue = "Absent: Yes";
-              }
-
-              return (
-                <div
-                  key={filter.id}
-                  className="flex items-center gap-x-2 px-2 py-1 bg-gray-700 rounded-full text-sm"
-                >
-                  <span>{displayValue}</span>
-                  <button
-                    onClick={() =>
-                      table.getColumn(filter.id)?.setFilterValue("")
-                    }
-                    className="text-red-500 hover:text-red-600 bg-white rounded-full"
-                  >
-                    <IoCloseCircle size={16} />
-                  </button>
-                </div>
-              );
-            })}
-            {table.getState().columnFilters.length > 0 && (
-              <button
-                onClick={() => table.resetColumnFilters()}
-                className="px-2 py-1 text-sm text-red-400 hover:text-red-300 border border-red-400 hover:border-red-300 rounded-full"
-              >
-                Reset All
-              </button>
-            )}
-          </div> */}
+                  return (
+                    <div key={column.id} className="flex items-center gap-x-2">
+                      <input
+                        type="checkbox"
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                        className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
+                      />
+                      <label className="text-sm">
+                        {column.id === "employeeName"
+                          ? "Employee Name"
+                          : column.id === "isPresentOnTime"
+                          ? "Late Join"
+                          : column.id === "employeeType"
+                          ? "Employee Type"
+                          : column.id.charAt(0).toUpperCase() +
+                            column.id.slice(1)}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </Menu.Items>
+          </Menu>
         </div>
 
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-4 w-full sm:w-auto">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
           >
             <span>Add Attendance</span>
           </button>
 
-          {/* Column Visibility */}
-          <Menu as="div" className="relative">
+          {/* Column Visibility - Desktop Only */}
+          <Menu as="div" className="relative hidden sm:block">
             <Menu.Button className="text-3xl text-gray-400 hover:text-white">
               <MdViewColumn />
             </Menu.Button>
-
             <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-2">
                 {table.getAllLeafColumns().map((column) => {
@@ -426,104 +415,9 @@ const AttendanceComponent = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-x-4 mb-4">
-        {/* Employee Name Dropdown */}
-        {/* <div className="w-64">
-          <Listbox
-            value={
-              (table.getColumn("employeeId")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(value) =>
-              table.getColumn("employeeId")?.setFilterValue(value)
-            }
-          >
-            <div className="relative">
-              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
-                <span className="block truncate">
-                  {table.getColumn("employeeId")?.getFilterValue()
-                    ? records.find(
-                        (record) =>
-                          record.employeeId._id ===
-                          table.getColumn("employeeId")?.getFilterValue()
-                      )?.employeeId.firstName +
-                      " " +
-                      records.find(
-                        (record) =>
-                          record.employeeId._id ===
-                          table.getColumn("employeeId")?.getFilterValue()
-                      )?.employeeId.lastName
-                    : "Select Employee"}
-                </span>
-                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                </span>
-              </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                <Listbox.Option
-                  value=""
-                  className={({ active }) =>
-                    `${active ? "bg-primary text-white" : "text-white"}
-                        cursor-pointer select-none relative py-2 pl-10 pr-4`
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`${
-                          selected ? "font-medium" : "font-normal"
-                        } block truncate`}
-                      >
-                        All Employees
-                      </span>
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                          <FaCheckCircle className="w-5 h-5" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Listbox.Option>
-                {Array.from(
-                  new Map(
-                    records.map((record) => [
-                      record.employeeId._id,
-                      record.employeeId,
-                    ])
-                  ).values()
-                ).map((employee) => (
-                  <Listbox.Option
-                    key={employee._id}
-                    value={employee._id}
-                    className={({ active }) =>
-                      `${active ? "bg-primary text-white" : "text-white"}
-                          cursor-pointer select-none relative py-2 pl-10 pr-4`
-                    }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span
-                          className={`${
-                            selected ? "font-medium" : "font-normal"
-                          } block truncate`}
-                        >
-                          {`${employee.firstName} ${employee.lastName}`}
-                        </span>
-                        {selected && (
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                            <FaCheckCircle className="w-5 h-5" />
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </div>
-          </Listbox>
-        </div> */}
-
+      <div className="flex items-center gap-2 mb-4">
         {/* Month Dropdown */}
-        <div className="w-40">
+        <div className="w-1/2 sm:w-[140px]">
           <Listbox
             value={(table.getColumn("month")?.getFilterValue() as string) ?? ""}
             onChange={(value) => {
@@ -591,7 +485,7 @@ const AttendanceComponent = () => {
         </div>
 
         {/* Year Dropdown */}
-        <div className="w-32">
+        <div className="w-1/2 sm:w-[100px]">
           <Listbox
             value={(table.getColumn("year")?.getFilterValue() as string) ?? ""}
             onChange={(value) => table.getColumn("year")?.setFilterValue(value)}
@@ -638,86 +532,6 @@ const AttendanceComponent = () => {
             </div>
           </Listbox>
         </div>
-
-        {/* Status Dropdown */}
-        {/* <div className="w-40">
-          <Listbox
-            value={
-              (table.getColumn("status")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(value) =>
-              table.getColumn("status")?.setFilterValue(value)
-            }
-          >
-            <div className="relative">
-              <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
-                <span className="block truncate">
-                  {table.getColumn("status")?.getFilterValue()
-                    ? (
-                        table.getColumn("status")?.getFilterValue() as string
-                      ).replace("_", " ")
-                    : "Select Status"}
-                </span>
-                <span className="absolute inset-y-0 right-0 flex items-center pr-2">
-                  <HiChevronUpDown className="w-5 h-5 text-gray-400" />
-                </span>
-              </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
-                <Listbox.Option
-                  value=""
-                  className={({ active }) =>
-                    `${active ? "bg-primary text-white" : "text-white"}
-                        cursor-pointer select-none relative py-2 pl-10 pr-4`
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`${
-                          selected ? "font-medium" : "font-normal"
-                        } block truncate`}
-                      >
-                        All Statuses
-                      </span>
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                          <FaCheckCircle className="w-5 h-5" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Listbox.Option>
-                {Object.values(AttendanceStatus).map((status) => (
-                  <Listbox.Option
-                    key={status}
-                    value={status}
-                    className={({ active }) =>
-                      `${active ? "bg-primary text-white" : "text-white"}
-                          cursor-pointer select-none relative py-2 pl-10 pr-4`
-                    }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span
-                          className={`${
-                            selected ? "font-medium" : "font-normal"
-                          } block truncate`}
-                        >
-                          {status.replace("_", " ")}
-                        </span>
-                        {selected && (
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                            <FaCheckCircle className="w-5 h-5" />
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </div>
-          </Listbox>
-        </div> */}
       </div>
 
       {/* Table */}
@@ -810,9 +624,9 @@ const AttendanceComponent = () => {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex justify-between items-center">
-        <div className="flex items-center gap-x-2">
-          <span className="text-sm">
+      <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-2">
+          <span className="text-sm whitespace-nowrap">
             Showing{" "}
             {table.getState().pagination.pageIndex *
               table.getState().pagination.pageSize +
@@ -831,7 +645,7 @@ const AttendanceComponent = () => {
             onChange={(e) => {
               table.setPageSize(Number(e.target.value));
             }}
-            className="bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full sm:w-auto bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {PAGE_SIZES.map((pageSize) => (
               <option key={pageSize} value={pageSize}>
@@ -841,23 +655,23 @@ const AttendanceComponent = () => {
           </select>
         </div>
 
-        <div className="flex items-center gap-x-4">
-          <span className="text-sm">
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <span className="text-sm whitespace-nowrap">
             Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{" "}
             <strong>{table.getPageCount()}</strong>
           </span>
-          <div className="flex gap-x-2">
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
             >
               Previous
             </button>
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
             >
               Next
             </button>
