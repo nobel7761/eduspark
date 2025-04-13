@@ -117,16 +117,19 @@ const StepperForm: React.FC<StepperFormProps> = ({
   };
 
   return (
-    <div className="w-full mx-auto p-6">
+    <div className="w-full mx-auto">
       {/* Stepper */}
-      <div className="mb-12">
-        <div className="flex justify-between items-center relative">
+      <div className="p-4 sm:p-6 mb-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center relative">
           {steps.map((step, index) => (
-            <div key={step.id} className="flex flex-col items-center">
+            <div
+              key={step.id}
+              className="flex flex-col items-center mb-4 sm:mb-0"
+            >
               <div className="flex items-center cursor-pointer">
                 {/* circle with step number */}
                 <motion.div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                     currentStep >= step.id
                       ? "border-green-600 text-white border-4"
                       : "text-gray-600 border border-gray-600"
@@ -141,7 +144,7 @@ const StepperForm: React.FC<StepperFormProps> = ({
                 {/* border */}
                 {index < steps.length - 1 && (
                   <motion.div
-                    className={`h-1 mx-3 rounded ${
+                    className={`hidden sm:block h-1 mx-3 rounded ${
                       currentStep > step.id ? "bg-green-600" : "bg-gray-600"
                     }`}
                     initial={{ width: 0 }}
@@ -154,7 +157,7 @@ const StepperForm: React.FC<StepperFormProps> = ({
               {/* Title below the step */}
               <motion.span
                 key={`title-${step.id}`}
-                className={`text-sm font-medium mt-2 ${
+                className={`text-xs sm:text-sm font-medium mt-2 text-center ${
                   currentStep >= step.id ? "text-green-600" : "text-gray-500"
                 }`}
                 initial={{ opacity: 0, y: 10 }}
@@ -176,12 +179,12 @@ const StepperForm: React.FC<StepperFormProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="rounded-lg shadow-lg"
+            className="rounded-lg shadow-lg p-4 sm:p-6"
           >
             {steps[currentStep - 1].component}
           </motion.div>
 
-          <div className="mt-4 flex justify-between">
+          <div className="mt-4 p-4 md:p-0 flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
             <button
               type="button"
               onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
@@ -196,7 +199,7 @@ const StepperForm: React.FC<StepperFormProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -237,7 +240,11 @@ const StepperForm: React.FC<StepperFormProps> = ({
             )}
           </div>
 
-          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="mt-2 text-sm text-red-500 text-center sm:text-left">
+              {error}
+            </p>
+          )}
         </form>
       </FormProvider>
     </div>

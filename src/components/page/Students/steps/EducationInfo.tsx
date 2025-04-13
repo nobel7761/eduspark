@@ -56,17 +56,18 @@ const EducationStep = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
-      className="p-4 rounded-lg"
+      className="rounded-lg"
     >
-      <h2 className="text-xl font-semibold mb-3">Education & Address</h2>
+      <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+        Education & Address
+      </h2>
 
-      <div className="w-full flex gap-x-8 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
         {/* Institute Name */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="w-full"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
         >
           <label className="block text-sm font-medium mb-1">
             Institute Name
@@ -87,10 +88,9 @@ const EducationStep = () => {
 
         {/* Class */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="w-full"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
         >
           <label className="block text-sm font-medium mb-1">Class</label>
           <select
@@ -117,105 +117,100 @@ const EducationStep = () => {
 
       {/* Groups - Conditional Rendering */}
       {showGroups && (
-        <div className="w-full flex mb-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="w-full"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="mb-4"
+        >
+          <label className="block text-sm font-medium mb-1">Group</label>
+          <select
+            {...register("group", { required: "Group is required" })}
+            className="w-full p-2 rounded bg-gray-800 focus:outline-none"
           >
-            <label className="block text-sm font-medium mb-1">Group</label>
-            <select
-              {...register("group", { required: "Group is required" })}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
-            >
-              <option value="">Select Group</option>
-              <option value="science">Science</option>
-              <option value="business">Business Studies</option>
-              <option value="humanities">Humanities</option>
-            </select>
-            {errors.group && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.group.message as string}
-              </p>
-            )}
-          </motion.div>
-        </div>
+            <option value="">Select Group</option>
+            <option value="science">Science</option>
+            <option value="business">Business Studies</option>
+            <option value="humanities">Humanities</option>
+          </select>
+          {errors.group && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.group.message as string}
+            </p>
+          )}
+        </motion.div>
       )}
 
       {/* Subjects - Conditional Rendering */}
       {showSubjects && (
-        <div className="w-full flex mb-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="w-full"
-          >
-            <label className="block text-sm font-medium mb-1">Subjects</label>
-            <Select
-              isMulti
-              options={subjectOptions}
-              onChange={handleSubjectChange}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              value={watch("subjects")}
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  backgroundColor: "#1f2937", // dark background
-                  borderColor: "#374151",
-                }),
-                menu: (base) => ({
-                  ...base,
-                  backgroundColor: "#1f2937", // dropdown background
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isFocused ? "#374151" : "#1f2937",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#374151",
-                  },
-                }),
-                multiValue: (base) => ({
-                  ...base,
-                  backgroundColor: "#374151",
-                }),
-                multiValueLabel: (base) => ({
-                  ...base,
-                  color: "white",
-                }),
-                multiValueRemove: (base) => ({
-                  ...base,
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#4B5563",
-                    color: "white",
-                  },
-                }),
-                input: (base) => ({
-                  ...base,
-                  color: "white",
-                }),
-              }}
-            />
-            {errors.subjects && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.subjects.message as string}
-              </p>
-            )}
-          </motion.div>
-        </div>
-      )}
-
-      <div className="w-full flex gap-x-6 gap-y-4">
-        {/* Present Address */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="w-full"
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="mb-4"
+        >
+          <label className="block text-sm font-medium mb-1">Subjects</label>
+          <Select
+            isMulti
+            options={subjectOptions}
+            onChange={handleSubjectChange}
+            className="react-select-container"
+            classNamePrefix="react-select"
+            value={watch("subjects")}
+            styles={{
+              control: (base) => ({
+                ...base,
+                backgroundColor: "#1f2937",
+                borderColor: "#374151",
+              }),
+              menu: (base) => ({
+                ...base,
+                backgroundColor: "#1f2937",
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused ? "#374151" : "#1f2937",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#374151",
+                },
+              }),
+              multiValue: (base) => ({
+                ...base,
+                backgroundColor: "#374151",
+              }),
+              multiValueLabel: (base) => ({
+                ...base,
+                color: "white",
+              }),
+              multiValueRemove: (base) => ({
+                ...base,
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "#4B5563",
+                  color: "white",
+                },
+              }),
+              input: (base) => ({
+                ...base,
+                color: "white",
+              }),
+            }}
+          />
+          {errors.subjects && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.subjects.message as string}
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* Present Address */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
         >
           <label className="block text-sm font-medium mb-1">
             Present Address
@@ -236,10 +231,9 @@ const EducationStep = () => {
 
         {/* Permanent Address */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="w-full"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.7 }}
         >
           <label className="block text-sm font-medium mb-1">
             Permanent Address

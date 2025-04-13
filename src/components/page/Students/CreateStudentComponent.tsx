@@ -88,8 +88,10 @@ const CreateStudentComponent = () => {
   };
 
   return (
-    <div className="bg-primary p-4 rounded-md text-white">
-      <h1 className="text-lg font-semibold">Create Student</h1>
+    <div className="bg-primary p-1 md:p-4 rounded-md text-white">
+      <h1 className="text-lg font-semibold text-center md:text-left lg:text-left py-3 md:py-0 lg:py-0">
+        Create Student
+      </h1>
       <StepperForm
         steps={steps}
         onSubmit={handleSubmit}

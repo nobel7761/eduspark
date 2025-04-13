@@ -23,16 +23,27 @@ const ReferralInfoStep = () => {
   } = useFormContext<ReferralFormData>();
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
+      className="rounded-lg"
+    >
+      <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+        Referral Information
+      </h2>
+
       {/* Referral Information Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="p-4 rounded-lg bg-gray-900/50 border border-white"
+        className="p-3 md:p-4 rounded-lg bg-gray-900/50 border border-white mb-4 md:mb-6"
       >
-        <h2 className="text-xl font-semibold mb-3">Referral Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">
+          Referral Information
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -44,10 +55,10 @@ const ReferralInfoStep = () => {
             <input
               type="text"
               {...register("referredBy.name")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.referredBy?.name && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 {errors.referredBy.name.message as string}
               </p>
             )}
@@ -64,10 +75,10 @@ const ReferralInfoStep = () => {
             <input
               type="tel"
               {...register("referredBy.phone")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.referredBy?.phone && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 {errors.referredBy.phone.message as string}
               </p>
             )}
@@ -80,10 +91,12 @@ const ReferralInfoStep = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
-        className="p-4 rounded-lg bg-gray-900/50 border border-white"
+        className="p-3 md:p-4 rounded-lg bg-gray-900/50 border border-white"
       >
-        <h2 className="text-xl font-semibold mb-3">Payment Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">
+          Payment Details
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -95,7 +108,7 @@ const ReferralInfoStep = () => {
             <input
               type="number"
               {...register("payment.admissionFee")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.payment?.admissionFee && (
               <p className="text-red-500 text-xs mt-1">
@@ -113,7 +126,7 @@ const ReferralInfoStep = () => {
             <input
               type="number"
               {...register("payment.formFee")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.payment?.formFee && (
               <p className="text-red-500 text-xs mt-1">
@@ -133,7 +146,7 @@ const ReferralInfoStep = () => {
             <input
               type="number"
               {...register("payment.monthlyFee")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.payment?.monthlyFee && (
               <p className="text-red-500 text-xs mt-1">
@@ -148,12 +161,12 @@ const ReferralInfoStep = () => {
             transition={{ duration: 0.3, delay: 0.7 }}
           >
             <label className="block text-sm font-medium mb-1">
-              Our Monthly Package Fee
+              Package Fee
             </label>
             <input
               type="number"
               {...register("payment.packageFee")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.payment?.packageFee && (
               <p className="text-red-500 text-xs mt-1">
@@ -173,10 +186,10 @@ const ReferralInfoStep = () => {
             <input
               type="number"
               {...register("payment.referrerFee")}
-              className="w-full p-2 rounded bg-gray-800 focus:outline-none"
+              className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none"
             />
             {errors.payment?.referrerFee && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 {errors.payment.referrerFee.message as string}
               </p>
             )}
@@ -186,17 +199,17 @@ const ReferralInfoStep = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.8 }}
-          className="md:col-span-2 mt-4"
+          transition={{ duration: 0.3, delay: 0.9 }}
+          className="mt-4"
         >
           <label className="block text-sm font-medium mb-1">Comments</label>
           <textarea
             {...register("payment.comments")}
-            className="w-full p-2 rounded bg-gray-800 focus:outline-none min-h-[100px]"
+            className="w-full p-2 text-sm md:text-base rounded bg-gray-800 focus:outline-none min-h-[100px]"
           />
         </motion.div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -42,66 +42,14 @@ const PersonalInfoStep = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
-      className="p-4 rounded-lg"
+      className="rounded-lg"
     >
-      <h2 className="text-xl font-semibold mb-3">Personal Information</h2>
-      <div className="flex justify-between items-center gap-x-3 my-10">
-        {/* photo */}
-        {/* <motion.div
-          className="w-1/3"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <div className="w-[250px] h-[250px] relative">
-            <motion.div
-              className="w-full h-full flex justify-center items-center overflow-hidden bg-gray-600 rounded-full"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
-              {photoPreview ? (
-                <Image
-                  src={photoPreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  width={100}
-                  height={100}
-                />
-              ) : (
-                <svg
-                  className="w-[260px] h-[260px] text-gray-400 mt-12"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-              )}
-            </motion.div>
-            <motion.label
-              className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-primary transition-colors"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                {...register("photo", { required: true })}
-                className="hidden"
-              />
-              <MdCloudUpload className="text-3xl text-primary hover:text-white transition-colors" />
-            </motion.label>
-          </div>
-        </motion.div> */}
-        {/* name, phoneNumber, Info */}
-        <div className="w-full flex flex-col gap-6">
-          {" "}
+      <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+        Personal Information
+      </h2>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-8 my-6 md:my-10">
+        <div className="w-full flex flex-col gap-4 md:gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -148,7 +96,8 @@ const PersonalInfoStep = () => {
           </motion.div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -215,6 +164,7 @@ const PersonalInfoStep = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.5 }}
+          className="sm:col-span-2 lg:col-span-1"
         >
           <label className="block text-sm font-medium mb-1">Gender</label>
           <Listbox
@@ -280,6 +230,7 @@ const PersonalInfoStep = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.6 }}
+          className="sm:col-span-2 lg:col-span-1"
         >
           <label className="block text-sm font-medium mb-1">Religion</label>
           <Listbox
