@@ -50,19 +50,21 @@ const AllClassComponent: React.FC = () => {
   return (
     <>
       <div className="p-4 rounded-md bg-primary text-white">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Classe Details</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-lg font-semibold whitespace-nowrap w-full sm:w-auto text-center sm:text-left">
+            Class Details
+          </h2>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <button
               onClick={() => setIsAddSubjectOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
               Add Subject
             </button>
             <button
               onClick={() => setIsAddClassOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
               Add Class
             </button>
