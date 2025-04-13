@@ -82,15 +82,42 @@ const LoginComponent = () => {
         <div className="flex flex-col md:flex-row">
           {!showRegistration ? (
             <>
-              {/* Left Side - Login Form */}
+              {/* Right Side - Feature Showcase - Now on top for mobile */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="w-full md:w-1/2 p-8 bg-[#1B2028]/95"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full md:w-1/2 bg-white p-4 md:p-8 flex flex-col justify-center items-center order-1 md:order-2"
+              >
+                <div className="max-w-md w-full text-center">
+                  <div className="flex justify-center items-center mb-4 md:mb-8">
+                    <Image
+                      src={logo}
+                      alt="EduSpark"
+                      width={300}
+                      height={300}
+                      className="w-auto h-auto"
+                      priority
+                    />
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-2 md:mb-4">
+                    EduSpark
+                  </h2>
+                  <p className="text-gray-600 text-sm md:text-base mb-4 md:mb-8">
+                    EduSpark is a platform that helps students learn and grow.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Left Side - Login Form - Now below for mobile */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="w-full md:w-1/2 p-4 md:p-8 bg-[#1B2028]/95 order-2 md:order-1"
               >
                 <div className="max-w-md mx-auto">
-                  <h1 className="text-3xl font-semibold text-white mb-16 text-center">
+                  <h1 className="text-2xl md:text-3xl font-semibold text-white my-8 md:mb-16 text-center">
                     Let&apos;s get you signed in
                   </h1>
 
@@ -117,7 +144,7 @@ const LoginComponent = () => {
 
                   {error && (
                     <div
-                      className="flex justify-center items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800"
+                      className="flex justify-center items-center p-3 md:p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800"
                       role="alert"
                     >
                       <svg
@@ -130,20 +157,27 @@ const LoginComponent = () => {
                         <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
                       </svg>
                       <span className="sr-only">Info</span>
-                      <div className="text-red-500">{error}</div>
+                      <div className="text-red-500 text-sm md:text-base">
+                        {error}
+                      </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-4 md:space-y-6"
+                  >
                     <div>
-                      <label className="block text-white mb-2">Email</label>
+                      <label className="block text-white mb-2 text-sm md:text-base">
+                        Email
+                      </label>
                       <input
                         type="email"
                         {...register("email")}
-                        className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-600 rounded-lg focus:outline-none focus:border-primary text-sm md:text-base"
                       />
                       {errors.email && (
-                        <p className="mt-1 text-red-500 text-sm">
+                        <p className="mt-1 text-red-500 text-xs md:text-sm">
                           {errors.email.message}
                         </p>
                       )}
@@ -151,7 +185,9 @@ const LoginComponent = () => {
 
                     <div>
                       <div className="flex justify-between mb-2">
-                        <label className="text-white">Password</label>
+                        <label className="text-white text-sm md:text-base">
+                          Password
+                        </label>
                         {/* <Link
                             href="/forgot-password"
                             className="text-white hover:text-primary/80"
@@ -163,18 +199,18 @@ const LoginComponent = () => {
                         <input
                           type={showPassword ? "text" : "password"}
                           {...register("password")}
-                          className="w-full px-4 py-3  border border-gray-600 rounded-lg focus:outline-none focus:border-primary"
+                          className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-600 rounded-lg focus:outline-none focus:border-primary text-sm md:text-base"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xl"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-lg md:text-xl"
                         >
                           {showPassword ? <FaEyeSlash /> : <FaEye />}
                         </button>
                       </div>
                       {errors.password && (
-                        <p className="mt-1 text-red-500 text-sm">
+                        <p className="mt-1 text-red-500 text-xs md:text-sm">
                           {errors.password.message}
                         </p>
                       )}
@@ -183,12 +219,12 @@ const LoginComponent = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full px-4 py-2 bg-blue-600 text-white flex items-center justify-center gap-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-blue-600 text-white flex items-center justify-center gap-2 rounded hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed text-sm md:text-base"
                     >
                       {isSubmitting ? (
                         <>
                           <svg
-                            className="animate-spin h-5 w-5 text-white"
+                            className="animate-spin h-4 w-4 md:h-5 md:w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -215,8 +251,8 @@ const LoginComponent = () => {
                     </button>
                   </form>
 
-                  <div className="text-center mt-6">
-                    <p className="text-white">
+                  {/* <div className="text-center mt-4 md:mt-6">
+                    <p className="text-white text-sm md:text-base">
                       Don&apos;t have an account?{" "}
                       <button
                         onClick={() => setShowRegistration(true)}
@@ -225,63 +261,36 @@ const LoginComponent = () => {
                         Register here
                       </button>
                     </p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Right Side - Feature Showcase */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="w-full md:w-1/2 bg-white p-8 flex flex-col justify-center items-center"
-              >
-                <div className="max-w-md text-center">
-                  <Image
-                    src={logo}
-                    alt="EduSpark"
-                    width={400}
-                    height={400}
-                    className="mb-8"
-                  />
-                  <h2 className="text-5xl font-extrabold text-gray-800 mb-4">
-                    EduSpark
-                  </h2>
-                  <p className="text-gray-600 mb-8">
-                    EduSpark is a platform that helps students learn and grow.
-                  </p>
-                  {/* <button className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                      Learn More
-                    </button> */}
+                  </div> */}
                 </div>
               </motion.div>
             </>
           ) : (
             <>
-              {/* Left Side - Feature Showcase */}
+              {/* Left Side - Feature Showcase - Now on top for mobile */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="w-full md:w-1/2 bg-white p-8 flex flex-col justify-center items-center"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full md:w-1/2 bg-white p-4 md:p-8 flex flex-col justify-center items-center order-1 md:order-2"
               >
-                <div className="max-w-md text-center">
-                  <Image
-                    src={logo}
-                    alt="EduSpark"
-                    width={400}
-                    height={400}
-                    className="mb-8"
-                  />
-                  <h2 className="text-5xl font-extrabold text-gray-800 mb-4">
+                <div className="max-w-md w-full text-center">
+                  <div className="flex justify-center items-center mb-4 md:mb-8">
+                    <Image
+                      src={logo}
+                      alt="EduSpark"
+                      width={300}
+                      height={300}
+                      className="w-auto h-auto"
+                      priority
+                    />
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-2 md:mb-4">
                     EduSpark
                   </h2>
-                  <p className="text-gray-600 mb-8">
+                  <p className="text-gray-600 text-sm md:text-base mb-4 md:mb-8">
                     EduSpark is a platform that helps students learn and grow.
                   </p>
-                  {/* <button className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                      Learn More
-                    </button> */}
                 </div>
               </motion.div>
 
