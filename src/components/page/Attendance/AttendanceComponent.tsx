@@ -5,7 +5,6 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getPaginationRowModel,
   createColumnHelper,
   flexRender,
   SortingState,
@@ -49,14 +48,11 @@ const DEFAULT_VISIBLE_COLUMNS = {
   employeeId: false,
 };
 
-const PAGE_SIZES = [5, 10, 20, 50, 100] as const;
-
 const AttendanceComponent = () => {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
     {
       id: "month",
@@ -151,14 +147,6 @@ const AttendanceComponent = () => {
           return year === parseInt(filterValue as string);
         },
       }),
-      columnHelper.accessor("status", {
-        id: "status",
-        enableColumnFilter: true,
-        filterFn: (row, columnId, filterValue) => {
-          if (!filterValue) return true;
-          return row.getValue(columnId) === filterValue;
-        },
-      }),
     ];
   }, [columnHelper, records]);
 
@@ -191,17 +179,14 @@ const AttendanceComponent = () => {
     columns,
     state: {
       sorting,
-      pagination,
       columnFilters,
       columnVisibility,
     },
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
@@ -427,7 +412,7 @@ const AttendanceComponent = () => {
             }}
             disabled={loading}
           >
-            <div className="relative">
+            <div className="relative z-20">
               <Listbox.Button
                 className={`relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
@@ -449,7 +434,7 @@ const AttendanceComponent = () => {
                   <HiChevronUpDown className="w-5 h-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute z-20 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
                 {Array.from({ length: 12 }, (_, i) => i).map((month) => (
                   <Listbox.Option
                     key={month}
@@ -490,7 +475,7 @@ const AttendanceComponent = () => {
             value={(table.getColumn("year")?.getFilterValue() as string) ?? ""}
             onChange={(value) => table.getColumn("year")?.setFilterValue(value)}
           >
-            <div className="relative">
+            <div className="relative z-20">
               <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                 <span className="block truncate">
                   {(table.getColumn("year")?.getFilterValue() as string) ||
@@ -500,7 +485,7 @@ const AttendanceComponent = () => {
                   <HiChevronUpDown className="w-5 h-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute z-20 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
                 {uniqueValues.years.map((year) => (
                   <Listbox.Option
                     key={year}
@@ -536,145 +521,102 @@ const AttendanceComponent = () => {
 
       {/* Table */}
       <div className="mt-4 rounded-lg overflow-hidden border border-gray-700">
-        <table className="w-full border-collapse text-sm">
-          <thead className="bg-gray-800 text-gray-400">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className={`py-2 px-4 font-medium text-center ${
-                      header.column.id === "date" ? "text-left" : ""
-                    }`}
-                  >
-                    {header.isPlaceholder ? null : (
-                      <div
-                        {...{
-                          className: header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : "",
-                          onClick: header.column.getToggleSortingHandler(),
-                        }}
+        <div className="overflow-x-auto">
+          <div className="min-w-full inline-block align-middle">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-gray-800 text-gray-400">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className={`py-2 px-4 font-medium text-center sticky ${
+                          header.column.id === "date"
+                            ? "left-0 bg-gray-800 z-20"
+                            : ""
+                        } ${header.column.id === "date" ? "text-left" : ""}`}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+                        {header.isPlaceholder ? null : (
+                          <div
+                            {...{
+                              className: header.column.getCanSort()
+                                ? "cursor-pointer select-none"
+                                : "",
+                              onClick: header.column.getToggleSortingHandler(),
+                            }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {header.column.getIsSorted() && (
+                              <span>
+                                {header.column.getIsSorted() === "asc"
+                                  ? " 🔼"
+                                  : " 🔽"}
+                              </span>
+                            )}
+                          </div>
                         )}
-                        {header.column.getIsSorted() && (
-                          <span>
-                            {header.column.getIsSorted() === "asc"
-                              ? " 🔼"
-                              : " 🔽"}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </th>
+                      </th>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={table.getAllColumns().length} className="py-20">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                    <div className="text-sm text-gray-400">
-                      Loading records...
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={table.getAllColumns().length}
-                  className="text-center py-4"
-                >
-                  No records found
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-t border-gray-700 hover:bg-gray-800"
-                >
-                  {row.getVisibleCells().map((cell) => (
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
                     <td
-                      key={cell.id}
-                      className={`py-2 px-4 ${
-                        cell.column.id === "employeeName"
-                          ? "text-left"
-                          : "text-center"
-                      }`}
+                      colSpan={table.getAllColumns().length}
+                      className="py-20"
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        <div className="text-sm text-gray-400">
+                          Loading records...
+                        </div>
+                      </div>
                     </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-2">
-          <span className="text-sm whitespace-nowrap">
-            Showing{" "}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}{" "}
-            to{" "}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}{" "}
-            of {table.getFilteredRowModel().rows.length} entries
-          </span>
-
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="w-full sm:w-auto bg-gray-700 text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            {PAGE_SIZES.map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="w-full sm:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <span className="text-sm whitespace-nowrap">
-            Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{" "}
-            <strong>{table.getPageCount()}</strong>
-          </span>
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="w-full sm:w-auto px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="w-full sm:w-auto px-4 py-2 bg-gray-700 rounded disabled:opacity-50 text-sm"
-            >
-              Next
-            </button>
+                  </tr>
+                ) : table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={table.getAllColumns().length}
+                      className="text-center py-4"
+                    >
+                      No records found
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="border-t border-gray-700 hover:bg-gray-800"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className={`py-2 px-4 ${
+                            cell.column.id === "date"
+                              ? "sticky left-0 bg-gray-900 z-10"
+                              : ""
+                          } ${
+                            cell.column.id === "employeeName"
+                              ? "text-left"
+                              : "text-center"
+                          }`}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

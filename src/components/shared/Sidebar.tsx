@@ -19,7 +19,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: SidebarProps) => {
 
   return (
     <aside
-      className={`bg-[#173F66] flex flex-col fixed h-screen transition-all duration-300 ${
+      className={`bg-[#173F66] flex flex-col fixed h-screen transition-all duration-300 z-50 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
