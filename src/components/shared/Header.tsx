@@ -2,7 +2,7 @@
 
 import UserAvatar from "./UserAvatar";
 import { loggedInUserData } from "../../../public/data/data";
-import { IoNotifications, IoCloseCircle } from "react-icons/io5";
+import { IoCloseCircle } from "react-icons/io5";
 import { useSearch } from "@/context/SearchContext";
 
 interface HeaderProps {
@@ -36,10 +36,7 @@ export default function Header({ isCollapsed }: HeaderProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-x-4 relative w-1/12">
-        <span className="cursor-pointer text-3xl">
-          <IoNotifications />
-        </span>
+      <div className="flex items-center justify-center gap-x-4 relative w-1/12">
         <div className="flex items-center">
           <UserAvatar user={loggedInUserData[0]} />
         </div>

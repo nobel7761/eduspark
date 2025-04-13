@@ -153,94 +153,118 @@ const DashboardComponent: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Total Earnings</h3>
-          <p className="text-3xl font-bold">৳ {stats.totalEarnings}</p>
+          <h3 className="text-base md:text-lg font-semibold">Total Earnings</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.totalEarnings}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Total Expenses</h3>
-          <p className="text-3xl font-bold">৳ {stats.totalExpenses}</p>
+          <h3 className="text-base md:text-lg font-semibold">Total Expenses</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.totalExpenses}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Total Investments</h3>
-          <p className="text-3xl font-bold">৳ {stats.totalInvestments}</p>
+          <h3 className="text-base md:text-lg font-semibold">
+            Total Investments
+          </h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.totalInvestments}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className={`bg-gradient-to-r rounded-lg p-6 text-white ${
+          className={`bg-gradient-to-r rounded-lg p-4 md:p-6 text-white ${
             stats.totalProfit >= 0
               ? "from-emerald-500 to-emerald-600"
               : "from-red-500 to-red-600"
           }`}
         >
-          <h3 className="text-lg font-semibold -mb-2">Total Profit</h3>
+          <h3 className="text-base md:text-lg font-semibold -mb-2">
+            Total Profit
+          </h3>
           <span className="text-xs italic">Earnings - Expenses</span>
-          <p className="text-3xl font-bold">৳ {stats.totalProfit}</p>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.totalProfit}
+          </p>
         </motion.div>
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Total Students</h3>
-          <p className="text-3xl font-bold">{stats.totalStudents}</p>
+          <h3 className="text-base md:text-lg font-semibold">Total Students</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.totalStudents}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Total Teachers</h3>
-          <p className="text-3xl font-bold">{stats.totalTeachers}</p>
+          <h3 className="text-base md:text-lg font-semibold">Total Teachers</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.totalTeachers}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Earnings ({currentMonth})</h3>
-          <p className="text-3xl font-bold">৳ {stats.monthlyEarnings}</p>
+          <h3 className="text-base md:text-lg font-semibold">
+            Earnings ({currentMonth})
+          </h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.monthlyEarnings}
+          </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white"
+          className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 md:p-6 text-white"
         >
-          <h3 className="text-lg font-semibold">Expenses ({currentMonth})</h3>
-          <p className="text-3xl font-bold">৳ {stats.monthlyExpenses}</p>
+          <h3 className="text-base md:text-lg font-semibold">
+            Expenses ({currentMonth})
+          </h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.monthlyExpenses}
+          </p>
         </motion.div>
       </div>
 
