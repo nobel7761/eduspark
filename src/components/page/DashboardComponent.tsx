@@ -42,7 +42,7 @@ const DashboardComponent: React.FC = () => {
     totalExpenses: 0,
     totalInvestments: 0,
     totalProfit: 0,
-    totalFundRaised: 0,
+    totalFundAmount: 0,
   });
   const [genderData, setGenderData] = useState<GenderCount>({
     male: 0,
@@ -74,7 +74,7 @@ const DashboardComponent: React.FC = () => {
           totalExpenses: data.totalExpense,
           totalInvestments: data.totalInvestment,
           totalProfit: data.totalProfit,
-          totalFundRaised: data.totalFundRaised,
+          totalFundAmount: data.totalFundAmount,
         });
         setGenderData(data.totalStudentsByGender);
         setClassData(data.totalStudentsByClass);
@@ -214,7 +214,7 @@ const DashboardComponent: React.FC = () => {
         >
           <h3 className="text-base md:text-lg font-semibold">Fund Raised</h3>
           <p className="text-2xl md:text-3xl font-bold">
-            ৳ {stats.totalFundRaised}
+            ৳ {stats.totalFundAmount}
           </p>
         </motion.div>
       </div>
