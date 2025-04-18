@@ -16,10 +16,11 @@ import { Menu } from "@headlessui/react";
 import { MdViewColumn } from "react-icons/md";
 import { toast } from "react-toastify";
 import AddAttendanceDialog from "@/components/Dialogs/AddAttendanceDialog";
+import EditAttendanceDialog from "@/components/Dialogs/EditAttendanceDialog";
 import { EmployeeType } from "@/enums/employees.enum";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaEdit } from "react-icons/fa";
 import { AttendanceStatus } from "@/enums/attendance.enum";
 
 export interface AttendanceRecord {
@@ -67,6 +68,10 @@ const AttendanceComponent = () => {
     DEFAULT_VISIBLE_COLUMNS
   );
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(
+    null
+  );
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const columnHelper = createColumnHelper<TableRecord>();
@@ -104,7 +109,7 @@ const AttendanceComponent = () => {
             if (!status) return <span className="text-gray-500">-</span>;
 
             return (
-              <div className="text-center font-bold">
+              <div className="text-center font-bold flex items-center justify-center gap-2">
                 <span
                   className={`px-2 py-1 rounded-full text-xs inline-block w-20 ${
                     {
@@ -120,6 +125,22 @@ const AttendanceComponent = () => {
                 >
                   {String(status).replace("_", " ")}
                 </span>
+                <button
+                  className="text-gray-400 hover:text-white transition-colors"
+                  onClick={() => {
+                    const record = records.find(
+                      (r) =>
+                        r.employeeId.firstName + " " + r.employeeId.lastName ===
+                          employeeName && r.date === info.row.original.date
+                    );
+                    if (record) {
+                      setSelectedRecord(record);
+                      setIsEditModalOpen(true);
+                    }
+                  }}
+                >
+                  <FaEdit className="w-4 h-4" />
+                </button>
               </div>
             );
           },
@@ -145,6 +166,14 @@ const AttendanceComponent = () => {
           if (!filterValue) return true;
           const year = new Date(row.getValue("date")).getFullYear();
           return year === parseInt(filterValue as string);
+        },
+      }),
+      columnHelper.accessor("status", {
+        id: "status",
+        enableColumnFilter: true,
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return row.getValue(columnId) === filterValue;
         },
       }),
     ];
@@ -314,58 +343,25 @@ const AttendanceComponent = () => {
 
   return (
     <div className="p-4 rounded-md bg-gray-900 text-white">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div className="flex justify-between items-center w-full sm:w-auto">
+      <div className="flex justify-between items-center mb-4">
+        <div className="space-y-2">
           <h1 className="text-lg font-semibold">Attendance Records</h1>
-          <Menu as="div" className="relative sm:hidden">
-            <Menu.Button className="text-3xl text-gray-400 hover:text-white">
-              <MdViewColumn />
-            </Menu.Button>
-            <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
-              <div className="space-y-2">
-                {table.getAllLeafColumns().map((column) => {
-                  if (column.id === "month" || column.id === "year")
-                    return null;
-
-                  return (
-                    <div key={column.id} className="flex items-center gap-x-2">
-                      <input
-                        type="checkbox"
-                        checked={column.getIsVisible()}
-                        onChange={column.getToggleVisibilityHandler()}
-                        className="rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary"
-                      />
-                      <label className="text-sm">
-                        {column.id === "employeeName"
-                          ? "Employee Name"
-                          : column.id === "isPresentOnTime"
-                          ? "Late Join"
-                          : column.id === "employeeType"
-                          ? "Employee Type"
-                          : column.id.charAt(0).toUpperCase() +
-                            column.id.slice(1)}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
-            </Menu.Items>
-          </Menu>
         </div>
 
-        <div className="flex items-center gap-x-4 w-full sm:w-auto">
+        <div className="flex items-center gap-x-4">
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <span>Add Attendance</span>
           </button>
 
-          {/* Column Visibility - Desktop Only */}
-          <Menu as="div" className="relative hidden sm:block">
+          {/* Column Visibility */}
+          <Menu as="div" className="relative">
             <Menu.Button className="text-3xl text-gray-400 hover:text-white">
               <MdViewColumn />
             </Menu.Button>
+
             <Menu.Items className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-lg p-2 z-50">
               <div className="space-y-2">
                 {table.getAllLeafColumns().map((column) => {
@@ -400,9 +396,9 @@ const AttendanceComponent = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-x-4 mb-4">
         {/* Month Dropdown */}
-        <div className="w-1/2 sm:w-[140px]">
+        <div className="w-40">
           <Listbox
             value={(table.getColumn("month")?.getFilterValue() as string) ?? ""}
             onChange={(value) => {
@@ -412,7 +408,7 @@ const AttendanceComponent = () => {
             }}
             disabled={loading}
           >
-            <div className="relative z-20">
+            <div className="relative">
               <Listbox.Button
                 className={`relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
@@ -434,7 +430,7 @@ const AttendanceComponent = () => {
                   <HiChevronUpDown className="w-5 h-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-20 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
                 {Array.from({ length: 12 }, (_, i) => i).map((month) => (
                   <Listbox.Option
                     key={month}
@@ -470,12 +466,12 @@ const AttendanceComponent = () => {
         </div>
 
         {/* Year Dropdown */}
-        <div className="w-1/2 sm:w-[100px]">
+        <div className="w-32">
           <Listbox
             value={(table.getColumn("year")?.getFilterValue() as string) ?? ""}
             onChange={(value) => table.getColumn("year")?.setFilterValue(value)}
           >
-            <div className="relative z-20">
+            <div className="relative">
               <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-gray-700 rounded cursor-pointer focus:outline-none text-white">
                 <span className="block truncate">
                   {(table.getColumn("year")?.getFilterValue() as string) ||
@@ -485,7 +481,7 @@ const AttendanceComponent = () => {
                   <HiChevronUpDown className="w-5 h-5 text-gray-400" />
                 </span>
               </Listbox.Button>
-              <Listbox.Options className="absolute z-20 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
+              <Listbox.Options className="absolute z-10 w-full py-1 mt-1 overflow-auto bg-gray-700 rounded-md shadow-lg max-h-60">
                 {uniqueValues.years.map((year) => (
                   <Listbox.Option
                     key={year}
@@ -627,6 +623,19 @@ const AttendanceComponent = () => {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={refreshData}
       />
+
+      {/* Edit Attendance Modal */}
+      {selectedRecord && (
+        <EditAttendanceDialog
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedRecord(null);
+          }}
+          onSuccess={refreshData}
+          record={selectedRecord}
+        />
+      )}
     </div>
   );
 };
