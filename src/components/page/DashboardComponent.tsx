@@ -76,7 +76,7 @@ const DashboardComponent: React.FC = () => {
           totalProfit: data.totalProfit,
           totalFundAmount: data.totalFundAmount,
         });
-        setGenderData(data.totalStudentsByGender);
+        setGenderData(data.totalStudentsByGender || { male: 0, female: 0 });
         setClassData(data.totalStudentsByClass);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -90,8 +90,8 @@ const DashboardComponent: React.FC = () => {
 
   // Prepare data for charts
   const genderChartData = [
-    { name: "Male", value: genderData.male },
-    { name: "Female", value: genderData.female },
+    { name: "Male", value: genderData?.male || 0 },
+    { name: "Female", value: genderData?.female || 0 },
   ];
 
   const classChartData = Object.entries(classData).map(
