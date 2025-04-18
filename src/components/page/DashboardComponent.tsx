@@ -42,6 +42,7 @@ const DashboardComponent: React.FC = () => {
     totalExpenses: 0,
     totalInvestments: 0,
     totalProfit: 0,
+    totalFundRaised: 0,
   });
   const [genderData, setGenderData] = useState<GenderCount>({
     male: 0,
@@ -59,62 +60,24 @@ const DashboardComponent: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [
-          totalStudents,
-          totalTeachers,
-          monthlyEarnings,
-          totalEarnings,
-          monthlyExpenses,
-          totalExpenses,
-          totalInvestments,
-          genderStats,
-          classStats,
-          totalProfit,
-        ] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/students/student-count/total`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/employees/employee-count/teachers`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/earnings/earning-count/this-month`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/earnings/earning-count/total`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/expenses/expense-count/this-month`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/expenses/expense-count/total`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/investments/investment-count/total`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/students/student-count/by-gender`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/students/student-count/by-class`
-          ).then((res) => res.json()),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/earnings/total-profit`
-          ).then((res) => res.json()),
-        ]);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/earnings/get-dashboard-items`
+        );
+        const data = await response.json();
 
         setStats({
-          totalStudents: totalStudents.count,
-          totalTeachers: totalTeachers.count,
-          monthlyEarnings: monthlyEarnings.count,
-          totalEarnings: totalEarnings.count,
-          monthlyExpenses: monthlyExpenses.count,
-          totalExpenses: totalExpenses.count,
-          totalInvestments: totalInvestments.count,
-          totalProfit: totalProfit.count,
+          totalStudents: data.totalStudents,
+          totalTeachers: data.totalEmployees,
+          monthlyEarnings: data.thisMonthEarning,
+          totalEarnings: data.totalEarning,
+          monthlyExpenses: data.thisMonthExpense,
+          totalExpenses: data.totalExpense,
+          totalInvestments: data.totalInvestment,
+          totalProfit: data.totalProfit,
+          totalFundRaised: data.totalFundRaised,
         });
-        setGenderData(genderStats);
-        setClassData(classStats);
+        setGenderData(data.totalStudentsByGender);
+        setClassData(data.totalStudentsByClass);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -214,36 +177,12 @@ const DashboardComponent: React.FC = () => {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white"
-        >
-          <h3 className="text-base md:text-lg font-semibold">Total Students</h3>
-          <p className="text-2xl md:text-3xl font-bold">
-            {stats.totalStudents}
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white"
-        >
-          <h3 className="text-base md:text-lg font-semibold">Total Teachers</h3>
-          <p className="text-2xl md:text-3xl font-bold">
-            {stats.totalTeachers}
-          </p>
-        </motion.div>
-
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 md:p-6 text-white"
+          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white"
         >
           <h3 className="text-base md:text-lg font-semibold">
             Earnings ({currentMonth})
@@ -264,6 +203,44 @@ const DashboardComponent: React.FC = () => {
           </h3>
           <p className="text-2xl md:text-3xl font-bold">
             ৳ {stats.monthlyExpenses}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 md:p-6 text-white"
+        >
+          <h3 className="text-base md:text-lg font-semibold">Fund Raised</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            ৳ {stats.totalFundRaised}
+          </p>
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 md:p-6 text-white"
+        >
+          <h3 className="text-base md:text-lg font-semibold">Total Students</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.totalStudents}
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 md:p-6 text-white"
+        >
+          <h3 className="text-base md:text-lg font-semibold">Total Teachers</h3>
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.totalTeachers}
           </p>
         </motion.div>
       </div>
