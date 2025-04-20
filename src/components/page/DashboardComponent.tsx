@@ -17,6 +17,7 @@ import {
   // LineChart,
   // Line,
 } from "recharts";
+import { fetchWithAuth } from "@/utils/api";
 
 // interface CountResponse {
 //   count: number;
@@ -60,7 +61,7 @@ const DashboardComponent: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `${process.env.NEXT_PUBLIC_API_BASE}/earnings/get-dashboard-items`
         );
         const data = await response.json();

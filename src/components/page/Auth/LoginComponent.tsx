@@ -8,10 +8,11 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { UserType } from "@/enums/user-type.enum";
-import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import RegistrationComponent from "./RegistrationComponent";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import Cookies from "js-cookie";
 
 export interface LoginFormValues {
   email: string;
@@ -41,8 +42,8 @@ const LoginComponent = () => {
     },
   });
 
-  const { login } = useAuth();
   const router = useRouter();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,17 +63,50 @@ const LoginComponent = () => {
       );
 
       const data = await response.json();
+      console.log("Login response:", data);
 
       if (!response.ok) {
         setError(data.message || "Failed to login");
         return;
       }
 
-      login(data.accessToken, data.refreshToken);
+      // Check for both access_token and accessToken in the response
+      const accessToken = data.access_token || data.accessToken;
+      const refreshToken = data.refresh_token || data.refreshToken;
+
+      if (!accessToken) {
+        console.error("No access token in response:", data);
+        setError("Invalid login response - No access token found");
+        return;
+      }
+
+      // Store tokens directly before using AuthContext
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      // Set cookies with proper options
+      Cookies.set("accessToken", accessToken, {
+        expires: 7,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      Cookies.set("refreshToken", refreshToken, {
+        expires: 7,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      // Use the login function from AuthContext
+      login(accessToken, refreshToken);
       router.push("/");
     } catch (error) {
       console.error("Login error:", error);
-      setError(error as string);
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
     }
   };
 
