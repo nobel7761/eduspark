@@ -21,6 +21,7 @@ const TeacherClassCountComponent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [classBasedTeachers, setClassBasedTeachers] = useState<IEmployee[]>([]);
+  const [teacherDetails, setTeacherDetails] = useState<IEmployee[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
     {
@@ -53,8 +54,31 @@ const TeacherClassCountComponent = () => {
     }
   };
 
+  const fetchTeacherDetails = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/employees/get-employee-for-submit-class-count`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setTeacherDetails(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch class-based teachers:", error);
+      setError("Failed to load teachers");
+      toast.error("Failed to load teachers");
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchClassBasedTeachers();
+    fetchTeacherDetails();
   }, []);
 
   const refreshData = useCallback(() => {
@@ -89,6 +113,7 @@ const TeacherClassCountComponent = () => {
           isOpen={isClassCountOpen}
           onClose={() => setIsClassCountOpen(false)}
           classBasedTeachers={classBasedTeachers}
+          teacherDetails={teacherDetails}
           onSubmitSuccess={refreshData}
         />
 
