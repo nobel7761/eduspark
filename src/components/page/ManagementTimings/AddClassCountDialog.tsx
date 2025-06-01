@@ -270,7 +270,7 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Select Teacher
                 </label>
-                {teacherDetails && teacherDetails.length > 1 ? (
+                {teacherDetails && teacherDetails.length > 2 ? (
                   <Listbox
                     value={watch("employeeId")}
                     onChange={(value) => setValue("employeeId", value)}
