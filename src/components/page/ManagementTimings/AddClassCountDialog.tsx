@@ -51,29 +51,9 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
 }) => {
   const [showProxyFields, setShowProxyFields] = useState(false);
   const [allClasses, setAllClasses] = useState<Class[]>([]);
-
-  // Add useEffect to fetch classes
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/classes`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch classes");
-        }
-        const data = await response.json();
-        setAllClasses(data);
-      } catch (error) {
-        console.error("Error fetching classes:", error);
-        toast.error("Failed to load classes");
-      }
-    };
-
-    if (isOpen) {
-      fetchClasses();
-    }
-  }, [isOpen]);
+  const [teacherDetails, setTeacherDetails] = useState<IEmployee[] | null>(
+    null
+  );
 
   const {
     register,
@@ -94,6 +74,60 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
       hasProxyClass: false,
     },
   });
+
+  // Add useEffect to set employeeId when there's only one teacher
+  useEffect(() => {
+    if (
+      teacherDetails &&
+      teacherDetails.length === 1 &&
+      teacherDetails[0]._id
+    ) {
+      setValue("employeeId", teacherDetails[0]._id);
+    }
+  }, [teacherDetails, setValue]);
+
+  // Add useEffect to fetch classes
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/classes`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch classes");
+        }
+        const data = await response.json();
+        setAllClasses(data);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+        toast.error("Failed to load classes");
+      }
+    };
+
+    const fetchTeacherDetails = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/employees/get-employee-for-submit-class-count`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const data = await response.json();
+        setTeacherDetails(data);
+      } catch (error) {
+        console.error("Error fetching logged in user:", error);
+        toast.error("Failed to load logged in user");
+      }
+    };
+
+    if (isOpen) {
+      fetchClasses();
+      fetchTeacherDetails();
+    }
+  }, [isOpen]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -236,61 +270,73 @@ const AddClassCountDialog: React.FC<AddClassCountDialogProps> = ({
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Select Teacher
                 </label>
-                <Listbox
-                  value={watch("employeeId")}
-                  onChange={(value) => setValue("employeeId", value)}
-                >
-                  <div className="relative">
-                    <Listbox.Button className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary text-left flex justify-between items-center">
-                      <span>
-                        {classBasedTeachers.find(
-                          (t) => t._id === watch("employeeId")
-                        )
-                          ? `${
-                              classBasedTeachers.find(
-                                (t) => t._id === watch("employeeId")
-                              )?.firstName
-                            } ${
-                              classBasedTeachers.find(
-                                (t) => t._id === watch("employeeId")
-                              )?.lastName
-                            }`
-                          : "Select teacher..."}
-                      </span>
-                      <HiChevronUpDown className="h-5 w-5" />
-                    </Listbox.Button>
-                    <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg py-1 shadow-lg max-h-60 overflow-auto">
-                      {classBasedTeachers.map((teacher) => (
-                        <Listbox.Option
-                          key={teacher._id}
-                          value={teacher._id}
-                          className={({ active }) =>
-                            `cursor-pointer select-none relative py-2 px-4 ${
-                              active
-                                ? "bg-gray-700 text-white"
-                                : "text-gray-300"
-                            }`
-                          }
-                        >
-                          {({ selected }) => (
-                            <div className="flex items-center">
-                              {selected && (
-                                <FaCheckCircle className="text-blue-600 mr-2" />
-                              )}
-                              <span
-                                className={`block truncate ${
-                                  selected ? "font-medium" : "font-normal"
-                                }`}
-                              >
-                                {teacher.firstName + " " + teacher.lastName}
-                              </span>
-                            </div>
-                          )}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </div>
-                </Listbox>
+                {teacherDetails && teacherDetails.length > 1 ? (
+                  <Listbox
+                    value={watch("employeeId")}
+                    onChange={(value) => setValue("employeeId", value)}
+                  >
+                    <div className="relative">
+                      <Listbox.Button className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary text-left flex justify-between items-center">
+                        <span>
+                          {classBasedTeachers.find(
+                            (t) => t._id === watch("employeeId")
+                          )
+                            ? `${
+                                classBasedTeachers.find(
+                                  (t) => t._id === watch("employeeId")
+                                )?.firstName
+                              } ${
+                                classBasedTeachers.find(
+                                  (t) => t._id === watch("employeeId")
+                                )?.lastName
+                              }`
+                            : "Select teacher..."}
+                        </span>
+                        <HiChevronUpDown className="h-5 w-5" />
+                      </Listbox.Button>
+                      <Listbox.Options className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg py-1 shadow-lg max-h-60 overflow-auto">
+                        {classBasedTeachers.map((teacher) => (
+                          <Listbox.Option
+                            key={teacher._id}
+                            value={teacher._id}
+                            className={({ active }) =>
+                              `cursor-pointer select-none relative py-2 px-4 ${
+                                active
+                                  ? "bg-gray-700 text-white"
+                                  : "text-gray-300"
+                              }`
+                            }
+                          >
+                            {({ selected }) => (
+                              <div className="flex items-center">
+                                {selected && (
+                                  <FaCheckCircle className="text-blue-600 mr-2" />
+                                )}
+                                <span
+                                  className={`block truncate ${
+                                    selected ? "font-medium" : "font-normal"
+                                  }`}
+                                >
+                                  {teacher.firstName + " " + teacher.lastName}
+                                </span>
+                              </div>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </div>
+                  </Listbox>
+                ) : (
+                  <input
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-primary"
+                    value={
+                      teacherDetails?.[0]?.firstName +
+                      " " +
+                      teacherDetails?.[0]?.lastName
+                    }
+                    disabled
+                  />
+                )}
                 {errors.employeeId && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.employeeId.message}
