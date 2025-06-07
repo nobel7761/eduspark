@@ -66,6 +66,15 @@ const TeacherClassCountComponent = () => {
         }
       );
       const data = await response.json();
+      console.log("Teacher Details API Response:", data);
+
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error("Teacher Details API did not return an array:", data);
+        setTeacherDetails([]);
+        return;
+      }
+
       setTeacherDetails(data);
       setIsLoading(false);
     } catch (error) {
