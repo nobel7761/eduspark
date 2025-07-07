@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Listbox } from "@headlessui/react";
 import { HiChevronUpDown } from "react-icons/hi2";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaEdit } from "react-icons/fa";
 import { ColumnFiltersState } from "@tanstack/react-table";
 
 interface ClassCount {
@@ -124,6 +124,7 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
   return (
     <div>
       <div className="overflow-x-auto w-full rounded-b-lg shadow-lg bg-primary">
+        {/* filters */}
         <div className="flex items-center gap-x-4 p-4 mb-4">
           {/* Month Dropdown */}
           <div className="w-40">
@@ -246,15 +247,19 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
             <tr className="bg-primary text-white text-sm">
               <th className="p-4 border-b border-r border-gray-200">Date</th>
               {data.map((employee, index) => (
-                <th
-                  key={index}
-                  className={`p-4 border-b border-gray-200 text-center ${
-                    index < data.length - 1 ? "border-r" : ""
-                  }`}
-                  colSpan={3}
-                >
-                  {employee.shortName}
-                </th>
+                <React.Fragment key={index}>
+                  <th
+                    className={`p-4 border-b border-gray-200 text-center`}
+                    colSpan={3}
+                  >
+                    {employee.shortName}
+                  </th>
+                  <th
+                    className={`p-4 border-b border-gray-200 text-center ${
+                      index < data.length - 1 ? "border-r" : ""
+                    }`}
+                  ></th>
+                </React.Fragment>
               ))}
             </tr>
             <tr className="bg-primary/90 text-white">
@@ -268,12 +273,15 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                     9-10
                   </th>
                   <th
-                    className={`p-3 border-b border-gray-200 text-sm font-medium ${
-                      index < data.length - 1 ? "border-r" : ""
-                    }`}
+                    className={`p-3 border-b border-gray-200 text-sm font-medium `}
                   >
                     11-12
                   </th>
+                  <th
+                    className={`p-3 border-b border-gray-200 text-sm font-medium ${
+                      index < data.length - 1 ? "border-r" : ""
+                    }`}
+                  ></th>
                 </React.Fragment>
               ))}
             </tr>
@@ -287,7 +295,7 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                     month: "short",
                   })}
                 </td>
-                {data.map((employee, teacherIndex, index) => {
+                {data.map((employee, teacherIndex, dataIndex) => {
                   const dayData = employee.classCountDetails.find(
                     (detail) => detail.date.split("T")[0] === date
                   );
@@ -299,7 +307,7 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
 
                   return (
                     <React.Fragment
-                      key={`${index}-${employee.employeeId}-${date}`}
+                      key={`${dataIndex}-${employee.employeeId}-${date}`}
                     >
                       <td className="p-4 border-b border-gray-200 text-center">
                         <span
@@ -323,11 +331,7 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                           {classCount["9-10"] > 0 ? classCount["9-10"] : "-"}
                         </span>
                       </td>
-                      <td
-                        className={`p-4 border-b border-gray-200 text-center ${
-                          teacherIndex < data.length - 1 ? "border-r" : ""
-                        }`}
-                      >
+                      <td className={`p-4 border-b  text-center `}>
                         <span
                           className={`inline-block px-3 py-1 rounded-full ${
                             classCount["11-12"] > 0
@@ -337,6 +341,13 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                         >
                           {classCount["11-12"] > 0 ? classCount["11-12"] : "-"}
                         </span>
+                      </td>
+                      <td
+                        className={`p-4 border-b border-gray-200 text-center ${
+                          teacherIndex < data.length - 1 ? "border-r" : ""
+                        }`}
+                      >
+                        <FaEdit className="inline-block text-lg cursor-pointer text-blue-400" />
                       </td>
                     </React.Fragment>
                   );
@@ -362,15 +373,16 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                       {employee.totalClassTakenThisMonthSoFar["9-10"]}
                     </span>
                   </td>
-                  <td
-                    className={`p-2 border-gray-200 text-center ${
-                      teacherIndex < data.length - 1 ? "border-r" : ""
-                    }`}
-                  >
+                  <td className={`p-2 border-gray-200 text-center `}>
                     <span className="text-xs">
                       {employee.totalClassTakenThisMonthSoFar["11-12"]}
                     </span>
                   </td>
+                  <td
+                    className={`p-2 border-gray-200 text-center ${
+                      teacherIndex < data.length - 1 ? "border-r" : ""
+                    }`}
+                  ></td>
                 </React.Fragment>
               ))}
             </tr>
@@ -392,15 +404,16 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                       ৳ {employee.totalIncomeThisMonthSoFar["9-10"]}
                     </span>
                   </td>
-                  <td
-                    className={`p-2 border-gray-200 text-center ${
-                      teacherIndex < data.length - 1 ? "border-r" : ""
-                    }`}
-                  >
+                  <td className={`p-2 border-gray-200 text-center `}>
                     <span className="text-xs">
                       ৳ {employee.totalIncomeThisMonthSoFar["11-12"]}
                     </span>
                   </td>
+                  <td
+                    className={`p-2 border-gray-200 text-center ${
+                      teacherIndex < data.length - 1 ? "border-r" : ""
+                    }`}
+                  ></td>
                 </React.Fragment>
               ))}
             </tr>
@@ -414,14 +427,17 @@ const RunningMonthClassCount: React.FC<RunningMonthClassCountProps> = ({
                 <React.Fragment key={`final-income-${employee.employeeId}`}>
                   <td
                     colSpan={3}
-                    className={`p-2 border-gray-200 text-center ${
-                      teacherIndex < data.length - 1 ? "border-r" : ""
-                    }`}
+                    className={`p-2 border-gray-200 text-center `}
                   >
                     <span className="text-xs">
                       ৳ {employee.totalIncomeThisMonthSoFar.total}
                     </span>
-                  </td>
+                  </td>{" "}
+                  <td
+                    className={`p-2 border-gray-200 text-center ${
+                      teacherIndex < data.length - 1 ? "border-r" : ""
+                    }`}
+                  ></td>
                 </React.Fragment>
               ))}
             </tr>
